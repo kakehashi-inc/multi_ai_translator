@@ -1,0 +1,154 @@
+{
+  "extensionName": {
+    "message": "Multi-AI Translator",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Translate web pages using multiple AI providers (OpenAI, Claude, Gemini, Ollama)",
+    "description": "Description of the extension"
+  },
+  "commandTranslatePage": {
+    "message": "Translate page",
+    "description": "Command to translate entire page"
+  },
+  "commandTranslateSelection": {
+    "message": "Translate selection",
+    "description": "Command to translate selected text"
+  },
+  "commandRestoreOriginal": {
+    "message": "Restore original",
+    "description": "Command to restore original content"
+  },
+  "settingsSubtitle": {
+    "message": "Settings",
+    "description": "Settings page subtitle"
+  },
+  "tabProviders": {
+    "message": "Providers",
+    "description": "Providers tab"
+  },
+  "tabCommon": {
+    "message": "Common Settings",
+    "description": "Common settings tab"
+  },
+  "tabUI": {
+    "message": "UI Settings",
+    "description": "UI settings tab"
+  },
+  "headingProviders": {
+    "message": "AI Provider Settings",
+    "description": "Providers section heading"
+  },
+  "headingCommon": {
+    "message": "Common Settings",
+    "description": "Common settings heading"
+  },
+  "headingUI": {
+    "message": "UI Settings",
+    "description": "UI settings heading"
+  },
+  "labelProvider": {
+    "message": "Provider",
+    "description": "Provider label"
+  },
+  "labelTargetLanguage": {
+    "message": "Target Language",
+    "description": "Target language label"
+  },
+  "labelAPIKey": {
+    "message": "API Key",
+    "description": "API key label"
+  },
+  "labelModel": {
+    "message": "Model",
+    "description": "Model label"
+  },
+  "labelTemperature": {
+    "message": "Temperature",
+    "description": "Temperature label"
+  },
+  "labelMaxTokens": {
+    "message": "Max Tokens",
+    "description": "Max tokens label"
+  },
+  "labelHost": {
+    "message": "Host",
+    "description": "Host label"
+  },
+  "labelBaseURL": {
+    "message": "Base URL",
+    "description": "Base URL label"
+  },
+  "labelDefaultProvider": {
+    "message": "Default Provider",
+    "description": "Default provider label"
+  },
+  "labelDefaultTargetLanguage": {
+    "message": "Default Target Language",
+    "description": "Default target language label"
+  },
+  "labelAutoDetectLanguage": {
+    "message": "Auto-detect source language",
+    "description": "Auto detect language label"
+  },
+  "labelTheme": {
+    "message": "Theme",
+    "description": "Theme label"
+  },
+  "labelShowOriginalText": {
+    "message": "Show original text on hover",
+    "description": "Show original text label"
+  },
+  "labelHighlightTranslated": {
+    "message": "Highlight translated content",
+    "description": "Highlight translated label"
+  },
+  "themeAuto": {
+    "message": "Auto",
+    "description": "Auto theme option"
+  },
+  "themeLight": {
+    "message": "Light",
+    "description": "Light theme option"
+  },
+  "themeDark": {
+    "message": "Dark",
+    "description": "Dark theme option"
+  },
+  "btnTranslatePage": {
+    "message": "Translate Page",
+    "description": "Translate page button"
+  },
+  "btnTranslateSelection": {
+    "message": "Translate Selection",
+    "description": "Translate selection button"
+  },
+  "btnRestore": {
+    "message": "Restore Original",
+    "description": "Restore button"
+  },
+  "btnSettings": {
+    "message": "Settings",
+    "description": "Settings button"
+  },
+  "btnSave": {
+    "message": "Save Settings",
+    "description": "Save button"
+  },
+  "btnReset": {
+    "message": "Reset to Defaults",
+    "description": "Reset button"
+  },
+  "btnExport": {
+    "message": "Export Settings",
+    "description": "Export button"
+  },
+  "btnImport": {
+    "message": "Import Settings",
+    "description": "Import button"
+  },
+  "btnFetchModels": {
+    "message": "Fetch Models",
+    "description": "Fetch models button"
+  }
+}
