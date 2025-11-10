@@ -1,0 +1,123 @@
+/**
+ * Content Script Styles
+ * Styles for translated content and popups
+ */
+
+/* Translated element highlighting */
+.translated {
+  background-color: rgba(255, 235, 59, 0.1) !important;
+  transition: background-color 0.3s ease;
+}
+
+.translation-highlight {
+  background-color: rgba(255, 235, 59, 0.3) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Loading indicator */
+.translation-loading {
+  position: relative;
+  opacity: 0.6;
+}
+
+.translation-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Translation popup */
+.translation-popup {
+  position: fixed;
+  max-width: 400px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #333333;
+  word-wrap: break-word;
+}
+
+.translation-popup .popup-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #666666;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.translation-popup .popup-close:hover {
+  color: #333333;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .translation-popup {
+    background: #2d2d2d;
+    border-color: #444444;
+    color: #e0e0e0;
+  }
+
+  .translation-popup .popup-close {
+    color: #999999;
+  }
+
+  .translation-popup .popup-close:hover {
+    color: #ffffff;
+  }
+
+  .translated {
+    background-color: rgba(255, 235, 59, 0.15) !important;
+  }
+
+  .translation-highlight {
+    background-color: rgba(255, 235, 59, 0.25) !important;
+  }
+}
+
+/* Provider badge */
+[data-translated-by]::before {
+  content: attr(data-translated-by);
+  display: inline-block;
+  padding: 2px 6px;
+  margin-right: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #4caf50;
+  color: white;
+  border-radius: 3px;
+  opacity: 0.7;
+}

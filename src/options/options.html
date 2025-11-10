@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-AI Translator Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 data-i18n="extensionName">Multi-AI Translator</h1>
+      <p data-i18n="settingsSubtitle">Settings</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="providers" data-i18n="tabProviders">Providers</button>
+      <button class="tab-btn" data-tab="common" data-i18n="tabCommon">Common Settings</button>
+      <button class="tab-btn" data-tab="ui" data-i18n="tabUI">UI Settings</button>
+    </nav>
+
+    <main class="content">
+      <!-- Providers Tab -->
+      <div id="providers-tab" class="tab-content active">
+        <h2 data-i18n="headingProviders">AI Provider Settings</h2>
+
+        <!-- OpenAI -->
+        <div class="provider-section">
+          <h3>
+            <input type="checkbox" id="openai-enabled" class="provider-toggle">
+            <label for="openai-enabled">OpenAI</label>
+          </h3>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="openai-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="openai-api-key" class="form-control" placeholder="sk-...">
+            </div>
+            <div class="form-group">
+              <label for="openai-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="openai-model" class="form-control" placeholder="gpt-3.5-turbo">
+              <button id="openai-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+            <div class="form-group">
+              <label for="openai-temperature" data-i18n="labelTemperature">Temperature:</label>
+              <input type="number" id="openai-temperature" class="form-control" min="0" max="2" step="0.1" value="0.3">
+            </div>
+          </div>
+        </div>
+
+        <!-- Claude -->
+        <div class="provider-section">
+          <h3>
+            <input type="checkbox" id="claude-enabled" class="provider-toggle">
+            <label for="claude-enabled">Claude (Anthropic)</label>
+          </h3>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="claude-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="claude-api-key" class="form-control" placeholder="sk-ant-...">
+            </div>
+            <div class="form-group">
+              <label for="claude-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="claude-model" class="form-control" placeholder="claude-3-sonnet-20240229">
+            </div>
+            <div class="form-group">
+              <label for="claude-max-tokens" data-i18n="labelMaxTokens">Max Tokens:</label>
+              <input type="number" id="claude-max-tokens" class="form-control" value="2000">
+            </div>
+          </div>
+        </div>
+
+        <!-- Gemini -->
+        <div class="provider-section">
+          <h3>
+            <input type="checkbox" id="gemini-enabled" class="provider-toggle">
+            <label for="gemini-enabled">Gemini (Google)</label>
+          </h3>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="gemini-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="gemini-api-key" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="gemini-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="gemini-model" class="form-control" placeholder="gemini-pro">
+            </div>
+          </div>
+        </div>
+
+        <!-- Ollama -->
+        <div class="provider-section">
+          <h3>
+            <input type="checkbox" id="ollama-enabled" class="provider-toggle">
+            <label for="ollama-enabled">Ollama (Local)</label>
+          </h3>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="ollama-host" data-i18n="labelHost">Host:</label>
+              <input type="text" id="ollama-host" class="form-control" placeholder="http://127.0.0.1:11434">
+            </div>
+            <div class="form-group">
+              <label for="ollama-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="ollama-model" class="form-control" placeholder="llama2">
+              <button id="ollama-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- OpenAI Compatible -->
+        <div class="provider-section">
+          <h3>
+            <input type="checkbox" id="openai-compatible-enabled" class="provider-toggle">
+            <label for="openai-compatible-enabled">OpenAI Compatible</label>
+          </h3>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="openai-compatible-base-url" data-i18n="labelBaseURL">Base URL:</label>
+              <input type="text" id="openai-compatible-base-url" class="form-control" placeholder="http://localhost:1234/v1">
+            </div>
+            <div class="form-group">
+              <label for="openai-compatible-api-key" data-i18n="labelAPIKey">API Key (optional):</label>
+              <input type="password" id="openai-compatible-api-key" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="openai-compatible-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="openai-compatible-model" class="form-control">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Common Settings Tab -->
+      <div id="common-tab" class="tab-content">
+        <h2 data-i18n="headingCommon">Common Settings</h2>
+
+        <div class="form-group">
+          <label for="default-provider" data-i18n="labelDefaultProvider">Default Provider:</label>
+          <select id="default-provider" class="form-control">
+            <option value="openai">OpenAI</option>
+            <option value="claude">Claude</option>
+            <option value="gemini">Gemini</option>
+            <option value="ollama">Ollama</option>
+            <option value="openai-compatible">OpenAI Compatible</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="default-target-language" data-i18n="labelDefaultTargetLanguage">Default Target Language:</label>
+          <select id="default-target-language" class="form-control">
+            <!-- Populated by JavaScript -->
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="auto-detect-language">
+            <span data-i18n="labelAutoDetectLanguage">Auto-detect source language</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- UI Settings Tab -->
+      <div id="ui-tab" class="tab-content">
+        <h2 data-i18n="headingUI">UI Settings</h2>
+
+        <div class="form-group">
+          <label for="theme" data-i18n="labelTheme">Theme:</label>
+          <select id="theme" class="form-control">
+            <option value="auto" data-i18n="themeAuto">Auto</option>
+            <option value="light" data-i18n="themeLight">Light</option>
+            <option value="dark" data-i18n="themeDark">Dark</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="show-original-text">
+            <span data-i18n="labelShowOriginalText">Show original text on hover</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="highlight-translated">
+            <span data-i18n="labelHighlightTranslated">Highlight translated content</span>
+          </label>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="button-group">
+        <button id="save-btn" class="btn btn-primary" data-i18n="btnSave">Save Settings</button>
+        <button id="reset-btn" class="btn btn-outline" data-i18n="btnReset">Reset to Defaults</button>
+        <button id="export-btn" class="btn btn-outline" data-i18n="btnExport">Export Settings</button>
+        <button id="import-btn" class="btn btn-outline" data-i18n="btnImport">Import Settings</button>
+      </div>
+      <div id="status-message" class="status-message"></div>
+    </footer>
+  </div>
+
+  <input type="file" id="import-file-input" accept=".json" style="display: none;">
+
+  <script src="options.js" type="module"></script>
+</body>
+</html>

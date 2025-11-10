@@ -1,0 +1,154 @@
+{
+  "extensionName": {
+    "message": "Multi-AI Translator",
+    "description": "拡張機能の名前"
+  },
+  "extensionDescription": {
+    "message": "複数のAIプロバイダ（OpenAI、Claude、Gemini、Ollama）を使用してWebページを翻訳",
+    "description": "拡張機能の説明"
+  },
+  "commandTranslatePage": {
+    "message": "ページを翻訳",
+    "description": "ページ全体を翻訳するコマンド"
+  },
+  "commandTranslateSelection": {
+    "message": "選択範囲を翻訳",
+    "description": "選択したテキストを翻訳するコマンド"
+  },
+  "commandRestoreOriginal": {
+    "message": "元に戻す",
+    "description": "元のコンテンツに戻すコマンド"
+  },
+  "settingsSubtitle": {
+    "message": "設定",
+    "description": "設定ページのサブタイトル"
+  },
+  "tabProviders": {
+    "message": "プロバイダ",
+    "description": "プロバイダタブ"
+  },
+  "tabCommon": {
+    "message": "共通設定",
+    "description": "共通設定タブ"
+  },
+  "tabUI": {
+    "message": "UI設定",
+    "description": "UI設定タブ"
+  },
+  "headingProviders": {
+    "message": "AIプロバイダ設定",
+    "description": "プロバイダセクションの見出し"
+  },
+  "headingCommon": {
+    "message": "共通設定",
+    "description": "共通設定の見出し"
+  },
+  "headingUI": {
+    "message": "UI設定",
+    "description": "UI設定の見出し"
+  },
+  "labelProvider": {
+    "message": "プロバイダ",
+    "description": "プロバイダラベル"
+  },
+  "labelTargetLanguage": {
+    "message": "翻訳先言語",
+    "description": "翻訳先言語ラベル"
+  },
+  "labelAPIKey": {
+    "message": "APIキー",
+    "description": "APIキーラベル"
+  },
+  "labelModel": {
+    "message": "モデル",
+    "description": "モデルラベル"
+  },
+  "labelTemperature": {
+    "message": "温度",
+    "description": "温度ラベル"
+  },
+  "labelMaxTokens": {
+    "message": "最大トークン数",
+    "description": "最大トークン数ラベル"
+  },
+  "labelHost": {
+    "message": "ホスト",
+    "description": "ホストラベル"
+  },
+  "labelBaseURL": {
+    "message": "ベースURL",
+    "description": "ベースURLラベル"
+  },
+  "labelDefaultProvider": {
+    "message": "デフォルトプロバイダ",
+    "description": "デフォルトプロバイダラベル"
+  },
+  "labelDefaultTargetLanguage": {
+    "message": "デフォルト翻訳先言語",
+    "description": "デフォルト翻訳先言語ラベル"
+  },
+  "labelAutoDetectLanguage": {
+    "message": "元言語を自動検出",
+    "description": "言語自動検出ラベル"
+  },
+  "labelTheme": {
+    "message": "テーマ",
+    "description": "テーマラベル"
+  },
+  "labelShowOriginalText": {
+    "message": "ホバー時に元のテキストを表示",
+    "description": "元のテキスト表示ラベル"
+  },
+  "labelHighlightTranslated": {
+    "message": "翻訳されたコンテンツを強調表示",
+    "description": "翻訳済み強調表示ラベル"
+  },
+  "themeAuto": {
+    "message": "自動",
+    "description": "自動テーマオプション"
+  },
+  "themeLight": {
+    "message": "ライト",
+    "description": "ライトテーマオプション"
+  },
+  "themeDark": {
+    "message": "ダーク",
+    "description": "ダークテーマオプション"
+  },
+  "btnTranslatePage": {
+    "message": "ページを翻訳",
+    "description": "ページ翻訳ボタン"
+  },
+  "btnTranslateSelection": {
+    "message": "選択範囲を翻訳",
+    "description": "選択範囲翻訳ボタン"
+  },
+  "btnRestore": {
+    "message": "元に戻す",
+    "description": "復元ボタン"
+  },
+  "btnSettings": {
+    "message": "設定",
+    "description": "設定ボタン"
+  },
+  "btnSave": {
+    "message": "設定を保存",
+    "description": "保存ボタン"
+  },
+  "btnReset": {
+    "message": "デフォルトに戻す",
+    "description": "リセットボタン"
+  },
+  "btnExport": {
+    "message": "設定をエクスポート",
+    "description": "エクスポートボタン"
+  },
+  "btnImport": {
+    "message": "設定をインポート",
+    "description": "インポートボタン"
+  },
+  "btnFetchModels": {
+    "message": "モデル取得",
+    "description": "モデル取得ボタン"
+  }
+}
