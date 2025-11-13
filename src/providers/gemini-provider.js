@@ -79,13 +79,8 @@ export class GeminiProvider extends BaseProvider {
         .filter(model => model.name.includes('gemini'))
         .map(model => model.name.replace('models/', ''));
     } catch (error) {
-      console.warn('Failed to fetch models, using defaults', error);
-      return [
-        'gemini-2.0-flash-exp',
-        'gemini-2.0-flash-thinking-exp',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro'
-      ];
+      console.warn('Failed to fetch models from Google Gen AI API', error);
+      return [];
     }
   }
 }

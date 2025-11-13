@@ -88,13 +88,8 @@ export class OpenAIProvider extends BaseProvider {
         .map(model => model.id)
         .sort();
     } catch (error) {
-      console.warn('Failed to fetch models, using defaults', error);
-      return [
-        'gpt-4-turbo-preview',
-        'gpt-4',
-        'gpt-3.5-turbo',
-        'gpt-3.5-turbo-16k'
-      ];
+      console.warn('Failed to fetch models from OpenAI API', error);
+      return [];
     }
   }
 }

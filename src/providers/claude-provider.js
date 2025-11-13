@@ -73,13 +73,16 @@ export class ClaudeProvider extends BaseProvider {
    * Get available models
    */
   async getModels() {
-    // Claude doesn't have a models list API, return known models
-    return [
-      'claude-3-opus-20240229',
-      'claude-3-sonnet-20240229',
-      'claude-3-haiku-20240307',
-      'claude-2.1',
-      'claude-2.0'
-    ];
+    try {
+      if (!this.client) {
+        await this.initialize();
+      }
+
+      const response = await this.client.models.list();
+      return response.data.map(model => model.id);
+    } catch (error) {
+      console.warn('Failed to fetch models from Anthropic API', error);
+      return [];
+    }
   }
 }
