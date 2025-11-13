@@ -183,10 +183,11 @@ function showStatus(message, type = 'info') {
 function formatProviderName(name) {
   const names = {
     'openai': 'OpenAI',
-    'claude': 'Claude',
+    'anthropic': 'Anthropic (Claude)',
     'gemini': 'Gemini',
     'ollama': 'Ollama',
-    'openai-compatible': 'OpenAI Compatible'
+    'openai-compatible': 'OpenAI Compatible',
+    'anthropic-compatible': 'Anthropic Compatible'
   };
   return names[name] || name;
 }

@@ -1,22 +1,22 @@
 import { BaseProvider } from './base-provider.js';
 
 /**
- * Claude Provider (Anthropic)
- * Supports Claude 3 family
+ * Anthropic Provider
+ * Supports Claude 3 and 4 models via Anthropic API
  */
-export class ClaudeProvider extends BaseProvider {
+export class AnthropicProvider extends BaseProvider {
   constructor(config) {
     super(config);
-    this.name = 'claude';
+    this.name = 'anthropic';
     this.client = null;
   }
 
   /**
-   * Initialize Claude client
+   * Initialize Anthropic client
    */
   async initialize() {
     if (!this.validateConfig()) {
-      throw new Error('Invalid Claude configuration');
+      throw new Error('Invalid Anthropic configuration');
     }
 
     try {
@@ -41,7 +41,7 @@ export class ClaudeProvider extends BaseProvider {
   }
 
   /**
-   * Translate text using Claude
+   * Translate text using Anthropic API
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
     if (!this.client) {

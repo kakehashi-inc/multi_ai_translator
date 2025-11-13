@@ -22,10 +22,10 @@ const DEFAULT_SETTINGS = {
       temperature: 0.3,
       maxTokens: 2000
     },
-    claude: {
+    anthropic: {
       enabled: false,
       apiKey: '',
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-5-sonnet-20241022',
       maxTokens: 2000,
       temperature: 0.3
     },
@@ -47,6 +47,14 @@ const DEFAULT_SETTINGS = {
       baseUrl: '',
       apiKey: '',
       model: '',
+      temperature: 0.3
+    },
+    'anthropic-compatible': {
+      enabled: false,
+      baseUrl: '',
+      apiKey: '',
+      model: '',
+      maxTokens: 2000,
       temperature: 0.3
     }
   },
