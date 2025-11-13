@@ -2,6 +2,7 @@
  * Options Page Script
  * Handles settings management
  */
+import browser from 'webextension-polyfill';
 import { translatePage, getSupportedLanguages } from '../utils/i18n.js';
 import {
   getSettings,
@@ -305,7 +306,7 @@ async function fetchModels(providerName) {
       config.model = 'dummy'; // Required but not used for listing
     }
 
-    const response = await chrome.runtime.sendMessage({
+    const response = await browser.runtime.sendMessage({
       action: 'getModels',
       data: { providerName, config }
     });

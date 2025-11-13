@@ -2,13 +2,14 @@
  * Background Service Worker
  * Handles extension lifecycle, context menus, and message passing
  */
+import browser from 'webextension-polyfill';
 import { createProvider } from '../providers/index.js';
 import { getSettings, getProviderSettings, addToHistory } from '../utils/storage.js';
 
 /**
  * Initialize extension
  */
-chrome.runtime.onInstalled.addListener(async (details) => {
+browser.runtime.onInstalled.addListener(async (details) => {
   console.log('[Multi-AI Translator] Extension installed', details);
 
   // Create context menus
@@ -24,20 +25,20 @@ chrome.runtime.onInstalled.addListener(async (details) => {
  * Create context menus
  */
 function createContextMenus() {
-  chrome.contextMenus.removeAll(() => {
-    chrome.contextMenus.create({
+  browser.contextMenus.removeAll(() => {
+    browser.contextMenus.create({
       id: 'translate-selection',
       title: 'Translate selection',
       contexts: ['selection']
     });
 
-    chrome.contextMenus.create({
+    browser.contextMenus.create({
       id: 'translate-page',
       title: 'Translate page',
       contexts: ['page']
     });
 
-    chrome.contextMenus.create({
+    browser.contextMenus.create({
       id: 'restore-original',
       title: 'Restore original',
       contexts: ['page']
@@ -48,7 +49,7 @@ function createContextMenus() {
 /**
  * Handle context menu clicks
  */
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     switch (info.menuItemId) {
       case 'translate-selection':
@@ -70,9 +71,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 /**
  * Handle keyboard commands
  */
-chrome.commands.onCommand.addListener(async (command) => {
+browser.commands.onCommand.addListener(async (command) => {
   try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
 
     switch (command) {
       case 'translate-page':
@@ -94,7 +95,7 @@ chrome.commands.onCommand.addListener(async (command) => {
 /**
  * Handle messages from content scripts and popup
  */
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   handleMessage(request, sender)
     .then(sendResponse)
     .catch(error => {
@@ -213,7 +214,7 @@ async function getProviderModels({ providerName, config }) {
  * Handle translate selection
  */
 async function handleTranslateSelection(info, tab) {
-  await chrome.tabs.sendMessage(tab.id, {
+  await browser.tabs.sendMessage(tab.id, {
     action: 'translate-selection',
     text: info?.selectionText
   });
@@ -223,7 +224,7 @@ async function handleTranslateSelection(info, tab) {
  * Handle translate page
  */
 async function handleTranslatePage(tab) {
-  await chrome.tabs.sendMessage(tab.id, {
+  await browser.tabs.sendMessage(tab.id, {
     action: 'translate-page'
   });
 }
@@ -232,7 +233,7 @@ async function handleTranslatePage(tab) {
  * Handle restore original
  */
 async function handleRestoreOriginal(tab) {
-  await chrome.tabs.sendMessage(tab.id, {
+  await browser.tabs.sendMessage(tab.id, {
     action: 'restore-original'
   });
 }
@@ -241,7 +242,7 @@ async function handleRestoreOriginal(tab) {
  * Show notification
  */
 function showNotification(title, message) {
-  chrome.notifications.create({
+  browser.notifications.create({
     type: 'basic',
     iconUrl: '../icons/icon-128.png',
     title: title,

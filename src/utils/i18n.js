@@ -2,17 +2,20 @@
  * Internationalization utility
  * Manages translations and locale switching
  */
+import browser from 'webextension-polyfill';
 
 let currentLocale = 'en';
 let messages = {};
 
 /**
- * Initialize i18n with messages from chrome.i18n
+ * Initialize i18n with messages from browser.i18n
  */
 export function initI18n() {
   // Get user's preferred language
-  if (typeof chrome !== 'undefined' && chrome.i18n) {
-    currentLocale = chrome.i18n.getUILanguage().split('-')[0];
+  try {
+    currentLocale = browser.i18n.getUILanguage().split('-')[0];
+  } catch (error) {
+    currentLocale = 'en';
   }
 }
 
@@ -23,12 +26,12 @@ export function initI18n() {
  * @returns {string} Translated message
  */
 export function getMessage(key, substitutions = []) {
-  if (typeof chrome !== 'undefined' && chrome.i18n) {
-    return chrome.i18n.getMessage(key, substitutions) || key;
+  try {
+    return browser.i18n.getMessage(key, substitutions) || key;
+  } catch (error) {
+    // Fallback for testing environment
+    return messages[key] || key;
   }
-
-  // Fallback for testing environment
-  return messages[key] || key;
 }
 
 /**

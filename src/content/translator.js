@@ -2,6 +2,7 @@
  * Translator Module
  * Core translation logic for content scripts
  */
+import browser from 'webextension-polyfill';
 import {
   getTranslatableNodes,
   replaceNodeContent,
@@ -34,11 +35,11 @@ export class Translator {
    */
   async getSettings() {
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
+      browser.runtime.sendMessage(
         { action: 'getSettings' },
         (response) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
+          if (browser.runtime.lastError) {
+            reject(browser.runtime.lastError);
           } else {
             resolve(response);
           }
@@ -174,7 +175,7 @@ export class Translator {
    */
   async translateText(text, targetLanguage, sourceLanguage, providerName) {
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(
+      browser.runtime.sendMessage(
         {
           action: 'translate',
           data: {
@@ -185,8 +186,8 @@ export class Translator {
           }
         },
         (response) => {
-          if (chrome.runtime.lastError) {
-            reject(chrome.runtime.lastError);
+          if (browser.runtime.lastError) {
+            reject(browser.runtime.lastError);
           } else {
             resolve(response);
           }

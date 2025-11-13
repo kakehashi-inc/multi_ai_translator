@@ -4,15 +4,19 @@
 
 A powerful browser extension that translates web pages using multiple AI providers.
 
+**Multi-Browser Support**: Chrome, Edge, and Firefox
+
 ## Features
 
 - 🌐 **Multiple AI Providers**: Choose from OpenAI, Claude, Gemini, Ollama, or OpenAI-compatible APIs
+- 🦊 **Multi-Browser Support**: Works seamlessly on Chrome, Edge, and Firefox
 - 📄 **Page Translation**: Translate entire web pages with a single click
 - ✨ **Selection Translation**: Translate selected text with popup display
 - 🔄 **Restore Original**: Easily revert to original content
 - 🎨 **Modern UI**: Clean and intuitive interface
 - 🌍 **Multi-language**: UI available in English and Japanese
 - ⚙️ **Highly Configurable**: Customize providers, models, and translation settings
+- ⚡ **Fast Build**: Built with Vite for lightning-fast development
 
 ## Supported AI Providers
 
@@ -45,11 +49,17 @@ npm run build
 ```
 
 4. Load in browser:
-   - Chrome: Navigate to `chrome://extensions/`
-   - Edge: Navigate to `edge://extensions/`
+
+   **Chrome/Edge:**
+   - Navigate to `chrome://extensions/` (Chrome) or `edge://extensions/` (Edge)
    - Enable "Developer mode"
    - Click "Load unpacked"
    - Select the `dist` folder
+
+   **Firefox:**
+   - Navigate to `about:debugging#/runtime/this-firefox`
+   - Click "Load Temporary Add-on"
+   - Select the `manifest.json` file in the `dist` folder
 
 ## Quick Start
 
@@ -83,9 +93,19 @@ npm run dev
 # Production build
 npm run build
 
-# Create package
+# Create distribution packages (Chrome/Edge and Firefox)
 npm run package
 ```
+
+This will create two ZIP files:
+- `multi-ai-translator-chrome.zip` - For Chrome and Edge
+- `multi-ai-translator-firefox.zip` - For Firefox
+
+## Tech Stack
+
+- **Build Tool**: Vite + CRXJS - Lightning-fast development and build
+- **Cross-Browser**: webextension-polyfill for unified API across browsers
+- **AI SDKs**: OpenAI, Anthropic (Claude), Google AI (Gemini), Ollama
 
 ## License
 

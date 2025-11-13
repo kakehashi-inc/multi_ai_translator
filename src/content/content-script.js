@@ -2,6 +2,7 @@
  * Content Script
  * Injected into web pages to handle translation
  */
+import browser from 'webextension-polyfill';
 import { Translator } from './translator.js';
 
 // Initialize translator
@@ -11,7 +12,7 @@ translator.initialize().catch(console.error);
 /**
  * Listen for messages from background script
  */
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   handleMessage(request)
     .then(sendResponse)
     .catch(error => {
