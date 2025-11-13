@@ -21,17 +21,15 @@ export class GeminiProvider extends BaseProvider {
     }
 
     try {
-      // Dynamic import for Google Generative AI
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
+      // Dynamic import for Google Gen AI SDK
+      const { GoogleGenAI } = await import('@google/genai');
 
-      this.client = new GoogleGenerativeAI(this.config.apiKey);
-      this.model = this.client.getGenerativeModel({
-        model: this.config.model || 'gemini-pro',
-        generationConfig: {
-          temperature: this.config.temperature || 0.3,
-          maxOutputTokens: this.config.maxOutputTokens || 2000
-        }
-      });
+      this.client = new GoogleGenAI({ apiKey: this.config.apiKey });
+      this.modelName = this.config.model || 'gemini-2.0-flash-exp';
+      this.generationConfig = {
+        temperature: this.config.temperature || 0.3,
+        maxOutputTokens: this.config.maxOutputTokens || 2000
+      };
     } catch (error) {
       this.handleError(error);
     }
@@ -48,17 +46,20 @@ export class GeminiProvider extends BaseProvider {
    * Translate text using Gemini
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.model) {
+    if (!this.client) {
       await this.initialize();
     }
 
     try {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
+      const response = await this.client.models.generateContent({
+        model: this.modelName,
+        contents: prompt,
+        generationConfig: this.generationConfig
+      });
 
-      return response.text().trim();
+      return response.text.trim();
     } catch (error) {
       this.handleError(error);
     }
@@ -73,16 +74,17 @@ export class GeminiProvider extends BaseProvider {
         await this.initialize();
       }
 
-      const models = await this.client.listModels();
-      return models
+      const response = await this.client.models.list();
+      return response.models
         .filter(model => model.name.includes('gemini'))
         .map(model => model.name.replace('models/', ''));
     } catch (error) {
       console.warn('Failed to fetch models, using defaults', error);
       return [
-        'gemini-pro',
-        'gemini-pro-vision',
-        'gemini-ultra'
+        'gemini-2.0-flash-exp',
+        'gemini-2.0-flash-thinking-exp',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro'
       ];
     }
   }
