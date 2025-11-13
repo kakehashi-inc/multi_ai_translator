@@ -1,7 +1,8 @@
 /**
  * Storage utility
- * Manages extension settings with Chrome Storage API
+ * Manages extension settings with Browser Storage API
  */
+import browser from 'webextension-polyfill';
 
 /**
  * Default settings
@@ -68,13 +69,13 @@ const DEFAULT_SETTINGS = {
  * @returns {Promise<object>} Settings object
  */
 export async function getSettings() {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    const result = await chrome.storage.local.get('settings');
+  try {
+    const result = await browser.storage.local.get('settings');
     return result.settings || DEFAULT_SETTINGS;
+  } catch (error) {
+    // Fallback for testing
+    return DEFAULT_SETTINGS;
   }
-
-  // Fallback for testing
-  return DEFAULT_SETTINGS;
 }
 
 /**
@@ -83,8 +84,10 @@ export async function getSettings() {
  * @returns {Promise<void>}
  */
 export async function saveSettings(settings) {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    await chrome.storage.local.set({ settings });
+  try {
+    await browser.storage.local.set({ settings });
+  } catch (error) {
+    console.error('Failed to save settings:', error);
   }
 }
 
@@ -161,12 +164,13 @@ export async function importSettings(jsonString) {
  * @returns {Promise<object[]>} Array of translation history items
  */
 export async function getTranslationHistory(limit = 50) {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    const result = await chrome.storage.local.get('translationHistory');
+  try {
+    const result = await browser.storage.local.get('translationHistory');
     const history = result.translationHistory || [];
     return history.slice(0, limit);
+  } catch (error) {
+    return [];
   }
-  return [];
 }
 
 /**
@@ -175,7 +179,7 @@ export async function getTranslationHistory(limit = 50) {
  * @returns {Promise<void>}
  */
 export async function addToHistory(item) {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
+  try {
     const history = await getTranslationHistory();
     history.unshift({
       ...item,
@@ -184,7 +188,9 @@ export async function addToHistory(item) {
 
     // Keep only last 100 items
     const trimmedHistory = history.slice(0, 100);
-    await chrome.storage.local.set({ translationHistory: trimmedHistory });
+    await browser.storage.local.set({ translationHistory: trimmedHistory });
+  } catch (error) {
+    console.error('Failed to add to history:', error);
   }
 }
 
@@ -193,8 +199,10 @@ export async function addToHistory(item) {
  * @returns {Promise<void>}
  */
 export async function clearHistory() {
-  if (typeof chrome !== 'undefined' && chrome.storage) {
-    await chrome.storage.local.set({ translationHistory: [] });
+  try {
+    await browser.storage.local.set({ translationHistory: [] });
+  } catch (error) {
+    console.error('Failed to clear history:', error);
   }
 }
 

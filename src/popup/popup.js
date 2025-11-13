@@ -2,6 +2,7 @@
  * Popup Script
  * Handles popup UI interactions
  */
+import browser from 'webextension-polyfill';
 import { translatePage } from '../utils/i18n.js';
 import { getSettings, getEnabledProviders } from '../utils/storage.js';
 import { getSupportedLanguages } from '../utils/i18n.js';
@@ -99,8 +100,8 @@ function setupEventListeners() {
 
       showStatus('Translating page...', 'info');
 
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      await chrome.tabs.sendMessage(tab.id, {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      await browser.tabs.sendMessage(tab.id, {
         action: 'translate-page',
         provider,
         language
@@ -126,8 +127,8 @@ function setupEventListeners() {
 
       showStatus('Translating selection...', 'info');
 
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      await chrome.tabs.sendMessage(tab.id, {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      await browser.tabs.sendMessage(tab.id, {
         action: 'translate-selection',
         provider,
         language
@@ -143,8 +144,8 @@ function setupEventListeners() {
   // Restore button
   document.getElementById('restore-btn').addEventListener('click', async () => {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      await chrome.tabs.sendMessage(tab.id, {
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      await browser.tabs.sendMessage(tab.id, {
         action: 'restore-original'
       });
 
@@ -157,7 +158,7 @@ function setupEventListeners() {
 
   // Settings button
   document.getElementById('settings-btn').addEventListener('click', () => {
-    chrome.runtime.openOptionsPage();
+    browser.runtime.openOptionsPage();
   });
 }
 
