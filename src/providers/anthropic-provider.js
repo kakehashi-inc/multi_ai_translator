@@ -44,11 +44,9 @@ export class AnthropicProvider extends BaseProvider {
    * Translate text using Anthropic API
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
+    await this.ensureInitialized();
 
-    try {
+    return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.messages.create({
@@ -64,9 +62,7 @@ export class AnthropicProvider extends BaseProvider {
       });
 
       return response.content[0].text.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
+    });
   }
 
   /**
@@ -74,9 +70,7 @@ export class AnthropicProvider extends BaseProvider {
    */
   async getModels() {
     try {
-      if (!this.client) {
-        await this.initialize();
-      }
+      await this.ensureInitialized();
 
       const response = await this.client.models.list();
       return response.data.map(model => model.id);

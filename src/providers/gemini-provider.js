@@ -46,11 +46,9 @@ export class GeminiProvider extends BaseProvider {
    * Translate text using Gemini
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
+    await this.ensureInitialized();
 
-    try {
+    return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.models.generateContent({
@@ -60,9 +58,7 @@ export class GeminiProvider extends BaseProvider {
       });
 
       return response.text.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
+    });
   }
 
   /**
@@ -70,9 +66,7 @@ export class GeminiProvider extends BaseProvider {
    */
   async getModels() {
     try {
-      if (!this.client) {
-        await this.initialize();
-      }
+      await this.ensureInitialized();
 
       const response = await this.client.models.list();
       return response.models
