@@ -3,7 +3,7 @@
 ## 前提条件
 
 - Node.js 22以上
-- npm または yarn 4
+- yarn 4
 - Chrome または Edge ブラウザ
 
 ## セットアップ
@@ -16,14 +16,7 @@ cd multi-ai-translator
 
 2. 依存関係をインストール：
 ```bash
-npm install
-# または
 yarn install
-```
-
-3. アイコンを生成：
-```bash
-npm run icons
 ```
 
 ## 開発ワークフロー
@@ -32,7 +25,7 @@ npm run icons
 
 自動リビルド付きのウォッチモード：
 ```bash
-npm run dev
+yarn dev
 ```
 
 これにより：
@@ -54,10 +47,10 @@ npm run dev
 3. 「展開して読み込み」をクリック
 4. `dist` フォルダを選択
 
-### 変更をテスト
+### 変更のテスト
 
-1. ソースファイルに変更を加える
-2. webpack のリビルドを待つ（ウォッチモード）
+1. ソースファイルを変更
+2. Vite のリビルドを待つ（ウォッチモード）
 3. ブラウザの拡張機能ページでリロードアイコンをクリック
 4. 変更をテスト
 
@@ -133,18 +126,18 @@ ESLint と Prettier を使用：
 
 ```bash
 # コードスタイルをチェック
-npm run lint
+yarn lint
 
 # コードをフォーマット
-npm run format
+yarn format
 ```
 
 ## よくある問題
 
 ### 拡張機能が読み込まれない
 - manifest.json の構文をチェック
-- webpack.config.js のすべてのパスを確認
-- ブラウザコンソールでエラーを確認
+- vite.config.js のビルド設定を確認
+- ブラウザコンソールのエラーを確認
 
 ### API 呼び出しが失敗する
 - CORS 設定を確認

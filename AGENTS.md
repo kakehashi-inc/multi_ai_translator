@@ -78,7 +78,7 @@ Before implementing solutions:
 ## Technology Stack
 
 - **Runtime**: Node.js 22+
-- **Package Manager**: yarn 4 (with npm fallback)
+- **Package Manager**: yarn 4 (yarn only, do not use npm)
 - **Module System**: ES Modules
 - **Build Tool**: Vite
 - **Target**: Browser Extension (Manifest V3)
@@ -123,12 +123,12 @@ Before implementing solutions:
 ## Development Commands
 
 ```bash
-npm install          # Install dependencies
-npm run dev          # Development mode with watch
-npm run build        # Production build
-npm run package      # Create distribution ZIP
-npm run lint         # Check code style
-npm run format       # Format code
+yarn install         # Install dependencies
+yarn dev             # Development mode with watch
+yarn build           # Production build
+yarn package         # Create distribution ZIP
+yarn lint            # Check code style
+yarn format          # Format code
 ```
 
 ## Key Design Patterns
@@ -209,24 +209,24 @@ export class YourProvider extends BaseProvider {
 1. **No eval()**: CSP restrictions
 2. **ES Modules only**: Configured in package.json
 3. **No inline scripts**: Manifest V3 requirement
-4. **Browser compatibility**: Chrome/Edge only (for now)
+4. **Browser compatibility**: Chrome, Edge, and Firefox
 5. **API keys in browser**: All keys stored client-side
 
 ## Testing Workflow
 
 1. Make changes in `src/`
-2. Run `npm run dev` (watch mode)
+2. Run `yarn dev` (watch mode)
 3. Load unpacked extension in browser
 4. Test changes
 5. Reload extension if needed
 
 ## File Watching
 
-Webpack watch mode monitors:
+Vite watch mode monitors:
 
 - All `src/**/*.js` files
 - All `src/**/*.css` files
-- HTML files via CopyPlugin
+- HTML files
 
 ## Debugging
 

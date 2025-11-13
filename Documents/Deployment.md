@@ -4,14 +4,14 @@
 
 1. Build the extension:
 ```bash
-npm run build
+yarn build
 ```
 
 This creates an optimized build in the `dist` directory.
 
 2. Create distribution package:
 ```bash
-npm run package
+yarn package
 ```
 
 This creates `multi-ai-translator.zip` ready for upload.
@@ -150,8 +150,8 @@ This creates `multi-ai-translator.zip` ready for upload.
 
 2. **Build and package**:
 ```bash
-npm run build
-npm run package
+yarn build
+yarn package
 ```
 
 3. **Upload new version**:

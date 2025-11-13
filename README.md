@@ -27,6 +27,7 @@ A powerful browser extension that translates web pages using multiple AI provide
 | Gemini | Gemini Pro, Ultra | ✅ Yes |
 | Ollama | Any local model | ❌ No (local) |
 | OpenAI-compatible | LM Studio, LocalAI, etc. | Depends |
+| Anthropic-compatible | Compatible APIs | Depends |
 
 ## Installation
 
@@ -41,15 +42,11 @@ cd multi-ai-translator
 2. Install dependencies:
 ```bash
 yarn install
-# or
-npm install
 ```
 
 3. Build the extension:
 ```bash
-yarn run build
-# or
-npm run build
+yarn build
 ```
 
 4. Load in browser:
@@ -83,59 +80,116 @@ npm run build
    - Right-click → "Translate selection"
    - Or use keyboard shortcut: `Ctrl+Shift+S`
 
+## Keyboard Shortcuts
+
+| Action | Windows/Linux | Mac |
+|--------|--------------|-----|
+| Translate Page | `Ctrl+Shift+T` | `Cmd+Shift+T` |
+| Translate Selection | `Ctrl+Shift+S` | `Cmd+Shift+S` |
+| Restore Original | `Ctrl+Shift+R` | `Cmd+Shift+R` |
+
+## Configuration
+
+### OpenAI
+- Get API key from [OpenAI Platform](https://platform.openai.com/)
+- Recommended model: `gpt-3.5-turbo` (fast and cost-effective)
+
+### Claude (Anthropic)
+- Get API key from [Anthropic Console](https://console.anthropic.com/)
+- Recommended model: `claude-3-sonnet-20240229`
+
+### Gemini (Google)
+- Get API key from [Google AI Studio](https://makersuite.google.com/)
+- Recommended model: `gemini-pro`
+
+### Ollama (Local)
+- Install [Ollama](https://ollama.ai/)
+- Pull a model: `ollama pull llama2`
+- Default host: `http://127.0.0.1:11434`
+
+### OpenAI-compatible
+- Works with LM Studio, LocalAI, or any OpenAI-compatible API
+- Configure base URL and model name
+
 ## Development
 
 See [Development Guide](Documents/Development.md) for detailed information.
 
 ### Available Commands
 
-All commands can be run with either `yarn run` or `npm run`:
+All commands should be run with `yarn`:
 
 ```bash
 # Install dependencies
 yarn install
 
 # Development mode (watch) - auto-rebuild on changes
-yarn run dev
+yarn dev
 
 # Production build
-yarn run build
+yarn build
 
 # Clean dist directory and packages
-yarn run clean
+yarn clean
 
 # Run ESLint
-yarn run lint
+yarn lint
 
 # Format code with Prettier
-yarn run format
+yarn format
 
 # Run lint and build
-yarn run check
+yarn check
 
 # Create distribution packages (Chrome/Edge and Firefox)
-yarn run package
+yarn package
 
 # Full build pipeline (clean, lint, build, package)
-yarn run dist
+yarn dist
 ```
 
 **Distribution Packages:**
 - `multi-ai-translator-chrome.zip` - For Chrome and Edge
 - `multi-ai-translator-firefox.zip` - For Firefox
 
-## Tech Stack
+## Project Structure
 
-- **Task Runner**: Gulp for streamlined development workflow
-- **Build Tool**: Vite + CRXJS - Lightning-fast development and build
-- **Cross-Browser**: webextension-polyfill for unified API across browsers
-- **AI SDKs**: OpenAI, Anthropic (Claude), Google AI (Gemini), Ollama
-- **Latest Packages**: All dependencies updated to latest major versions
+```
+multi-ai-translator/
+├── src/
+│   ├── background/      # Background service worker
+│   ├── content/         # Content scripts
+│   ├── options/         # Options page
+│   ├── popup/           # Popup UI
+│   ├── providers/       # AI provider implementations
+│   ├── utils/           # Utility functions
+│   └── locales/         # Translations (English, Japanese)
+├── icons/               # Extension icons
+├── Documents/           # Documentation
+└── dist/                # Build output
+```
+
+## Privacy
+
+This extension:
+- ✅ Does not collect any personal information
+- ✅ Stores all settings locally in your browser
+- ✅ Sends translation requests directly to your chosen AI provider
+- ✅ Does not use any tracking or analytics
+- ✅ Is completely open source
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
+## Acknowledgments
 
-Made with ❤️ by the Multi-AI Translator team
+- Build tools: [Gulp](https://gulpjs.com/) + [Vite](https://vitejs.dev/) + [CRXJS](https://crxjs.dev/)
+- Official SDKs: [OpenAI](https://github.com/openai/openai-node), [Anthropic](https://github.com/anthropics/anthropic-sdk-typescript), [Google Generative AI](https://github.com/google/generative-ai-js), [Ollama](https://github.com/ollama/ollama-js)
+
+## Support
+
+- 🐛 [Bug Reports](https://github.com/yourusername/multi-ai-translator/issues)
+- 💡 [Feature Requests](https://github.com/yourusername/multi-ai-translator/issues)
+- 📖 [Documentation](Documents/)
+- ❓ [Questions](https://github.com/yourusername/multi-ai-translator/discussions)

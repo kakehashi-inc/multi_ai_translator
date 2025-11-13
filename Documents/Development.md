@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Node.js 22 or higher
-- npm or yarn 4
+- yarn 4
 - Chrome or Edge browser
 
 ## Setup
@@ -16,14 +16,7 @@ cd multi-ai-translator
 
 2. Install dependencies:
 ```bash
-npm install
-# or
 yarn install
-```
-
-3. Generate icons:
-```bash
-npm run icons
 ```
 
 ## Development Workflow
@@ -32,7 +25,7 @@ npm run icons
 
 Watch mode with automatic rebuild:
 ```bash
-npm run dev
+yarn dev
 ```
 
 This will:
@@ -57,7 +50,7 @@ This will:
 ### Testing Changes
 
 1. Make changes to source files
-2. Wait for webpack to rebuild (watch mode)
+2. Wait for Vite to rebuild (watch mode)
 3. Click reload icon in browser extensions page
 4. Test your changes
 
@@ -133,17 +126,17 @@ We use ESLint and Prettier:
 
 ```bash
 # Check code style
-npm run lint
+yarn lint
 
 # Format code
-npm run format
+yarn format
 ```
 
 ## Common Issues
 
 ### Extension not loading
 - Check manifest.json syntax
-- Verify all paths in webpack.config.js
+- Check build configuration in vite.config.js
 - Check browser console for errors
 
 ### API calls failing

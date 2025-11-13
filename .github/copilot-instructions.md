@@ -74,7 +74,7 @@ Before implementing:
 
 ### Technology Stack
 - Runtime: Node.js 22+
-- Package Manager: yarn 4 (with npm fallback)
+- Package Manager: yarn 4 (yarn only, do not use npm)
 - Module System: ES Modules
 - Build Tool: Vite
 - Target: Browser Extension (Manifest V3)
@@ -114,10 +114,10 @@ Before implementing:
 
 ### Development Workflow
 1. Make changes in `src/`
-2. Run `npm run dev` (watch mode)
+2. Run `yarn dev` (watch mode)
 3. Load unpacked extension in browser
 4. Test changes
-5. Run `npm run lint` and `npm run format` before committing
+5. Run `yarn lint` and `yarn format` before committing
 
 ## Documentation
 - `AGENTS.md`: Comprehensive agent development guide

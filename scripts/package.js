@@ -15,7 +15,7 @@ const outputDir = path.join(__dirname, '..');
 
 // Check if dist directory exists
 if (!fs.existsSync(distDir)) {
-  console.error('Error: dist directory not found. Run "npm run build" first.');
+  console.error('Error: dist directory not found. Run "yarn build" first.');
   process.exit(1);
 }
 

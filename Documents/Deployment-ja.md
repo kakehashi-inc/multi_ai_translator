@@ -4,14 +4,14 @@
 
 1. 拡張機能をビルドする：
 ```bash
-npm run build
+yarn build
 ```
 
 これにより、`dist` ディレクトリに最適化されたビルドが作成されます。
 
 2. 配布パッケージを作成する：
 ```bash
-npm run package
+yarn package
 ```
 
 これにより、アップロード可能な `multi-ai-translator.zip` が作成されます。
@@ -150,8 +150,8 @@ npm run package
 
 2. **ビルドしてパッケージ化**：
 ```bash
-npm run build
-npm run package
+yarn build
+yarn package
 ```
 
 3. **新しいバージョンをアップロード**：
