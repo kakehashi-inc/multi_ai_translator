@@ -18,21 +18,21 @@ const DEFAULT_SETTINGS = {
     openai: {
       enabled: false,
       apiKey: '',
-      model: 'gpt-3.5-turbo',
+      model: '',
       temperature: 0.3,
       maxTokens: 2000
     },
-    claude: {
+    anthropic: {
       enabled: false,
       apiKey: '',
-      model: 'claude-3-sonnet-20240229',
+      model: '',
       maxTokens: 2000,
       temperature: 0.3
     },
     gemini: {
       enabled: false,
       apiKey: '',
-      model: 'gemini-pro',
+      model: '',
       temperature: 0.3,
       maxOutputTokens: 2000
     },
@@ -47,6 +47,14 @@ const DEFAULT_SETTINGS = {
       baseUrl: '',
       apiKey: '',
       model: '',
+      temperature: 0.3
+    },
+    'anthropic-compatible': {
+      enabled: false,
+      baseUrl: '',
+      apiKey: '',
+      model: '',
+      maxTokens: 2000,
       temperature: 0.3
     }
   },

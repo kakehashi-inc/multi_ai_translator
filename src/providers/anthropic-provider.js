@@ -1,22 +1,22 @@
 import { BaseProvider } from './base-provider.js';
 
 /**
- * Claude Provider (Anthropic)
- * Supports Claude 3 family
+ * Anthropic Provider
+ * Supports Claude 3 and 4 models via Anthropic API
  */
-export class ClaudeProvider extends BaseProvider {
+export class AnthropicProvider extends BaseProvider {
   constructor(config) {
     super(config);
-    this.name = 'claude';
+    this.name = 'anthropic';
     this.client = null;
   }
 
   /**
-   * Initialize Claude client
+   * Initialize Anthropic client
    */
   async initialize() {
     if (!this.validateConfig()) {
-      throw new Error('Invalid Claude configuration');
+      throw new Error('Invalid Anthropic configuration');
     }
 
     try {
@@ -41,18 +41,16 @@ export class ClaudeProvider extends BaseProvider {
   }
 
   /**
-   * Translate text using Claude
+   * Translate text using Anthropic API
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
+    await this.ensureInitialized();
 
-    try {
+    return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.messages.create({
-        model: this.config.model || 'claude-3-sonnet-20240229',
+        model: this.config.model,
         max_tokens: this.config.maxTokens || 2000,
         temperature: this.config.temperature || 0.3,
         messages: [
@@ -64,22 +62,21 @@ export class ClaudeProvider extends BaseProvider {
       });
 
       return response.content[0].text.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
+    });
   }
 
   /**
    * Get available models
    */
   async getModels() {
-    // Claude doesn't have a models list API, return known models
-    return [
-      'claude-3-opus-20240229',
-      'claude-3-sonnet-20240229',
-      'claude-3-haiku-20240307',
-      'claude-2.1',
-      'claude-2.0'
-    ];
+    try {
+      await this.ensureInitialized();
+
+      const response = await this.client.models.list();
+      return response.data.map(model => model.id);
+    } catch (error) {
+      console.warn('Failed to fetch models from Anthropic API', error);
+      return [];
+    }
   }
 }

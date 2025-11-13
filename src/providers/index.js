@@ -3,17 +3,19 @@
  * Creates and manages AI provider instances
  */
 import { OpenAIProvider } from './openai-provider.js';
-import { ClaudeProvider } from './claude-provider.js';
+import { AnthropicProvider } from './anthropic-provider.js';
 import { GeminiProvider } from './gemini-provider.js';
 import { OllamaProvider } from './ollama-provider.js';
 import { OpenAICompatibleProvider } from './openai-compatible-provider.js';
+import { AnthropicCompatibleProvider } from './anthropic-compatible-provider.js';
 
 export const PROVIDERS = {
   openai: OpenAIProvider,
-  claude: ClaudeProvider,
+  anthropic: AnthropicProvider,
   gemini: GeminiProvider,
   ollama: OllamaProvider,
-  'openai-compatible': OpenAICompatibleProvider
+  'openai-compatible': OpenAICompatibleProvider,
+  'anthropic-compatible': AnthropicCompatibleProvider
 };
 
 /**
@@ -42,8 +44,9 @@ export function getAvailableProviders() {
 
 export {
   OpenAIProvider,
-  ClaudeProvider,
+  AnthropicProvider,
   GeminiProvider,
   OllamaProvider,
-  OpenAICompatibleProvider
+  OpenAICompatibleProvider,
+  AnthropicCompatibleProvider
 };

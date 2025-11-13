@@ -42,11 +42,9 @@ export class OllamaProvider extends BaseProvider {
    * Translate text using Ollama
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
+    await this.ensureInitialized();
 
-    try {
+    return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.generate({
@@ -59,9 +57,7 @@ export class OllamaProvider extends BaseProvider {
       });
 
       return response.response.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
+    });
   }
 
   /**
@@ -69,9 +65,7 @@ export class OllamaProvider extends BaseProvider {
    */
   async getModels() {
     try {
-      if (!this.client) {
-        await this.initialize();
-      }
+      await this.ensureInitialized();
 
       const response = await this.client.list();
       return response.models.map(model => model.name);

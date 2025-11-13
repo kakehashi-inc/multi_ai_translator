@@ -44,15 +44,13 @@ export class OpenAIProvider extends BaseProvider {
    * Translate text using OpenAI
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
+    await this.ensureInitialized();
 
-    try {
+    return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.chat.completions.create({
-        model: this.config.model || 'gpt-3.5-turbo',
+        model: this.config.model,
         messages: [
           {
             role: 'system',
@@ -68,18 +66,14 @@ export class OpenAIProvider extends BaseProvider {
       });
 
       return response.choices[0].message.content.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
+    });
   }
 
   /**
    * Get available models
    */
   async getModels() {
-    if (!this.client) {
-      await this.initialize();
-    }
+    await this.ensureInitialized();
 
     try {
       const response = await this.client.models.list();
@@ -88,13 +82,8 @@ export class OpenAIProvider extends BaseProvider {
         .map(model => model.id)
         .sort();
     } catch (error) {
-      console.warn('Failed to fetch models, using defaults', error);
-      return [
-        'gpt-4-turbo-preview',
-        'gpt-4',
-        'gpt-3.5-turbo',
-        'gpt-3.5-turbo-16k'
-      ];
+      console.warn('Failed to fetch models from OpenAI API', error);
+      return [];
     }
   }
 }
