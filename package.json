@@ -4,11 +4,14 @@
   "description": "Browser extension for translating web pages using multiple AI providers",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "vite build",
-    "lint": "eslint src/**/*.js",
-    "format": "prettier --write src/**/*.js",
-    "package": "node scripts/package.js"
+    "dev": "gulp dev",
+    "build": "gulp build",
+    "clean": "gulp clean",
+    "lint": "gulp lint",
+    "format": "gulp format",
+    "check": "gulp check",
+    "package": "gulp packageExt",
+    "dist": "gulp dist"
   },
   "keywords": [
     "chrome-extension",
@@ -26,20 +29,25 @@
   "license": "MIT",
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.2.1",
-    "@types/chrome": "^0.0.268",
+    "@eslint/js": "^9.39.1",
+    "@types/chrome": "^0.1.28",
     "@types/webextension-polyfill": "^0.12.4",
     "archiver": "^7.0.1",
-    "eslint": "^8.57.0",
-    "prettier": "^3.3.3",
+    "del": "^8.0.1",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
+    "gulp": "^5.0.1",
+    "gulp-eslint-new": "^2.5.0",
+    "prettier": "^3.6.2",
     "vite": "^7.2.2",
     "vite-plugin-static-copy": "^3.1.4",
     "webextension-polyfill": "^0.12.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.3",
-    "@google/generative-ai": "^0.17.1",
-    "ollama": "^0.5.8",
-    "openai": "^4.57.0"
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@google/generative-ai": "^0.24.1",
+    "ollama": "^0.6.2",
+    "openai": "^6.8.1"
   },
   "engines": {
     "node": ">=22.0.0"

@@ -40,11 +40,15 @@ cd multi-ai-translator
 
 2. Install dependencies:
 ```bash
+yarn install
+# or
 npm install
 ```
 
 3. Build the extension:
 ```bash
+yarn run build
+# or
 npm run build
 ```
 
@@ -83,29 +87,50 @@ npm run build
 
 See [Development Guide](Documents/Development.md) for detailed information.
 
+### Available Commands
+
+All commands can be run with either `yarn run` or `npm run`:
+
 ```bash
 # Install dependencies
-npm install
+yarn install
 
-# Development mode (watch)
-npm run dev
+# Development mode (watch) - auto-rebuild on changes
+yarn run dev
 
 # Production build
-npm run build
+yarn run build
+
+# Clean dist directory and packages
+yarn run clean
+
+# Run ESLint
+yarn run lint
+
+# Format code with Prettier
+yarn run format
+
+# Run lint and build
+yarn run check
 
 # Create distribution packages (Chrome/Edge and Firefox)
-npm run package
+yarn run package
+
+# Full build pipeline (clean, lint, build, package)
+yarn run dist
 ```
 
-This will create two ZIP files:
+**Distribution Packages:**
 - `multi-ai-translator-chrome.zip` - For Chrome and Edge
 - `multi-ai-translator-firefox.zip` - For Firefox
 
 ## Tech Stack
 
+- **Task Runner**: Gulp for streamlined development workflow
 - **Build Tool**: Vite + CRXJS - Lightning-fast development and build
 - **Cross-Browser**: webextension-polyfill for unified API across browsers
 - **AI SDKs**: OpenAI, Anthropic (Claude), Google AI (Gemini), Ollama
+- **Latest Packages**: All dependencies updated to latest major versions
 
 ## License
 
