@@ -1,19 +1,19 @@
-import { BaseProvider } from './base-provider.js';
+import { OpenAIProvider } from './openai-provider.js';
 
 /**
  * OpenAI-Compatible Provider
  * Supports any OpenAI API-compatible service (LM Studio, LocalAI, etc.)
- * Uses official OpenAI SDK with custom baseURL
+ * Extends OpenAIProvider with custom baseURL support
  */
-export class OpenAICompatibleProvider extends BaseProvider {
+export class OpenAICompatibleProvider extends OpenAIProvider {
   constructor(config) {
     super(config);
     this.name = 'openai-compatible';
-    this.client = null;
   }
 
   /**
    * Initialize OpenAI client with custom baseURL
+   * Overrides parent to support custom baseURL and optional API key
    */
   async initialize() {
     if (!this.validateConfig()) {
@@ -26,8 +26,8 @@ export class OpenAICompatibleProvider extends BaseProvider {
 
       this.client = new OpenAI({
         apiKey: this.config.apiKey || 'dummy-key', // Some compatible services don't require API key
-        baseURL: this.config.baseUrl,
-        dangerouslyAllowBrowser: true // Required for browser extension
+        baseURL: this.config.baseUrl, // Custom baseURL is required
+        dangerouslyAllowBrowser: true
       });
     } catch (error) {
       this.handleError(error);
@@ -36,46 +36,15 @@ export class OpenAICompatibleProvider extends BaseProvider {
 
   /**
    * Validate configuration
+   * Requires baseUrl instead of apiKey
    */
   validateConfig() {
     return !!(this.config.baseUrl && this.config.model);
   }
 
   /**
-   * Translate text using OpenAI-compatible API
-   */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
-
-    try {
-      const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
-
-      const response = await this.client.chat.completions.create({
-        model: this.config.model,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional translator. Provide only the translation without any explanations.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: this.config.temperature || 0.3,
-        max_tokens: this.config.maxTokens || 2000
-      });
-
-      return response.choices[0].message.content.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
-   * Get available models using official OpenAI SDK
+   * Get available models without filtering
+   * Compatible services may have non-GPT models
    */
   async getModels() {
     if (!this.client) {

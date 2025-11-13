@@ -1,19 +1,19 @@
-import { BaseProvider } from './base-provider.js';
+import { AnthropicProvider } from './anthropic-provider.js';
 
 /**
  * Anthropic-Compatible Provider
  * Supports any Anthropic API-compatible service
- * Uses official Anthropic SDK with custom baseURL
+ * Extends AnthropicProvider with custom baseURL support
  */
-export class AnthropicCompatibleProvider extends BaseProvider {
+export class AnthropicCompatibleProvider extends AnthropicProvider {
   constructor(config) {
     super(config);
     this.name = 'anthropic-compatible';
-    this.client = null;
   }
 
   /**
    * Initialize Anthropic client with custom baseURL
+   * Overrides parent to support custom baseURL and optional API key
    */
   async initialize() {
     if (!this.validateConfig()) {
@@ -26,7 +26,7 @@ export class AnthropicCompatibleProvider extends BaseProvider {
 
       this.client = new Anthropic({
         apiKey: this.config.apiKey || 'dummy-key', // Some compatible services may not require API key
-        baseURL: this.config.baseUrl,
+        baseURL: this.config.baseUrl, // Custom baseURL is required
         dangerouslyAllowBrowser: true
       });
     } catch (error) {
@@ -36,55 +36,10 @@ export class AnthropicCompatibleProvider extends BaseProvider {
 
   /**
    * Validate configuration
+   * Requires baseUrl instead of apiKey
    */
   validateConfig() {
     return !!(this.config.baseUrl && this.config.model);
-  }
-
-  /**
-   * Translate text using Anthropic-compatible API
-   */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
-    if (!this.client) {
-      await this.initialize();
-    }
-
-    try {
-      const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
-
-      const response = await this.client.messages.create({
-        model: this.config.model,
-        max_tokens: this.config.maxTokens || 2000,
-        temperature: this.config.temperature || 0.3,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      });
-
-      return response.content[0].text.trim();
-    } catch (error) {
-      this.handleError(error);
-    }
-  }
-
-  /**
-   * Get available models using official Anthropic SDK
-   */
-  async getModels() {
-    if (!this.client) {
-      await this.initialize();
-    }
-
-    try {
-      const response = await this.client.models.list();
-      return response.data.map(model => model.id);
-    } catch (error) {
-      console.warn('Failed to fetch models from Anthropic-compatible endpoint', error);
-      return [];
-    }
   }
 
   /**
