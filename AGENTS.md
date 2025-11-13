@@ -2,9 +2,76 @@
 
 ## AI Agent Development Information
 
-This document provides guidance for AI coding agents (like Claude Code, GitHub Copilot, Cursor, etc.) working on this project.
+This document provides comprehensive guidance for AI coding agents (like Claude Code, GitHub Copilot, Cursor, etc.) working on this project.
+
+## Agent Behavior Principles
+
+### Persistence
+**You are an agent - keep going until the task is complete.**
+- Continue until the user's query is completely resolved before yielding back
+- Only terminate when you are sure the problem is solved
+- Never stop or hand back when encountering uncertainty
+- Research or deduce the most reasonable approach and continue
+- Do not ask to confirm or clarify assumptions - proceed with the most reasonable assumption and document it for user reference after acting
+
+### Context Gathering Strategy
+
+**Goal**: Get enough context fast. Parallelize discovery and stop as soon as you can act.
+
+**Method**:
+- Start broad, then fan out to focused subqueries
+- In parallel, launch varied queries; read top hits per query
+- Deduplicate paths and cache; don't repeat queries
+- Avoid over-searching for context - if needed, run targeted searches in one parallel batch
+
+**Early Stop Criteria**:
+- You can name exact content to change
+- Top hits converge (~70%) on one area/path
+
+**Escalation**:
+- If signals conflict or scope is fuzzy, run one refined parallel batch, then proceed
+- Trace only symbols you'll modify or whose contracts you rely on
+- Avoid transitive expansion unless necessary
+
+**Loop Pattern**: Batch search → minimal plan → complete task
+- Search again only if validation fails or new unknowns appear
+- **Prefer acting over more searching**
+
+### Self-Reflection Process
+Before implementing solutions:
+1. Think deeply about what makes a world-class solution for the specific task
+2. Create an internal rubric with 5-7 categories to evaluate quality
+3. Iterate internally until your solution hits top marks across all categories
+4. Do not show this rubric to the user - it's for your internal evaluation only
+
+## Code Quality Guidelines
+
+### Guiding Principles
+
+1. **Readability**
+   - For programming language code including comments, avoid using environment-dependent characters, emojis, or other non-standard character strings
+   - Write clear, self-documenting code
+   - Use meaningful variable and function names
+
+2. **Maintainability**
+   - Follow proper directory structure
+   - Maintain consistent naming conventions
+   - Organize shared logic appropriately
+   - Keep functions small and focused
+
+3. **Consistency**
+   - The user interface must adhere to a consistent design system
+   - Color tokens, typography, spacing, and components must be unified
+   - Follow established patterns in the codebase
+
+4. **Visual Quality**
+   - Follow high visual quality bar as outlined in OSS guidelines
+   - Pay attention to spacing, padding, hover states, etc.
+   - Ensure responsive design where applicable
 
 ## Project Overview
+
+**Multi-AI Translator** is a cross-browser extension (Chrome, Edge, Firefox) that translates web pages using multiple AI providers.
 
 **Multi-AI Translator** is a browser extension that enables translation of web pages using multiple AI providers (OpenAI, Claude, Gemini, Ollama, and OpenAI-compatible APIs).
 
@@ -13,8 +80,8 @@ This document provides guidance for AI coding agents (like Claude Code, GitHub C
 - **Runtime**: Node.js 22+
 - **Package Manager**: yarn 4 (with npm fallback)
 - **Module System**: ES Modules
-- **Build Tool**: Webpack 5
-- **Target**: Chrome/Edge Extension (Manifest V3)
+- **Build Tool**: Vite
+- **Target**: Browser Extension (Manifest V3)
 - **Languages**: JavaScript (ES2022)
 
 ## Architecture
@@ -67,19 +134,25 @@ npm run format       # Format code
 ## Key Design Patterns
 
 ### Provider Pattern
+
 All AI providers extend `BaseProvider` and implement:
+
 - `validateConfig()`: Check configuration validity
 - `translate()`: Perform translation
 - `getModels()`: Fetch available models
 
 ### Message Passing
+
 Uses Chrome extension messaging API:
+
 ```javascript
 chrome.runtime.sendMessage({ action: 'translate', data: {...} })
 ```
 
 ### Storage
+
 Settings stored using Chrome Storage API:
+
 ```javascript
 chrome.storage.local.get/set({ settings: {...} })
 ```
@@ -89,6 +162,7 @@ chrome.storage.local.get/set({ settings: {...} })
 ### Adding a New Provider
 
 1. Create `src/providers/your-provider.js`:
+
 ```javascript
 import { BaseProvider } from './base-provider.js';
 
@@ -112,9 +186,11 @@ export class YourProvider extends BaseProvider {
 }
 ```
 
+<!-- markdownlint-disable MD029 -->
 2. Register in `src/providers/index.js`
 3. Add UI in `src/options/options.html`
 4. Add default config in `src/utils/storage.js`
+<!-- markdownlint-enable MD029 -->
 
 ### Adding a Translation
 
@@ -147,6 +223,7 @@ export class YourProvider extends BaseProvider {
 ## File Watching
 
 Webpack watch mode monitors:
+
 - All `src/**/*.js` files
 - All `src/**/*.css` files
 - HTML files via CopyPlugin
@@ -199,6 +276,7 @@ Webpack watch mode monitors:
 ## Version Management
 
 Follow semantic versioning in `manifest.json`:
+
 ```json
 {
   "version": "MAJOR.MINOR.PATCH"
@@ -208,6 +286,7 @@ Follow semantic versioning in `manifest.json`:
 ## Build Output
 
 The `dist/` directory contains:
+
 - Transpiled JavaScript
 - Copied HTML/CSS
 - Manifest
@@ -217,6 +296,7 @@ The `dist/` directory contains:
 ## Extension Points
 
 Easy areas to extend:
+
 1. Add new provider → Implement BaseProvider
 2. Add UI language → Add to `src/locales/`
 3. Add keyboard shortcut → Update manifest commands
@@ -241,6 +321,7 @@ Easy areas to extend:
 ---
 
 **For AI Agents**: When making changes, always:
+
 1. Check existing patterns and follow them
 2. Test in actual browser environment
 3. Update relevant documentation

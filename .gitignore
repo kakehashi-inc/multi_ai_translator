@@ -128,18 +128,20 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
-# Yarn 4 (node-modules mode with hardlinks-global)
+# Yarn 4
+.pnp.*
 .yarn/*
-!.yarn/releases
-!.yarn/patches
-!.yarn/plugins
-!.yarn/versions
-
-# Yarn cache (using global cache)
-.yarn/cache
-.yarn/install-state.gz
-.yarn/build-state.yml
+#!.yarn/patches
+#!.yarn/plugins
+#!.yarn/releases
+#!.yarn/sdks
+#!.yarn/versions
 
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Etc
+deploy*.sh
+/*.sql
+.specstory
