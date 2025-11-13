@@ -52,7 +52,7 @@ export class AnthropicProvider extends BaseProvider {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.messages.create({
-        model: this.config.model || 'claude-3-sonnet-20240229',
+        model: this.config.model,
         max_tokens: this.config.maxTokens || 2000,
         temperature: this.config.temperature || 0.3,
         messages: [

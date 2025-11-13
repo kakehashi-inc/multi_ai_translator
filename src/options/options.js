@@ -225,17 +225,17 @@ function collectSettingsFromUI() {
     // Collect provider-specific settings
     if (provider === 'openai') {
       settings.providers[provider].apiKey = document.getElementById('openai-api-key')?.value || '';
-      settings.providers[provider].model = document.getElementById('openai-model')?.value || 'gpt-3.5-turbo';
+      settings.providers[provider].model = document.getElementById('openai-model')?.value || '';
       settings.providers[provider].temperature = parseFloat(document.getElementById('openai-temperature')?.value || '0.3');
       settings.providers[provider].maxTokens = 2000;
     } else if (provider === 'anthropic') {
       settings.providers[provider].apiKey = document.getElementById('anthropic-api-key')?.value || '';
-      settings.providers[provider].model = document.getElementById('anthropic-model')?.value || 'claude-3-5-sonnet-20241022';
+      settings.providers[provider].model = document.getElementById('anthropic-model')?.value || '';
       settings.providers[provider].maxTokens = parseInt(document.getElementById('anthropic-max-tokens')?.value || '2000');
       settings.providers[provider].temperature = 0.3;
     } else if (provider === 'gemini') {
       settings.providers[provider].apiKey = document.getElementById('gemini-api-key')?.value || '';
-      settings.providers[provider].model = document.getElementById('gemini-model')?.value || 'gemini-pro';
+      settings.providers[provider].model = document.getElementById('gemini-model')?.value || '';
       settings.providers[provider].temperature = 0.3;
       settings.providers[provider].maxOutputTokens = 2000;
     } else if (provider === 'ollama') {

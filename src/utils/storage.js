@@ -18,21 +18,21 @@ const DEFAULT_SETTINGS = {
     openai: {
       enabled: false,
       apiKey: '',
-      model: 'gpt-3.5-turbo',
+      model: '',
       temperature: 0.3,
       maxTokens: 2000
     },
     anthropic: {
       enabled: false,
       apiKey: '',
-      model: 'claude-3-5-sonnet-20241022',
+      model: '',
       maxTokens: 2000,
       temperature: 0.3
     },
     gemini: {
       enabled: false,
       apiKey: '',
-      model: 'gemini-pro',
+      model: '',
       temperature: 0.3,
       maxOutputTokens: 2000
     },

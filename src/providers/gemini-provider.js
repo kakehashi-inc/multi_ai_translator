@@ -25,7 +25,7 @@ export class GeminiProvider extends BaseProvider {
       const { GoogleGenAI } = await import('@google/genai');
 
       this.client = new GoogleGenAI({ apiKey: this.config.apiKey });
-      this.modelName = this.config.model || 'gemini-2.0-flash-exp';
+      this.modelName = this.config.model;
       this.generationConfig = {
         temperature: this.config.temperature || 0.3,
         maxOutputTokens: this.config.maxOutputTokens || 2000

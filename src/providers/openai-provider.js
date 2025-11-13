@@ -52,7 +52,7 @@ export class OpenAIProvider extends BaseProvider {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.chat.completions.create({
-        model: this.config.model || 'gpt-3.5-turbo',
+        model: this.config.model,
         messages: [
           {
             role: 'system',
