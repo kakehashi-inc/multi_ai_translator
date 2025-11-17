@@ -71,7 +71,7 @@ export class OllamaProvider extends BaseProvider {
       await this.ensureInitialized();
 
       const response = await this.client.list();
-      return response.models.map(model => model.name);
+      return response.models.map((model) => model.name);
     } catch (error) {
       console.warn('Failed to fetch Ollama models. Is Ollama running?', error);
       return [];

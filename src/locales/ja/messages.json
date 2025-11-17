@@ -79,9 +79,9 @@
     "message": "ベースURL",
     "description": "ベースURLラベル"
   },
-  "labelDefaultProvider": {
-    "message": "デフォルトプロバイダ",
-    "description": "デフォルトプロバイダラベル"
+  "labelDefaultSourceLanguage": {
+    "message": "デフォルト元言語",
+    "description": "デフォルト元言語ラベル"
   },
   "labelDefaultTargetLanguage": {
     "message": "デフォルト翻訳先言語",
@@ -150,5 +150,173 @@
   "btnFetchModels": {
     "message": "モデル取得",
     "description": "モデル取得ボタン"
+  },
+  "labelBatchMaxItems": {
+    "message": "バッチサイズ（リクエストあたりの項目数）",
+    "description": "バッチ最大項目数ラベル"
+  },
+  "labelBatchMaxChars": {
+    "message": "バッチサイズ（リクエストあたりの最大文字数）",
+    "description": "バッチ最大文字数ラベル"
+  },
+  "labelSourceLanguage": {
+    "message": "元言語",
+    "description": "元言語ラベル"
+  },
+  "statusScanning": {
+    "message": "翻訳可能なテキストをスキャン中…",
+    "description": "ページをスキャン中のステータスメッセージ"
+  },
+  "statusFoundBlocks": {
+    "message": "翻訳対象のテキストブロック $COUNT$ 個を検出しました…",
+    "description": "ブロックが見つかったときのステータスメッセージ",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "100"
+      }
+    }
+  },
+  "statusTranslating": {
+    "message": "翻訳中... ( $CURRENT$ / $TOTAL$ )",
+    "description": "翻訳中のステータスメッセージ",
+    "placeholders": {
+      "current": {
+        "content": "$1",
+        "example": "1"
+      },
+      "total": {
+        "content": "$2",
+        "example": "20"
+      }
+    }
+  },
+  "statusCompleted": {
+    "message": "翻訳完了: $COUNT$ バッチ処理済み。",
+    "description": "翻訳が完了したときのステータスメッセージ",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "20"
+      }
+    }
+  },
+  "statusCompletedWithErrors": {
+    "message": "完了: $BATCHES$ バッチ処理済み。$ERRORS$ ブロックが失敗しました。",
+    "description": "エラーがある場合の完了ステータスメッセージ",
+    "placeholders": {
+      "batches": {
+        "content": "$1",
+        "example": "20"
+      },
+      "errors": {
+        "content": "$2",
+        "example": "2"
+      }
+    }
+  },
+  "errorFailedToInitialize": {
+    "message": "ポップアップの初期化に失敗しました",
+    "description": "ポップアップの初期化が失敗したときのエラーメッセージ"
+  },
+  "errorPleaseSelectProvider": {
+    "message": "プロバイダを選択してください",
+    "description": "プロバイダが選択されていないときのエラーメッセージ"
+  },
+  "statusTranslatingPage": {
+    "message": "ページを翻訳中...",
+    "description": "ページを翻訳中のステータスメッセージ"
+  },
+  "statusTranslatingSelection": {
+    "message": "選択範囲を翻訳中...",
+    "description": "選択範囲を翻訳中のステータスメッセージ"
+  },
+  "errorTranslationFailed": {
+    "message": "翻訳に失敗しました。プロバイダの設定を確認してください。",
+    "description": "翻訳が失敗したときのエラーメッセージ"
+  },
+  "statusPageTranslationStarted": {
+    "message": "ページの翻訳を開始しました",
+    "description": "ページの翻訳が開始されたときのステータスメッセージ"
+  },
+  "statusSelectionTranslated": {
+    "message": "選択範囲を翻訳しました",
+    "description": "選択範囲が翻訳されたときのステータスメッセージ"
+  },
+  "errorTranslationFailedWithMessage": {
+    "message": "翻訳に失敗しました: $MESSAGE$",
+    "description": "特定のメッセージとともに翻訳が失敗したときのエラーメッセージ",
+    "placeholders": {
+      "message": {
+        "content": "$1",
+        "example": "ネットワークエラー"
+      }
+    }
+  },
+  "errorRestoreFailed": {
+    "message": "復元に失敗しました",
+    "description": "復元が失敗したときのエラーメッセージ"
+  },
+  "statusOriginalContentRestored": {
+    "message": "元のコンテンツを復元しました",
+    "description": "元のコンテンツが復元されたときのステータスメッセージ"
+  },
+  "errorRestoreFailedWithMessage": {
+    "message": "復元に失敗しました: $MESSAGE$",
+    "description": "特定のメッセージとともに復元が失敗したときのエラーメッセージ",
+    "placeholders": {
+      "message": {
+        "content": "$1",
+        "example": "ネットワークエラー"
+      }
+    }
+  },
+  "errorNoRegularWebPage": {
+    "message": "通常のWebページがフォーカスされていません。翻訳したいページをクリックしてから再度お試しください。",
+    "description": "通常のWebページがフォーカスされていないときのエラーメッセージ"
+  },
+  "errorScriptPathMissing": {
+    "message": "マニフェストから翻訳スクリプトのパスが見つかりません。",
+    "description": "スクリプトパスが見つからないときのエラーメッセージ"
+  },
+  "errorPageBlocksExtensions": {
+    "message": "このページは拡張機能を許可していません（例: chrome:// や Web Store）。別のページをお試しになるか、拡張機能を有効にした後にページを再読み込みしてください。",
+    "description": "ページが拡張機能をブロックしているときのエラーメッセージ"
+  },
+  "errorTranslatorCouldNotLoad": {
+    "message": "このページでは翻訳機能を読み込めませんでした。タブを再読み込みしてから再度お試しください。",
+    "description": "翻訳機能を読み込めなかったときのエラーメッセージ"
+  },
+  "errorRuntimeNotSupported": {
+    "message": "ランタイムがスクリプトインジェクションAPIをサポートしていません。",
+    "description": "ランタイムがスクリプトインジェクションをサポートしていないときのエラーメッセージ"
+  },
+  "errorNoTranslatableText": {
+    "message": "このページに翻訳可能なテキストが見つかりませんでした。",
+    "description": "翻訳可能なテキストが見つからないときのエラーメッセージ"
+  },
+  "errorUnknownAction": {
+    "message": "不明なアクション: $ACTION$",
+    "description": "不明なアクションのエラーメッセージ",
+    "placeholders": {
+      "action": {
+        "content": "$1",
+        "example": "translate"
+      }
+    }
+  },
+  "errorProviderNotEnabled": {
+    "message": "プロバイダ $PROVIDER$ が有効になっていません",
+    "description": "プロバイダが有効になっていないときのエラーメッセージ",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "openai"
+      }
+    }
+  },
+  "errorNoActiveTab": {
+    "message": "アクティブなタブがありません",
+    "description": "アクティブなタブがないときのエラーメッセージ"
   }
 }

@@ -98,16 +98,16 @@ function createDefaultSettings() {
   };
 
   const providers = {};
-  PROVIDER_ORDER.forEach(name => {
+  PROVIDER_ORDER.forEach((name) => {
     providers[name] = { ...providerDefaults[name] };
   });
 
   return {
     common: {
       defaultProvider: DEFAULT_PROVIDER,
+      defaultSourceLanguage: 'auto',
       defaultTargetLanguage: browserLanguage,
       uiLanguage: browserLanguage,
-      autoDetectLanguage: true,
       batchMaxChars: DEFAULT_BATCH_MAX_CHARS,
       batchMaxItems: DEFAULT_BATCH_MAX_ITEMS
     },
@@ -182,13 +182,13 @@ export async function getEnabledProviders() {
   const settings = await getSettings();
   const ordered = [];
 
-  PROVIDER_ORDER.forEach(name => {
+  PROVIDER_ORDER.forEach((name) => {
     if (settings.providers[name]?.enabled) {
       ordered.push(name);
     }
   });
 
-  Object.keys(settings.providers).forEach(name => {
+  Object.keys(settings.providers).forEach((name) => {
     if (!PROVIDER_ORDER.includes(name) && settings.providers[name]?.enabled) {
       ordered.push(name);
     }
@@ -306,7 +306,7 @@ function normalizeSettings(storedSettings) {
     ...(storedSettings.providers ? Object.keys(storedSettings.providers) : [])
   ]);
 
-  providerNames.forEach(name => {
+  providerNames.forEach((name) => {
     normalized.providers[name] = {
       ...(normalized.providers[name] || {}),
       ...(storedSettings.providers?.[name] || {})
@@ -317,6 +317,10 @@ function normalizeSettings(storedSettings) {
     ...normalized.ui,
     ...(storedSettings.ui || {})
   };
+
+  if (!normalized.common.defaultSourceLanguage) {
+    normalized.common.defaultSourceLanguage = 'auto';
+  }
 
   if (!normalized.common.defaultTargetLanguage) {
     normalized.common.defaultTargetLanguage = getBrowserLanguage();

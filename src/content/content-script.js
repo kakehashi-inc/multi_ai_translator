@@ -4,6 +4,7 @@
  */
 import browser from 'webextension-polyfill';
 import { Translator } from './translator.js';
+import { getMessage } from '../utils/i18n.js';
 
 // Initialize translator
 const translator = new Translator();
@@ -15,7 +16,7 @@ translator.initialize().catch(console.error);
 browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
   handleMessage(request)
     .then(sendResponse)
-    .catch(error => {
+    .catch((error) => {
       console.error('[Content Script] Error:', error);
       sendResponse({ error: error.message });
     });
@@ -31,7 +32,7 @@ async function handleMessage(request) {
 
   switch (action) {
     case 'translate-page':
-      await translator.translatePage(request.language, request.provider);
+      await translator.translatePage(request.language, request.provider, request.sourceLanguage);
       return { success: true };
 
     case 'translate-selection':
@@ -41,7 +42,8 @@ async function handleMessage(request) {
           text,
           false,
           request.language,
-          request.provider
+          request.provider,
+          request.sourceLanguage
         );
         return { success: true, translation };
       } else {
@@ -50,7 +52,8 @@ async function handleMessage(request) {
           null,
           true,
           request.language,
-          request.provider
+          request.provider,
+          request.sourceLanguage
         );
         return { success: true };
       }
@@ -60,7 +63,7 @@ async function handleMessage(request) {
       return { success: true };
 
     default:
-      throw new Error(`Unknown action: ${action}`);
+      throw new Error(getMessage('errorUnknownAction', [action]));
   }
 }
 

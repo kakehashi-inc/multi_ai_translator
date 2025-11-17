@@ -1,5 +1,4 @@
 import { PromptBuilder } from '../utils/prompt-builder.js';
-import { ConstVariables } from '../utils/const-variables.js';
 
 /**
  * Base Provider Class
@@ -120,7 +119,7 @@ export class BaseProvider {
    * @param {number} maxLength - Maximum length per chunk
    * @returns {string[]} Array of text chunks
    */
-  splitIntoChunks(text, maxLength = ConstVariables.DEFAULT_TEXT_CHUNK_LENGTH) {
+  splitIntoChunks(text, maxLength = 2000) {
     if (text.length <= maxLength) {
       return [text];
     }

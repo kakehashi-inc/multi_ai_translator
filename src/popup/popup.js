@@ -3,7 +3,7 @@
  * Handles popup UI interactions
  */
 import browser from 'webextension-polyfill';
-import { translatePage } from '../utils/i18n.js';
+import { translatePage, getMessage } from '../utils/i18n.js';
 import { getSettings, getEnabledProviders } from '../utils/storage.js';
 import { getSupportedLanguages } from '../utils/i18n.js';
 import { ConstVariables } from '../utils/const-variables.js';
@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await populateProviders(settings);
 
     // Populate languages
-    populateLanguages(settings);
+    populateTargetLanguages(settings);
+    populateSourceLanguages(settings);
 
     // Load last used provider
     await loadLastUsedProvider();
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
   } catch (error) {
     console.error('[Popup] Initialization error:', error);
-    showStatus('Failed to initialize popup', 'error');
+    showStatus(getMessage('errorFailedToInitialize'), 'error');
   }
 });
 
@@ -54,7 +55,7 @@ async function populateProviders(settings) {
   }
 
   // Add enabled providers
-  enabledProviders.forEach(providerName => {
+  enabledProviders.forEach((providerName) => {
     const option = document.createElement('option');
     option.value = providerName;
     option.textContent = ConstVariables.formatProviderName(providerName);
@@ -95,13 +96,39 @@ async function loadLastUsedProvider() {
 }
 
 /**
- * Populate language dropdown
+ * Populate source language dropdown
  */
-function populateLanguages(settings) {
+function populateSourceLanguages(settings) {
+  const select = document.getElementById('source-language-select');
+  const languages = getSupportedLanguages();
+
+  // Add auto-detect option
+  const autoOption = document.createElement('option');
+  autoOption.value = 'auto';
+  autoOption.textContent = 'Auto-detect';
+  select.appendChild(autoOption);
+
+  // Add supported languages
+  languages.forEach((lang) => {
+    const option = document.createElement('option');
+    option.value = lang.code;
+    option.textContent = lang.name;
+    select.appendChild(option);
+  });
+
+  // Select default source language
+  const defaultSourceLanguage = settings.common.defaultSourceLanguage || 'auto';
+  select.value = defaultSourceLanguage;
+}
+
+/**
+ * Populate target language dropdown
+ */
+function populateTargetLanguages(settings) {
   const select = document.getElementById('language-select');
   const languages = getSupportedLanguages();
 
-  languages.forEach(lang => {
+  languages.forEach((lang) => {
     const option = document.createElement('option');
     option.value = lang.code;
     option.textContent = lang.name;
@@ -122,14 +149,15 @@ function setupEventListeners() {
   document.getElementById('translate-page-btn').addEventListener('click', async () => {
     try {
       const provider = document.getElementById('provider-select').value;
-      const language = document.getElementById('language-select').value;
+      const targetLanguage = document.getElementById('language-select').value;
+      const sourceLanguage = document.getElementById('source-language-select').value;
 
       if (!provider) {
-        showStatus('Please select a provider', 'error');
+        showStatus(getMessage('errorPleaseSelectProvider'), 'error');
         return;
       }
 
-      showStatus('Translating page...', 'info');
+      showStatus(getMessage('statusTranslatingPage'), 'info');
 
       // Save last used provider
       await browser.runtime.sendMessage({
@@ -140,17 +168,18 @@ function setupEventListeners() {
       const response = await sendMessageToActiveTab({
         action: 'translate-page',
         provider,
-        language
+        language: targetLanguage,
+        sourceLanguage
       });
 
       if (!response?.success) {
-        throw new Error(response?.error || 'Translation failed. Please check provider settings.');
+        throw new Error(response?.error || getMessage('errorTranslationFailed'));
       }
 
-      showStatus('Page translation started', 'success');
+      showStatus(getMessage('statusPageTranslationStarted'), 'success');
     } catch (error) {
       console.error('[Popup] Translation error:', error);
-      showStatus('Translation failed: ' + error.message, 'error');
+      showStatus(getMessage('errorTranslationFailedWithMessage', [error.message]), 'error');
     }
   });
 
@@ -158,14 +187,15 @@ function setupEventListeners() {
   document.getElementById('translate-selection-btn').addEventListener('click', async () => {
     try {
       const provider = document.getElementById('provider-select').value;
-      const language = document.getElementById('language-select').value;
+      const targetLanguage = document.getElementById('language-select').value;
+      const sourceLanguage = document.getElementById('source-language-select').value;
 
       if (!provider) {
-        showStatus('Please select a provider', 'error');
+        showStatus(getMessage('errorPleaseSelectProvider'), 'error');
         return;
       }
 
-      showStatus('Translating selection...', 'info');
+      showStatus(getMessage('statusTranslatingSelection'), 'info');
 
       // Save last used provider
       await browser.runtime.sendMessage({
@@ -176,17 +206,18 @@ function setupEventListeners() {
       const response = await sendMessageToActiveTab({
         action: 'translate-selection',
         provider,
-        language
+        language: targetLanguage,
+        sourceLanguage
       });
 
       if (!response?.success) {
-        throw new Error(response?.error || 'Translation failed. Please check provider settings.');
+        throw new Error(response?.error || getMessage('errorTranslationFailed'));
       }
 
-      showStatus('Selection translated', 'success');
+      showStatus(getMessage('statusSelectionTranslated'), 'success');
     } catch (error) {
       console.error('[Popup] Translation error:', error);
-      showStatus('Translation failed: ' + error.message, 'error');
+      showStatus(getMessage('errorTranslationFailedWithMessage', [error.message]), 'error');
     }
   });
 
@@ -198,13 +229,13 @@ function setupEventListeners() {
       });
 
       if (!response?.success) {
-        throw new Error(response?.error || 'Restore failed');
+        throw new Error(response?.error || getMessage('errorRestoreFailed'));
       }
 
-      showStatus('Original content restored', 'success');
+      showStatus(getMessage('statusOriginalContentRestored'), 'success');
     } catch (error) {
       console.error('[Popup] Restore error:', error);
-      showStatus('Restore failed: ' + error.message, 'error');
+      showStatus(getMessage('errorRestoreFailedWithMessage', [error.message]), 'error');
     }
   });
 
@@ -240,7 +271,7 @@ function showStatus(message, type = 'info') {
 async function sendMessageToActiveTab(message) {
   const tab = await getContentTabForAction();
   if (!tab?.id) {
-    throw new Error('No regular web page is focused. Please click the page you want to translate and try again.');
+    throw new Error(getMessage('errorNoRegularWebPage'));
   }
 
   try {
@@ -275,9 +306,11 @@ async function getContentTabForAction() {
 
 function isContentTab(tab) {
   if (!tab?.url) return false;
-  return !tab.url.startsWith('chrome://') &&
+  return (
+    !tab.url.startsWith('chrome://') &&
     !tab.url.startsWith('chrome-extension://') &&
-    !tab.url.startsWith('edge://');
+    !tab.url.startsWith('edge://')
+  );
 }
 
 function isAccessDeniedError(error) {
@@ -295,7 +328,7 @@ function isAccessDeniedError(error) {
 async function injectContentScript(tabId) {
   const files = getContentScriptFiles();
   if (files.length === 0) {
-    throw new Error('Translator script path is missing from manifest.');
+    throw new Error(getMessage('errorScriptPathMissing'));
   }
 
   try {
@@ -303,9 +336,9 @@ async function injectContentScript(tabId) {
   } catch (error) {
     console.error('[Popup] Failed to inject content script:', error);
     if (isAccessDeniedError(error)) {
-      throw new Error('This page does not allow extensions (e.g. chrome:// or the Web Store). Please try another page or reload after enabling the extension.');
+      throw new Error(getMessage('errorPageBlocksExtensions'));
     }
-    throw new Error('Translator could not load on this page yet. Please reload the tab and try again.');
+    throw new Error(getMessage('errorTranslatorCouldNotLoad'));
   }
 }
 
@@ -316,8 +349,8 @@ function getContentScriptFiles() {
   }
 
   const files = [];
-  manifest.content_scripts.forEach(script => {
-    (script.js || []).forEach(file => files.push(file));
+  manifest.content_scripts.forEach((script) => {
+    (script.js || []).forEach((file) => files.push(file));
   });
   return files;
 }
@@ -338,5 +371,5 @@ async function executeContentScripts(tabId, files) {
     return;
   }
 
-  throw new Error('Runtime does not support script injection APIs.');
+  throw new Error(getMessage('errorRuntimeNotSupported'));
 }

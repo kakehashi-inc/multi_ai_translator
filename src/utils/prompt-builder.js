@@ -20,14 +20,20 @@ function normalizeForMatch(text = '') {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-const CODE_HOLD_INSTRUCTION =
-  'Do not translate programming code, API calls, configuration samples, stack traces, or other technical snippets. Preserve them exactly.';
-
 export class PromptBuilder {
   static buildPrompt(requestPayload, targetLanguage, sourceLanguage) {
-    const sourceLangText = sourceLanguage === 'auto' ? 'the detected source language' : sourceLanguage;
+    const sourceLangText =
+      sourceLanguage === 'auto' ? 'the detected source language' : sourceLanguage;
 
-    return `You are a precise translation engine. Translate each <item> inside the XML request from ${sourceLangText} to ${targetLanguage}. Preserve HTML tags, attributes, whitespace, indentation, and line breaks exactly as provided. ${CODE_HOLD_INSTRUCTION} Respond ONLY with XML matching this schema:
+    return `You are a precise translation engine.
+Instructions:
+- Task: Translate each <item> in the XML request from ${sourceLangText} to ${targetLanguage}.
+- Format: Respond ONLY with XML and nothing else (no explanations, no comments, no extra text).
+- Mapping: For every <item> in <request>, return one <item> in <response> where <original> is the original text and <translated> is the translated text.
+- Preservation: Keep all HTML tags, attributes, whitespace, and line breaks exactly as in the original.
+- Code: Do not translate programming code, API calls, configuration samples, stack traces, or other technical snippets. Copy these parts exactly.
+
+Response schema:
 
 <response>
 <item>
@@ -41,9 +47,7 @@ ${requestPayload}`;
   }
 
   static buildRequestPayload(texts = []) {
-    const items = texts
-      .map(text => `<item>${escapeXml(text)}</item>`)
-      .join('');
+    const items = texts.map((text) => `<item>${escapeXml(text)}</item>`).join('');
     return `<request>${items}</request>`;
   }
 

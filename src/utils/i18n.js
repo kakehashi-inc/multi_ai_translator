@@ -66,7 +66,7 @@ export function setMessages(msgs) {
 export function translatePage() {
   const elements = document.querySelectorAll('[data-i18n]');
 
-  elements.forEach(element => {
+  elements.forEach((element) => {
     const key = element.getAttribute('data-i18n');
     const text = getMessage(key);
 

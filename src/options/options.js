@@ -26,7 +26,6 @@ const {
   DEFAULT_GEMINI_MAX_OUTPUT_TOKENS,
   DEFAULT_OLLAMA_TEMPERATURE,
   DEFAULT_OLLAMA_HOST,
-  DEFAULT_PROVIDER,
   DEFAULT_LANGUAGE,
   DEFAULT_FONT_SIZE
 } = ConstVariables;
@@ -56,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 function setupEventListeners() {
   // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const tabName = btn.dataset.tab;
       switchTab(tabName);
@@ -156,12 +155,12 @@ function setupEventListeners() {
  */
 function switchTab(tabName) {
   // Update tab buttons
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
 
   // Update tab content
-  document.querySelectorAll('.tab-content').forEach(content => {
+  document.querySelectorAll('.tab-content').forEach((content) => {
     content.classList.toggle('active', content.id === `${tabName}-tab`);
   });
 }
@@ -171,7 +170,7 @@ function switchTab(tabName) {
  */
 function loadSettingsToUI(settings) {
   // Providers
-  PROVIDER_ORDER.forEach(provider => {
+  PROVIDER_ORDER.forEach((provider) => {
     const config = settings.providers[provider];
     const enabledEl = document.getElementById(`${provider}-enabled`);
 
@@ -180,12 +179,13 @@ function loadSettingsToUI(settings) {
     }
 
     // Load provider-specific settings
-    Object.keys(config).forEach(key => {
+    Object.keys(config).forEach((key) => {
       if (key === 'enabled') return;
 
-      const fieldName = provider === 'openai-compatible'
-        ? `${provider}-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`
-        : `${provider}-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+      const fieldName =
+        provider === 'openai-compatible'
+          ? `${provider}-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`
+          : `${provider}-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
 
       const el = document.getElementById(fieldName);
       if (el) {
@@ -215,20 +215,17 @@ function loadSettingsToUI(settings) {
   }
 
   // Common settings
-  const defaultProvider = document.getElementById('default-provider');
-  if (defaultProvider) {
-    defaultProvider.value = settings.common.defaultProvider;
+  const defaultSourceLanguage = document.getElementById('default-source-language');
+  if (defaultSourceLanguage) {
+    populateSourceLanguageDropdown(
+      defaultSourceLanguage,
+      settings.common.defaultSourceLanguage || 'auto'
+    );
   }
 
   const defaultTargetLanguage = document.getElementById('default-target-language');
   if (defaultTargetLanguage) {
-    defaultTargetLanguage.value =
-      settings.common.defaultTargetLanguage || getBrowserLanguage();
-  }
-
-  const autoDetect = document.getElementById('auto-detect-language');
-  if (autoDetect) {
-    autoDetect.checked = settings.common.autoDetectLanguage;
+    defaultTargetLanguage.value = settings.common.defaultTargetLanguage || getBrowserLanguage();
   }
 
   const batchMaxItems = document.getElementById('batch-max-items');
@@ -273,7 +270,7 @@ function collectSettingsFromUI() {
   };
 
   // Providers
-  PROVIDER_ORDER.forEach(provider => {
+  PROVIDER_ORDER.forEach((provider) => {
     const enabled = document.getElementById(`${provider}-enabled`)?.checked || false;
 
     settings.providers[provider] = { enabled };
@@ -289,9 +286,13 @@ function collectSettingsFromUI() {
         : DEFAULT_OPENAI_TEMPERATURE;
       settings.providers[provider].maxTokens = DEFAULT_OPENAI_MAX_TOKENS;
     } else if (provider === 'anthropic') {
-      settings.providers[provider].apiKey = document.getElementById('anthropic-api-key')?.value || '';
+      settings.providers[provider].apiKey =
+        document.getElementById('anthropic-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('anthropic-model')?.value || '';
-      const anthropicMaxTokens = parseInt(document.getElementById('anthropic-max-tokens')?.value ?? '', 10);
+      const anthropicMaxTokens = parseInt(
+        document.getElementById('anthropic-max-tokens')?.value ?? '',
+        10
+      );
       settings.providers[provider].maxTokens = Number.isFinite(anthropicMaxTokens)
         ? anthropicMaxTokens
         : DEFAULT_ANTHROPIC_MAX_TOKENS;
@@ -307,14 +308,20 @@ function collectSettingsFromUI() {
       settings.providers[provider].model = document.getElementById('ollama-model')?.value || '';
       settings.providers[provider].temperature = DEFAULT_OLLAMA_TEMPERATURE;
     } else if (provider === 'openai-compatible') {
-      settings.providers[provider].baseUrl = document.getElementById('openai-compatible-base-url')?.value || '';
-      settings.providers[provider].apiKey = document.getElementById('openai-compatible-api-key')?.value || '';
-      settings.providers[provider].model = document.getElementById('openai-compatible-model')?.value || '';
+      settings.providers[provider].baseUrl =
+        document.getElementById('openai-compatible-base-url')?.value || '';
+      settings.providers[provider].apiKey =
+        document.getElementById('openai-compatible-api-key')?.value || '';
+      settings.providers[provider].model =
+        document.getElementById('openai-compatible-model')?.value || '';
       settings.providers[provider].temperature = DEFAULT_OPENAI_TEMPERATURE;
     } else if (provider === 'anthropic-compatible') {
-      settings.providers[provider].baseUrl = document.getElementById('anthropic-compatible-base-url')?.value || '';
-      settings.providers[provider].apiKey = document.getElementById('anthropic-compatible-api-key')?.value || '';
-      settings.providers[provider].model = document.getElementById('anthropic-compatible-model')?.value || '';
+      settings.providers[provider].baseUrl =
+        document.getElementById('anthropic-compatible-base-url')?.value || '';
+      settings.providers[provider].apiKey =
+        document.getElementById('anthropic-compatible-api-key')?.value || '';
+      settings.providers[provider].model =
+        document.getElementById('anthropic-compatible-model')?.value || '';
       const anthCompatibleMaxTokens = parseInt(
         document.getElementById('anthropic-compatible-max-tokens')?.value ?? '',
         10
@@ -327,15 +334,19 @@ function collectSettingsFromUI() {
   });
 
   // Common settings
-  settings.common.defaultProvider =
-    document.getElementById('default-provider')?.value || DEFAULT_PROVIDER;
+  // Note: defaultProvider is no longer configurable - last used provider is automatically saved
+  const sourceLanguageField = document.getElementById('default-source-language');
+  const selectedSourceLanguage = sourceLanguageField?.value;
+  settings.common.defaultSourceLanguage =
+    selectedSourceLanguage && selectedSourceLanguage.trim() ? selectedSourceLanguage : 'auto';
+
   const targetLanguageField = document.getElementById('default-target-language');
   const selectedTargetLanguage = targetLanguageField?.value;
-  settings.common.defaultTargetLanguage = selectedTargetLanguage && selectedTargetLanguage.trim()
-    ? selectedTargetLanguage
-    : getBrowserLanguage();
-  settings.common.autoDetectLanguage =
-    document.getElementById('auto-detect-language')?.checked ?? true;
+  settings.common.defaultTargetLanguage =
+    selectedTargetLanguage && selectedTargetLanguage.trim()
+      ? selectedTargetLanguage
+      : getBrowserLanguage();
+
   settings.common.uiLanguage = DEFAULT_LANGUAGE;
 
   const batchItemsInput = document.getElementById('batch-max-items');
@@ -352,8 +363,7 @@ function collectSettingsFromUI() {
 
   // UI settings
   settings.ui.theme = document.getElementById('theme')?.value || 'auto';
-  settings.ui.showOriginalText =
-    document.getElementById('show-original-text')?.checked ?? true;
+  settings.ui.showOriginalText = document.getElementById('show-original-text')?.checked ?? true;
   settings.ui.highlightTranslated =
     document.getElementById('highlight-translated')?.checked ?? true;
   settings.ui.fontSize = DEFAULT_FONT_SIZE;
@@ -362,7 +372,39 @@ function collectSettingsFromUI() {
 }
 
 /**
- * Populate language dropdown
+ * Populate source language dropdown
+ */
+function populateSourceLanguageDropdown(select, selectedLanguage) {
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  const languages = getSupportedLanguages();
+
+  // Add auto-detect option
+  const autoOption = document.createElement('option');
+  autoOption.value = 'auto';
+  autoOption.textContent = 'Auto-detect';
+  select.appendChild(autoOption);
+
+  // Add supported languages
+  languages.forEach((lang) => {
+    const option = document.createElement('option');
+    option.value = lang.code;
+    option.textContent = lang.name;
+    select.appendChild(option);
+  });
+
+  // Select default source language
+  if (selectedLanguage) {
+    select.value = selectedLanguage;
+  } else {
+    select.value = 'auto';
+  }
+}
+
+/**
+ * Populate target language dropdown
  */
 function populateLanguages(selectedLanguage) {
   const select = document.getElementById('default-target-language');
@@ -372,7 +414,7 @@ function populateLanguages(selectedLanguage) {
 
   const languages = getSupportedLanguages();
 
-  languages.forEach(lang => {
+  languages.forEach((lang) => {
     const option = document.createElement('option');
     option.value = lang.code;
     option.textContent = lang.name;
@@ -423,7 +465,7 @@ async function fetchModels(providerName) {
       }
 
       datalist.innerHTML = '';
-      response.models.forEach(model => {
+      response.models.forEach((model) => {
         const option = document.createElement('option');
         option.value = model;
         datalist.appendChild(option);
@@ -442,7 +484,7 @@ async function fetchModels(providerName) {
 }
 
 function buildModelFetchConfig(providerName) {
-  const getValue = id => document.getElementById(id)?.value?.trim() || '';
+  const getValue = (id) => document.getElementById(id)?.value?.trim() || '';
 
   switch (providerName) {
     case 'openai': {

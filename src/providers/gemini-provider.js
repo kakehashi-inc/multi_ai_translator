@@ -31,7 +31,8 @@ export class GeminiProvider extends BaseProvider {
       this.modelName = this.config.model;
       this.generationConfig = {
         temperature: this.config.temperature ?? ConstVariables.DEFAULT_GEMINI_TEMPERATURE,
-        maxOutputTokens: this.config.maxOutputTokens ?? ConstVariables.DEFAULT_GEMINI_MAX_OUTPUT_TOKENS
+        maxOutputTokens:
+          this.config.maxOutputTokens ?? ConstVariables.DEFAULT_GEMINI_MAX_OUTPUT_TOKENS
       };
     } catch (error) {
       this.handleError(error);

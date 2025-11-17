@@ -81,30 +81,26 @@ let statusHideTimeout = null;
  * @returns {Node[]} Array of text nodes
  */
 export function getTranslatableNodes(rootElement = document.body) {
-  const walker = document.createTreeWalker(
-    rootElement,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        // Skip script, style, and other non-visible elements
-        const parent = node.parentElement;
-        if (!parent) return NodeFilter.FILTER_REJECT;
+  const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      // Skip script, style, and other non-visible elements
+      const parent = node.parentElement;
+      if (!parent) return NodeFilter.FILTER_REJECT;
 
-        const tagName = parent.tagName.toLowerCase();
-        if (['script', 'style', 'noscript', 'iframe', 'object'].includes(tagName)) {
-          return NodeFilter.FILTER_REJECT;
-        }
-
-        // Skip empty or whitespace-only nodes
-        const text = node.textContent.trim();
-        if (!text || text.length < 3) {
-          return NodeFilter.FILTER_REJECT;
-        }
-
-        return NodeFilter.FILTER_ACCEPT;
+      const tagName = parent.tagName.toLowerCase();
+      if (['script', 'style', 'noscript', 'iframe', 'object'].includes(tagName)) {
+        return NodeFilter.FILTER_REJECT;
       }
+
+      // Skip empty or whitespace-only nodes
+      const text = node.textContent.trim();
+      if (!text || text.length < 3) {
+        return NodeFilter.FILTER_REJECT;
+      }
+
+      return NodeFilter.FILTER_ACCEPT;
     }
-  );
+  });
 
   const nodes = [];
   let node;
@@ -152,15 +148,11 @@ export function replaceNodeContent(node, translation, provider) {
 export function restoreOriginalContent(rootElement = document.body) {
   const translatedElements = rootElement.querySelectorAll('[data-translation-id]');
 
-  translatedElements.forEach(element => {
+  translatedElements.forEach((element) => {
     const original = translationState.getOriginal(element);
     if (original) {
       // Find text nodes and restore
-      const walker = document.createTreeWalker(
-        element,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 
       let node;
       while ((node = walker.nextNode())) {

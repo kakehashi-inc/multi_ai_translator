@@ -5,6 +5,7 @@
 import browser from 'webextension-polyfill';
 import { createProvider } from '../providers/index.js';
 import { getSettings, addToHistory } from '../utils/storage.js';
+import { getMessage } from '../utils/i18n.js';
 
 // Cache for last used provider (for performance)
 let lastUsedProviderCache = null;
@@ -87,7 +88,10 @@ async function createContextMenus() {
   try {
     await browser.contextMenus.removeAll();
   } catch (error) {
-    console.warn('[Multi-AI Translator] Failed to clear context menus before creating new ones', error);
+    console.warn(
+      '[Multi-AI Translator] Failed to clear context menus before creating new ones',
+      error
+    );
   }
 
   const menuItems = [
@@ -169,7 +173,7 @@ browser.commands.onCommand.addListener(async (command) => {
 browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   handleMessage(request)
     .then(sendResponse)
-    .catch(error => {
+    .catch((error) => {
       console.error('[Multi-AI Translator] Message error:', error);
       sendResponse({ error: error.message });
     });
@@ -198,7 +202,7 @@ async function handleMessage(request, _sender) {
     case 'getLastUsedProvider':
       return { provider: await getLastUsedProvider() };
     default:
-      throw new Error(`Unknown action: ${action}`);
+      throw new Error(getMessage('errorUnknownAction', [action]));
   }
 }
 
@@ -218,7 +222,7 @@ async function translateText({ text, targetLanguage, sourceLanguage, providerNam
     const providerConfig = settings.providers[provider];
 
     if (!providerConfig || !providerConfig.enabled) {
-      throw new Error(`Provider ${provider} is not enabled`);
+      throw new Error(getMessage('errorProviderNotEnabled', [provider]));
     }
 
     // Create and initialize provider
@@ -300,10 +304,12 @@ async function handleTranslateSelection(info, tab) {
   const settings = await getSettings();
   const lastUsed = await getLastUsedProvider();
   const provider = lastUsed || settings.common.defaultProvider;
+  const sourceLanguage = settings.common.defaultSourceLanguage || 'auto';
   await sendMessageToTab(targetTab?.id, {
     action: 'translate-selection',
     text: info?.selectionText,
-    provider
+    provider,
+    sourceLanguage
   });
 }
 
@@ -315,9 +321,11 @@ async function handleTranslatePage(tab) {
   const settings = await getSettings();
   const lastUsed = await getLastUsedProvider();
   const provider = lastUsed || settings.common.defaultProvider;
+  const sourceLanguage = settings.common.defaultSourceLanguage || 'auto';
   await sendMessageToTab(targetTab?.id, {
     action: 'translate-page',
-    provider
+    provider,
+    sourceLanguage
   });
 }
 
@@ -345,7 +353,7 @@ function showNotification(title, message) {
 
 async function sendMessageToTab(tabId, message) {
   if (!tabId) {
-    throw new Error('No active tab available');
+    throw new Error(getMessage('errorNoActiveTab'));
   }
 
   try {
@@ -385,8 +393,8 @@ function getContentScriptFiles() {
     return [];
   }
   const files = [];
-  manifest.content_scripts.forEach(script => {
-    (script.js || []).forEach(file => files.push(file));
+  manifest.content_scripts.forEach((script) => {
+    (script.js || []).forEach((file) => files.push(file));
   });
   return files;
 }
@@ -394,7 +402,7 @@ function getContentScriptFiles() {
 async function injectContentScript(tabId) {
   const files = getContentScriptFiles();
   if (files.length === 0) {
-    throw new Error('Translator script path is missing from manifest.');
+    throw new Error(getMessage('errorScriptPathMissing'));
   }
 
   try {
@@ -402,9 +410,9 @@ async function injectContentScript(tabId) {
   } catch (error) {
     console.error('[Service Worker] Failed to inject content script:', error);
     if (isAccessDeniedError(error)) {
-      throw new Error('This page does not allow extensions (e.g. chrome:// or the Web Store). Please try another page or reload after enabling the extension.');
+      throw new Error(getMessage('errorPageBlocksExtensions'));
     }
-    throw new Error('Translator could not load on this page yet. Please reload the tab and try again.');
+    throw new Error(getMessage('errorTranslatorCouldNotLoad'));
   }
 }
 
@@ -424,7 +432,7 @@ async function executeContentScripts(tabId, files) {
     return;
   }
 
-  throw new Error('Runtime does not support script injection APIs.');
+  throw new Error(getMessage('errorRuntimeNotSupported'));
 }
 
 async function resolveContentTab(tab) {
@@ -438,9 +446,11 @@ async function resolveContentTab(tab) {
 
 function isContentTab(tab) {
   if (!tab?.url) return false;
-  return !tab.url.startsWith('chrome://') &&
+  return (
+    !tab.url.startsWith('chrome://') &&
     !tab.url.startsWith('chrome-extension://') &&
-    !tab.url.startsWith('edge://');
+    !tab.url.startsWith('edge://')
+  );
 }
 
 console.log('[Multi-AI Translator] Service worker loaded');

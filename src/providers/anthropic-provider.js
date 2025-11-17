@@ -80,7 +80,7 @@ export class AnthropicProvider extends BaseProvider {
       await this.ensureInitialized();
 
       const response = await this.client.models.list();
-      return response.data.map(model => model.id);
+      return response.data.map((model) => model.id);
     } catch (error) {
       console.warn('Failed to fetch models from Anthropic API', error);
       return [];

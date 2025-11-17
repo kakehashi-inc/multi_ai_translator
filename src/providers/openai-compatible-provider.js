@@ -55,7 +55,7 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
 
     try {
       const response = await this.client.models.list();
-      return response.data.map(model => model.id);
+      return response.data.map((model) => model.id);
     } catch (error) {
       console.warn('Failed to fetch models from OpenAI-compatible endpoint', error);
       return [];

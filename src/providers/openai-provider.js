@@ -61,7 +61,8 @@ export class OpenAIProvider extends BaseProvider {
         messages: [
           {
             role: 'system',
-            content: 'You are a professional translator. Provide only the translation without any explanations.'
+            content:
+              'You are a professional translator. Provide only the translation without any explanations.'
           },
           {
             role: 'user',
@@ -85,8 +86,8 @@ export class OpenAIProvider extends BaseProvider {
     try {
       const response = await this.client.models.list();
       return response.data
-        .filter(model => model.id.includes('gpt'))
-        .map(model => model.id)
+        .filter((model) => model.id.includes('gpt'))
+        .map((model) => model.id)
         .sort();
     } catch (error) {
       console.warn('Failed to fetch models from OpenAI API', error);

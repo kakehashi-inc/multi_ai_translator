@@ -16,12 +16,9 @@ export class ConstVariables {
   static DEFAULT_OLLAMA_TEMPERATURE = 0.3;
   static DEFAULT_OLLAMA_HOST = 'http://127.0.0.1:11434';
 
-  // Text processing
-  static DEFAULT_TEXT_CHUNK_LENGTH = 2000;
-
   // Batch translation
   static DEFAULT_BATCH_MAX_ITEMS = 20;
-  static DEFAULT_BATCH_MAX_CHARS = 100000;
+  static DEFAULT_BATCH_MAX_CHARS = 64000;
 
   // Timing constants
   static STATUS_CLEAR_DELAY_MS = 4000;
