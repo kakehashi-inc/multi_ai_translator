@@ -226,7 +226,8 @@ async function getProviderModels({ providerName, config }) {
  * Handle translate selection
  */
 async function handleTranslateSelection(info, tab) {
-  await browser.tabs.sendMessage(tab.id, {
+  const targetTab = await resolveContentTab(tab);
+  await sendMessageToTab(targetTab?.id, {
     action: 'translate-selection',
     text: info?.selectionText
   });
@@ -236,7 +237,8 @@ async function handleTranslateSelection(info, tab) {
  * Handle translate page
  */
 async function handleTranslatePage(tab) {
-  await browser.tabs.sendMessage(tab.id, {
+  const targetTab = await resolveContentTab(tab);
+  await sendMessageToTab(targetTab?.id, {
     action: 'translate-page'
   });
 }
@@ -245,7 +247,8 @@ async function handleTranslatePage(tab) {
  * Handle restore original
  */
 async function handleRestoreOriginal(tab) {
-  await browser.tabs.sendMessage(tab.id, {
+  const targetTab = await resolveContentTab(tab);
+  await sendMessageToTab(targetTab?.id, {
     action: 'restore-original'
   });
 }
@@ -260,6 +263,106 @@ function showNotification(title, message) {
     title: title,
     message: message
   });
+}
+
+async function sendMessageToTab(tabId, message) {
+  if (!tabId) {
+    throw new Error('No active tab available');
+  }
+
+  try {
+    return await browser.tabs.sendMessage(tabId, message);
+  } catch (error) {
+    if (isMissingContentScriptError(error)) {
+      await injectContentScript(tabId);
+      return await browser.tabs.sendMessage(tabId, message);
+    }
+    throw error;
+  }
+}
+
+function isMissingContentScriptError(error) {
+  if (!error?.message) return false;
+  return (
+    error.message.includes('Receiving end does not exist') ||
+    error.message.includes('Could not establish connection')
+  );
+}
+
+function isAccessDeniedError(error) {
+  if (!error?.message) return false;
+  return (
+    error.message.includes('Cannot access contents of the page') ||
+    error.message.includes('Cannot access contents of url') ||
+    error.message.includes('Extensions manifest must request permission') ||
+    error.message.includes('No tab with id') ||
+    error.message.includes('Frame with ID') ||
+    error.message.includes('blocked by the administrator')
+  );
+}
+
+function getContentScriptFiles() {
+  const manifest = browser.runtime.getManifest();
+  if (!manifest?.content_scripts) {
+    return [];
+  }
+  const files = [];
+  manifest.content_scripts.forEach(script => {
+    (script.js || []).forEach(file => files.push(file));
+  });
+  return files;
+}
+
+async function injectContentScript(tabId) {
+  const files = getContentScriptFiles();
+  if (files.length === 0) {
+    throw new Error('Translator script path is missing from manifest.');
+  }
+
+  try {
+    await executeContentScripts(tabId, files);
+  } catch (error) {
+    console.error('[Service Worker] Failed to inject content script:', error);
+    if (isAccessDeniedError(error)) {
+      throw new Error('This page does not allow extensions (e.g. chrome:// or the Web Store). Please try another page or reload after enabling the extension.');
+    }
+    throw new Error('Translator could not load on this page yet. Please reload the tab and try again.');
+  }
+}
+
+async function executeContentScripts(tabId, files) {
+  if (browser.scripting?.executeScript) {
+    await browser.scripting.executeScript({
+      target: { tabId },
+      files
+    });
+    return;
+  }
+
+  if (browser.tabs?.executeScript) {
+    for (const file of files) {
+      await browser.tabs.executeScript(tabId, { file });
+    }
+    return;
+  }
+
+  throw new Error('Runtime does not support script injection APIs.');
+}
+
+async function resolveContentTab(tab) {
+  if (isContentTab(tab)) {
+    return tab;
+  }
+
+  const tabs = await browser.tabs.query({ currentWindow: true });
+  return tabs.find(isContentTab);
+}
+
+function isContentTab(tab) {
+  if (!tab?.url) return false;
+  return !tab.url.startsWith('chrome://') &&
+    !tab.url.startsWith('chrome-extension://') &&
+    !tab.url.startsWith('edge://');
 }
 
 console.log('[Multi-AI Translator] Service worker loaded');

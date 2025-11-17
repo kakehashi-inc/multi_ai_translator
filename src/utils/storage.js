@@ -3,6 +3,7 @@
  * Manages extension settings with Browser Storage API
  */
 import browser from 'webextension-polyfill';
+import { PROVIDER_ORDER } from '../providers/provider-meta.js';
 
 function normalizeLanguageCode(language) {
   if (!language || typeof language !== 'string') {
@@ -34,6 +35,55 @@ export function getBrowserLanguage() {
  */
 function createDefaultSettings() {
   const browserLanguage = getBrowserLanguage();
+  const providerDefaults = {
+    gemini: {
+      enabled: false,
+      apiKey: '',
+      model: '',
+      temperature: 0.3,
+      maxOutputTokens: 2000
+    },
+    anthropic: {
+      enabled: false,
+      apiKey: '',
+      model: '',
+      maxTokens: 2000,
+      temperature: 0.3
+    },
+    'anthropic-compatible': {
+      enabled: false,
+      baseUrl: '',
+      apiKey: '',
+      model: '',
+      maxTokens: 2000,
+      temperature: 0.3
+    },
+    openai: {
+      enabled: false,
+      apiKey: '',
+      model: '',
+      temperature: 0.3,
+      maxTokens: 2000
+    },
+    'openai-compatible': {
+      enabled: false,
+      baseUrl: '',
+      apiKey: '',
+      model: '',
+      temperature: 0.3
+    },
+    ollama: {
+      enabled: false,
+      host: 'http://127.0.0.1:11434',
+      model: '',
+      temperature: 0.3
+    }
+  };
+
+  const providers = {};
+  PROVIDER_ORDER.forEach(name => {
+    providers[name] = { ...providerDefaults[name] };
+  });
 
   return {
     common: {
@@ -42,50 +92,7 @@ function createDefaultSettings() {
       uiLanguage: browserLanguage,
       autoDetectLanguage: true
     },
-    providers: {
-      openai: {
-        enabled: false,
-        apiKey: '',
-        model: '',
-        temperature: 0.3,
-        maxTokens: 2000
-      },
-      anthropic: {
-        enabled: false,
-        apiKey: '',
-        model: '',
-        maxTokens: 2000,
-        temperature: 0.3
-      },
-      gemini: {
-        enabled: false,
-        apiKey: '',
-        model: '',
-        temperature: 0.3,
-        maxOutputTokens: 2000
-      },
-      ollama: {
-        enabled: false,
-        host: 'http://127.0.0.1:11434',
-        model: '',
-        temperature: 0.3
-      },
-      'openai-compatible': {
-        enabled: false,
-        baseUrl: '',
-        apiKey: '',
-        model: '',
-        temperature: 0.3
-      },
-      'anthropic-compatible': {
-        enabled: false,
-        baseUrl: '',
-        apiKey: '',
-        model: '',
-        maxTokens: 2000,
-        temperature: 0.3
-      }
-    },
+    providers,
     ui: {
       theme: 'auto',
       fontSize: 14,
@@ -159,9 +166,21 @@ export async function saveProviderSettings(providerName, providerSettings) {
  */
 export async function getEnabledProviders() {
   const settings = await getSettings();
-  return Object.keys(settings.providers).filter(
-    name => settings.providers[name].enabled
-  );
+  const ordered = [];
+
+  PROVIDER_ORDER.forEach(name => {
+    if (settings.providers[name]?.enabled) {
+      ordered.push(name);
+    }
+  });
+
+  Object.keys(settings.providers).forEach(name => {
+    if (!PROVIDER_ORDER.includes(name) && settings.providers[name]?.enabled) {
+      ordered.push(name);
+    }
+  });
+
+  return ordered;
 }
 
 /**

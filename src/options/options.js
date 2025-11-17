@@ -12,6 +12,7 @@ import {
   importSettings,
   getBrowserLanguage
 } from '../utils/storage.js';
+import { PROVIDER_ORDER, formatProviderName } from '../providers/provider-meta.js';
 
 // Initialize options page
 document.addEventListener('DOMContentLoaded', async () => {
@@ -21,13 +22,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load settings
     const settings = await getSettings();
+
+    populateLanguages(settings.common.defaultTargetLanguage || getBrowserLanguage());
     loadSettingsToUI(settings);
 
     // Set up event listeners
     setupEventListeners();
-
-    // Populate language dropdown
-    populateLanguages();
   } catch (error) {
     console.error('[Options] Initialization error:', error);
     showStatus('Failed to load settings', 'error');
@@ -118,12 +118,12 @@ function setupEventListeners() {
 
   // Fetch models buttons
   [
-    { id: 'openai-fetch-models', provider: 'openai' },
-    { id: 'anthropic-fetch-models', provider: 'anthropic' },
     { id: 'gemini-fetch-models', provider: 'gemini' },
-    { id: 'ollama-fetch-models', provider: 'ollama' },
+    { id: 'anthropic-fetch-models', provider: 'anthropic' },
+    { id: 'anthropic-compatible-fetch-models', provider: 'anthropic-compatible' },
+    { id: 'openai-fetch-models', provider: 'openai' },
     { id: 'openai-compatible-fetch-models', provider: 'openai-compatible' },
-    { id: 'anthropic-compatible-fetch-models', provider: 'anthropic-compatible' }
+    { id: 'ollama-fetch-models', provider: 'ollama' }
   ].forEach(({ id, provider }) => {
     const button = document.getElementById(id);
     if (button) {
@@ -154,9 +154,7 @@ function switchTab(tabName) {
  */
 function loadSettingsToUI(settings) {
   // Providers
-  const providers = ['openai', 'anthropic', 'gemini', 'ollama', 'openai-compatible', 'anthropic-compatible'];
-
-  providers.forEach(provider => {
+  PROVIDER_ORDER.forEach(provider => {
     const config = settings.providers[provider];
     const enabledEl = document.getElementById(`${provider}-enabled`);
 
@@ -225,9 +223,7 @@ function collectSettingsFromUI() {
   };
 
   // Providers
-  const providers = ['openai', 'anthropic', 'gemini', 'ollama', 'openai-compatible', 'anthropic-compatible'];
-
-  providers.forEach(provider => {
+  PROVIDER_ORDER.forEach(provider => {
     const enabled = document.getElementById(`${provider}-enabled`)?.checked || false;
 
     settings.providers[provider] = { enabled };
@@ -268,15 +264,21 @@ function collectSettingsFromUI() {
 
   // Common settings
   settings.common.defaultProvider = document.getElementById('default-provider')?.value || 'openai';
-  settings.common.defaultTargetLanguage =
-    document.getElementById('default-target-language')?.value || getBrowserLanguage();
-  settings.common.autoDetectLanguage = document.getElementById('auto-detect-language')?.checked || true;
+  const targetLanguageField = document.getElementById('default-target-language');
+  const selectedTargetLanguage = targetLanguageField?.value;
+  settings.common.defaultTargetLanguage = selectedTargetLanguage && selectedTargetLanguage.trim()
+    ? selectedTargetLanguage
+    : getBrowserLanguage();
+  settings.common.autoDetectLanguage =
+    document.getElementById('auto-detect-language')?.checked ?? true;
   settings.common.uiLanguage = 'en';
 
   // UI settings
   settings.ui.theme = document.getElementById('theme')?.value || 'auto';
-  settings.ui.showOriginalText = document.getElementById('show-original-text')?.checked || true;
-  settings.ui.highlightTranslated = document.getElementById('highlight-translated')?.checked || true;
+  settings.ui.showOriginalText =
+    document.getElementById('show-original-text')?.checked ?? true;
+  settings.ui.highlightTranslated =
+    document.getElementById('highlight-translated')?.checked ?? true;
   settings.ui.fontSize = 14;
 
   // Shortcuts (keep existing)
@@ -293,9 +295,11 @@ function collectSettingsFromUI() {
 /**
  * Populate language dropdown
  */
-function populateLanguages() {
+function populateLanguages(selectedLanguage) {
   const select = document.getElementById('default-target-language');
   if (!select) return;
+
+  select.innerHTML = '';
 
   const languages = getSupportedLanguages();
 
@@ -305,6 +309,15 @@ function populateLanguages() {
     option.textContent = lang.name;
     select.appendChild(option);
   });
+
+  const preferredLanguage = selectedLanguage || getBrowserLanguage();
+  if (preferredLanguage) {
+    select.value = preferredLanguage;
+  }
+
+  if (!select.value && languages.length > 0) {
+    select.value = languages[0].code;
+  }
 }
 
 /**
@@ -434,14 +447,3 @@ function showStatus(message, type = 'info') {
 /**
  * Format provider name for display
  */
-function formatProviderName(name) {
-  const names = {
-    'openai': 'OpenAI',
-    'anthropic': 'Anthropic (Claude)',
-    'gemini': 'Gemini',
-    'ollama': 'Ollama',
-    'openai-compatible': 'OpenAI Compatible',
-    'anthropic-compatible': 'Anthropic Compatible'
-  };
-  return names[name] || name;
-}

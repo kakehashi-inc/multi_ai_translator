@@ -6,6 +6,7 @@ import browser from 'webextension-polyfill';
 import { translatePage } from '../utils/i18n.js';
 import { getSettings, getEnabledProviders } from '../utils/storage.js';
 import { getSupportedLanguages } from '../utils/i18n.js';
+import { formatProviderName } from '../providers/provider-meta.js';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -43,7 +44,7 @@ async function populateProviders(settings) {
   if (enabledProviders.length === 0) {
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = 'No providers configured';
+    option.textContent = 'Enable a provider in Settings';
     option.disabled = true;
     select.appendChild(option);
     return;
@@ -60,6 +61,10 @@ async function populateProviders(settings) {
   // Select default provider
   if (settings.common.defaultProvider) {
     select.value = settings.common.defaultProvider;
+  }
+
+  if (!select.value && enabledProviders.length > 0) {
+    select.value = enabledProviders[0];
   }
 }
 
@@ -100,12 +105,15 @@ function setupEventListeners() {
 
       showStatus('Translating page...', 'info');
 
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      await browser.tabs.sendMessage(tab.id, {
+      const response = await sendMessageToActiveTab({
         action: 'translate-page',
         provider,
         language
       });
+
+      if (!response?.success) {
+        throw new Error(response?.error || 'Translation failed. Please check provider settings.');
+      }
 
       showStatus('Page translation started', 'success');
     } catch (error) {
@@ -127,12 +135,15 @@ function setupEventListeners() {
 
       showStatus('Translating selection...', 'info');
 
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      await browser.tabs.sendMessage(tab.id, {
+      const response = await sendMessageToActiveTab({
         action: 'translate-selection',
         provider,
         language
       });
+
+      if (!response?.success) {
+        throw new Error(response?.error || 'Translation failed. Please check provider settings.');
+      }
 
       showStatus('Selection translated', 'success');
     } catch (error) {
@@ -144,10 +155,13 @@ function setupEventListeners() {
   // Restore button
   document.getElementById('restore-btn').addEventListener('click', async () => {
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      await browser.tabs.sendMessage(tab.id, {
+      const response = await sendMessageToActiveTab({
         action: 'restore-original'
       });
+
+      if (!response?.success) {
+        throw new Error(response?.error || 'Restore failed');
+      }
 
       showStatus('Original content restored', 'success');
     } catch (error) {
@@ -165,29 +179,126 @@ function setupEventListeners() {
 /**
  * Show status message
  */
+let statusTimeoutId = null;
+
 function showStatus(message, type = 'info') {
   const statusEl = document.getElementById('status-message');
   statusEl.textContent = message;
   statusEl.className = `status-message ${type}`;
 
+  if (statusTimeoutId) {
+    clearTimeout(statusTimeoutId);
+    statusTimeoutId = null;
+  }
+
   if (type === 'success' || type === 'info') {
-    setTimeout(() => {
+    statusTimeoutId = setTimeout(() => {
+      statusTimeoutId = null;
       statusEl.className = 'status-message';
-    }, 3000);
+    }, 5000);
   }
 }
 
-/**
- * Format provider name for display
- */
-function formatProviderName(name) {
-  const names = {
-    'openai': 'OpenAI',
-    'anthropic': 'Anthropic (Claude)',
-    'gemini': 'Gemini',
-    'ollama': 'Ollama',
-    'openai-compatible': 'OpenAI Compatible',
-    'anthropic-compatible': 'Anthropic Compatible'
-  };
-  return names[name] || name;
+async function sendMessageToActiveTab(message) {
+  const tab = await getContentTabForAction();
+  if (!tab?.id) {
+    throw new Error('No regular web page is focused. Please click the page you want to translate and try again.');
+  }
+
+  try {
+    return await browser.tabs.sendMessage(tab.id, message);
+  } catch (error) {
+    if (isMissingContentScriptError(error)) {
+      await injectContentScript(tab.id);
+      return await browser.tabs.sendMessage(tab.id, message);
+    }
+    throw error;
+  }
+}
+
+function isMissingContentScriptError(error) {
+  if (!error?.message) return false;
+  return (
+    error.message.includes('Receiving end does not exist') ||
+    error.message.includes('Could not establish connection')
+  );
+}
+
+async function getContentTabForAction() {
+  const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+  if (isContentTab(activeTab)) {
+    return activeTab;
+  }
+
+  // Fallback: pick the first non-internal tab in the current window
+  const tabs = await browser.tabs.query({ currentWindow: true });
+  return tabs.find(isContentTab);
+}
+
+function isContentTab(tab) {
+  if (!tab?.url) return false;
+  return !tab.url.startsWith('chrome://') &&
+    !tab.url.startsWith('chrome-extension://') &&
+    !tab.url.startsWith('edge://');
+}
+
+function isAccessDeniedError(error) {
+  if (!error?.message) return false;
+  return (
+    error.message.includes('Cannot access contents of the page') ||
+    error.message.includes('Cannot access contents of url') ||
+    error.message.includes('Extensions manifest must request permission') ||
+    error.message.includes('No tab with id') ||
+    error.message.includes('Frame with ID') ||
+    error.message.includes('blocked by the administrator')
+  );
+}
+
+async function injectContentScript(tabId) {
+  const files = getContentScriptFiles();
+  if (files.length === 0) {
+    throw new Error('Translator script path is missing from manifest.');
+  }
+
+  try {
+    await executeContentScripts(tabId, files);
+  } catch (error) {
+    console.error('[Popup] Failed to inject content script:', error);
+    if (isAccessDeniedError(error)) {
+      throw new Error('This page does not allow extensions (e.g. chrome:// or the Web Store). Please try another page or reload after enabling the extension.');
+    }
+    throw new Error('Translator could not load on this page yet. Please reload the tab and try again.');
+  }
+}
+
+function getContentScriptFiles() {
+  const manifest = browser.runtime.getManifest();
+  if (!manifest?.content_scripts) {
+    return [];
+  }
+
+  const files = [];
+  manifest.content_scripts.forEach(script => {
+    (script.js || []).forEach(file => files.push(file));
+  });
+  return files;
+}
+
+async function executeContentScripts(tabId, files) {
+  if (browser.scripting?.executeScript) {
+    await browser.scripting.executeScript({
+      target: { tabId },
+      files
+    });
+    return;
+  }
+
+  if (browser.tabs?.executeScript) {
+    for (const file of files) {
+      await browser.tabs.executeScript(tabId, { file });
+    }
+    return;
+  }
+
+  throw new Error('Runtime does not support script injection APIs.');
 }

@@ -145,3 +145,5 @@ vite.config.ts.timestamp-*
 deploy*.sh
 /*.sql
 .specstory
+dist-firefox
+packages/*

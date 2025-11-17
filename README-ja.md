@@ -6,7 +6,7 @@
 
 ## 機能
 
-- 🌐 **複数のAIプロバイダ対応**: OpenAI、Anthropic（Claude）、Gemini、Ollama、OpenAI互換APIから選択可能
+- 🌐 **複数のAIプロバイダ対応**: Gemini、Anthropic（Claude）、Anthropic互換API、OpenAI、OpenAI互換API、Ollamaから選択可能
 - 🦊 **マルチブラウザ対応**: Chrome、Edge、Firefoxでシームレスに動作
 - 📄 **ページ翻訳**: ワンクリックでWebページ全体を翻訳
 - ✨ **選択範囲翻訳**: 選択したテキストをポップアップで翻訳
@@ -20,12 +20,12 @@
 
 | プロバイダ | モデル | APIキー必須 |
 |----------|--------|------------|
-| OpenAI | GPT-4, GPT-3.5-turbo | ✅ 必要 |
-| Anthropic（Claude） | Claude 3 (Opus, Sonnet, Haiku) | ✅ 必要 |
 | Gemini | Gemini Pro, Ultra | ✅ 必要 |
-| Ollama | ローカルモデル | ❌ 不要（ローカル） |
-| OpenAI互換 | LM Studio, LocalAI等 | 状況による |
+| Anthropic（Claude） | Claude 3 (Opus, Sonnet, Haiku) | ✅ 必要 |
 | Anthropic互換 | 互換API | 状況による |
+| OpenAI | GPT-4, GPT-3.5-turbo | ✅ 必要 |
+| OpenAI互換 | LM Studio, LocalAI等 | 状況による |
+| Ollama | ローカルモデル | ❌ 不要（ローカル） |
 
 ## インストール
 
@@ -44,7 +44,11 @@ yarn install
 
 3. 拡張機能をビルド:
 ```bash
-yarn build
+# Chrome / Edge（dist/に出力）
+yarn build:chromium
+
+# Firefox（Manifest V2、dist-firefox/に出力）
+yarn build:firefox
 ```
 
 4. ブラウザに読み込み:
@@ -55,10 +59,10 @@ yarn build
    - 「パッケージ化されていない拡張機能を読み込む」をクリック
    - `dist`フォルダを選択
 
-   **Firefox:**
+   **Firefox（`yarn build:firefox` 実行後）:**
    - `about:debugging#/runtime/this-firefox`を開く
    - 「一時的なアドオンを読み込む」をクリック
-   - `dist`フォルダ内の`manifest.json`ファイルを選択
+   - `dist-firefox`フォルダ内の`manifest.json`ファイルを選択
 
 ## クイックスタート
 
@@ -88,26 +92,30 @@ yarn build
 
 ## 設定
 
-### OpenAI
-- [OpenAI Platform](https://platform.openai.com/)からAPIキーを取得
-- 推奨モデル: `gpt-3.5-turbo`（高速でコスト効率が良い）
+### Gemini (Google)
+- [Google AI Studio](https://makersuite.google.com/)からAPIキーを取得
+- 推奨モデル: `gemini-pro`
 
 ### Anthropic（Claude）
 - [Anthropic Console](https://console.anthropic.com/)からAPIキーを取得
 - 推奨モデル: `claude-3-sonnet-20240229`
 
-### Gemini (Google)
-- [Google AI Studio](https://makersuite.google.com/)からAPIキーを取得
-- 推奨モデル: `gemini-pro`
+### Anthropic互換
+- Claude互換API（Bedrockや社内プロキシなど）で利用可能
+- それぞれのベースURLと必要に応じたAPIキーを設定してください
+
+### OpenAI
+- [OpenAI Platform](https://platform.openai.com/)からAPIキーを取得
+- 推奨モデル: `gpt-3.5-turbo`（高速でコスト効率が良い）
+
+### OpenAI互換
+- LM Studio、LocalAI、またはOpenAI互換APIで動作
+- ベースURLとモデル名を設定
 
 ### Ollama (ローカル)
 - [Ollama](https://ollama.ai/)をインストール
 - モデルをプル: `ollama pull llama2`
 - デフォルトホスト: `http://127.0.0.1:11434`
-
-### OpenAI互換
-- LM Studio、LocalAI、またはOpenAI互換APIで動作
-- ベースURLとモデル名を設定
 
 ## 開発
 
@@ -117,11 +125,16 @@ yarn build
 # 依存関係のインストール
 yarn install
 
-# 開発モード（ウォッチ）
+# 開発モード（ウォッチ、Chromium向け）
 yarn dev
 
+# Firefox用ウォッチ
+yarn dev:firefox
+
 # 本番ビルド
-yarn build
+yarn build         # = yarn build:chromium
+yarn build:firefox
+yarn build:all
 
 # distディレクトリとパッケージのクリーン
 yarn clean

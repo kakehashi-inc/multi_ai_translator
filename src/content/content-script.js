@@ -31,17 +31,27 @@ async function handleMessage(request) {
 
   switch (action) {
     case 'translate-page':
-      await translator.translatePage();
+      await translator.translatePage(request.language, request.provider);
       return { success: true };
 
     case 'translate-selection':
       if (text) {
         // Translate provided text (from context menu)
-        const translation = await translator.translateSelection(text, false);
+        const translation = await translator.translateSelection(
+          text,
+          false,
+          request.language,
+          request.provider
+        );
         return { success: true, translation };
       } else {
         // Translate current selection
-        await translator.translateSelection();
+        await translator.translateSelection(
+          null,
+          true,
+          request.language,
+          request.provider
+        );
         return { success: true };
       }
 

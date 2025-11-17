@@ -8,7 +8,7 @@ A powerful browser extension that translates web pages using multiple AI provide
 
 ## Features
 
-- 🌐 **Multiple AI Providers**: Choose from OpenAI, Anthropic (Claude), Gemini, Ollama, or OpenAI-compatible APIs
+- 🌐 **Multiple AI Providers**: Choose from Gemini, Anthropic (Claude), Anthropic-compatible APIs, OpenAI, OpenAI-compatible APIs, or Ollama
 - 🦊 **Multi-Browser Support**: Works seamlessly on Chrome, Edge, and Firefox
 - 📄 **Page Translation**: Translate entire web pages with a single click
 - ✨ **Selection Translation**: Translate selected text with popup display
@@ -22,12 +22,12 @@ A powerful browser extension that translates web pages using multiple AI provide
 
 | Provider | Models | API Key Required |
 |----------|--------|------------------|
-| OpenAI | GPT-4, GPT-3.5-turbo | ✅ Yes |
-| Anthropic (Claude) | Claude 3 (Opus, Sonnet, Haiku) | ✅ Yes |
 | Gemini | Gemini Pro, Ultra | ✅ Yes |
-| Ollama | Any local model | ❌ No (local) |
-| OpenAI-compatible | LM Studio, LocalAI, etc. | Depends |
+| Anthropic (Claude) | Claude 3 (Opus, Sonnet, Haiku) | ✅ Yes |
 | Anthropic-compatible | Compatible APIs | Depends |
+| OpenAI | GPT-4, GPT-3.5-turbo | ✅ Yes |
+| OpenAI-compatible | LM Studio, LocalAI, etc. | Depends |
+| Ollama | Any local model | ❌ No (local) |
 
 ## Installation
 
@@ -46,7 +46,11 @@ yarn install
 
 3. Build the extension:
 ```bash
-yarn build
+# Chrome / Edge (outputs to dist/)
+yarn build:chromium
+
+# Firefox (Manifest V2 build, outputs to dist-firefox/)
+yarn build:firefox
 ```
 
 4. Load in browser:
@@ -57,10 +61,10 @@ yarn build
    - Click "Load unpacked"
    - Select the `dist` folder
 
-   **Firefox:**
+   **Firefox (after `yarn build:firefox`):**
    - Navigate to `about:debugging#/runtime/this-firefox`
    - Click "Load Temporary Add-on"
-   - Select the `manifest.json` file in the `dist` folder
+   - Select the `manifest.json` file in the `dist-firefox` folder
 
 ## Quick Start
 
@@ -90,26 +94,30 @@ yarn build
 
 ## Configuration
 
-### OpenAI
-- Get API key from [OpenAI Platform](https://platform.openai.com/)
-- Recommended model: `gpt-3.5-turbo` (fast and cost-effective)
+### Gemini (Google)
+- Get API key from [Google AI Studio](https://makersuite.google.com/)
+- Recommended model: `gemini-pro`
 
 ### Anthropic (Claude)
 - Get API key from [Anthropic Console](https://console.anthropic.com/)
 - Recommended model: `claude-3-sonnet-20240229`
 
-### Gemini (Google)
-- Get API key from [Google AI Studio](https://makersuite.google.com/)
-- Recommended model: `gemini-pro`
+### Anthropic-compatible
+- Works with Claude-compatible APIs (Bedrock, enterprise gateways, etc.)
+- Configure the custom base URL and optional API key to match your deployment
+
+### OpenAI
+- Get API key from [OpenAI Platform](https://platform.openai.com/)
+- Recommended model: `gpt-3.5-turbo` (fast and cost-effective)
+
+### OpenAI-compatible
+- Works with LM Studio, LocalAI, or any OpenAI-compatible API
+- Configure base URL and model name
 
 ### Ollama (Local)
 - Install [Ollama](https://ollama.ai/)
 - Pull a model: `ollama pull llama2`
 - Default host: `http://127.0.0.1:11434`
-
-### OpenAI-compatible
-- Works with LM Studio, LocalAI, or any OpenAI-compatible API
-- Configure base URL and model name
 
 ## Development
 
@@ -123,11 +131,16 @@ All commands should be run with `yarn`:
 # Install dependencies
 yarn install
 
-# Development mode (watch) - auto-rebuild on changes
+# Development mode (watch) - auto-rebuild on changes (Chromium build)
 yarn dev
 
+# Firefox development watch build
+yarn dev:firefox
+
 # Production build
-yarn build
+yarn build        # Equivalent to yarn build:chromium
+yarn build:firefox
+yarn build:all    # Builds Chromium + Firefox outputs
 
 # Clean dist directory and packages
 yarn clean

@@ -10,19 +10,29 @@ import archiver from 'archiver';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const distDir = path.join(__dirname, '..', 'dist');
-const outputDir = path.join(__dirname, '..');
+const distDirChromium = path.join(__dirname, '..', 'dist');
+const distDirFirefox = path.join(__dirname, '..', 'dist-firefox');
+const outputDir = path.join(__dirname, '..', 'packages');
+
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir);
+}
 
 // Check if dist directory exists
-if (!fs.existsSync(distDir)) {
-  console.error('Error: dist directory not found. Run "yarn build" first.');
+if (!fs.existsSync(distDirChromium)) {
+  console.error('Error: dist directory not found. Run "yarn build:chromium" first.');
+  process.exit(1);
+}
+
+if (!fs.existsSync(distDirFirefox)) {
+  console.error('Error: dist-firefox directory not found. Run "yarn build:firefox" first.');
   process.exit(1);
 }
 
 /**
  * Create a ZIP package
  */
-function createPackage(name, description) {
+function createPackage(name, sourceDir, description) {
   const outputFile = path.join(outputDir, `${name}.zip`);
 
   // Remove existing zip file
@@ -49,7 +59,7 @@ function createPackage(name, description) {
     archive.pipe(output);
 
     // Add dist directory contents
-    archive.directory(distDir, false);
+    archive.directory(sourceDir, false);
 
     archive.finalize();
   });
@@ -59,8 +69,8 @@ function createPackage(name, description) {
 console.log('\nCreating multi-browser packages...\n');
 
 Promise.all([
-  createPackage('multi-ai-translator-chrome', 'Chrome/Edge package'),
-  createPackage('multi-ai-translator-firefox', 'Firefox package')
+  createPackage('multi-ai-translator-chrome', distDirChromium, 'Chrome/Edge package'),
+  createPackage('multi-ai-translator-firefox', distDirFirefox, 'Firefox package')
 ])
   .then(() => {
     console.log('\n✓ All packages created successfully!');

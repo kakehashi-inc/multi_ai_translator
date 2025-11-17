@@ -24,35 +24,37 @@
       <div id="providers-tab" class="tab-content active">
         <h2 data-i18n="headingProviders">AI Provider Settings</h2>
 
-        <!-- OpenAI -->
+        <!-- Gemini -->
         <div class="provider-section">
-          <h3>
-            <input type="checkbox" id="openai-enabled" class="provider-toggle">
-            <label for="openai-enabled">OpenAI</label>
-          </h3>
+          <div class="provider-header">
+            <h3>Gemini (Google)</h3>
+            <label class="toggle-switch">
+              <input type="checkbox" id="gemini-enabled" class="provider-toggle" aria-label="Enable Gemini (Google)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
           <div class="provider-config">
             <div class="form-group">
-              <label for="openai-api-key" data-i18n="labelAPIKey">API Key:</label>
-              <input type="password" id="openai-api-key" class="form-control" placeholder="sk-...">
+              <label for="gemini-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="gemini-api-key" class="form-control">
             </div>
             <div class="form-group">
-              <label for="openai-model" data-i18n="labelModel">Model:</label>
-              <input type="text" id="openai-model" class="form-control" placeholder="gpt-3.5-turbo">
-              <button id="openai-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
-            </div>
-            <div class="form-group">
-              <label for="openai-temperature" data-i18n="labelTemperature">Temperature:</label>
-              <input type="number" id="openai-temperature" class="form-control" min="0" max="2" step="0.1" value="0.3">
+              <label for="gemini-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="gemini-model" class="form-control" placeholder="gemini-pro">
+              <button id="gemini-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
             </div>
           </div>
         </div>
 
         <!-- Anthropic -->
         <div class="provider-section">
-          <h3>
-            <input type="checkbox" id="anthropic-enabled" class="provider-toggle">
-            <label for="anthropic-enabled">Anthropic (Claude)</label>
-          </h3>
+          <div class="provider-header">
+            <h3>Anthropic (Claude)</h3>
+            <label class="toggle-switch">
+              <input type="checkbox" id="anthropic-enabled" class="provider-toggle" aria-label="Enable Anthropic (Claude)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
           <div class="provider-config">
             <div class="form-group">
               <label for="anthropic-api-key" data-i18n="labelAPIKey">API Key:</label>
@@ -70,73 +72,15 @@
           </div>
         </div>
 
-        <!-- Gemini -->
-        <div class="provider-section">
-          <h3>
-            <input type="checkbox" id="gemini-enabled" class="provider-toggle">
-            <label for="gemini-enabled">Gemini (Google)</label>
-          </h3>
-          <div class="provider-config">
-            <div class="form-group">
-              <label for="gemini-api-key" data-i18n="labelAPIKey">API Key:</label>
-              <input type="password" id="gemini-api-key" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="gemini-model" data-i18n="labelModel">Model:</label>
-              <input type="text" id="gemini-model" class="form-control" placeholder="gemini-pro">
-              <button id="gemini-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ollama -->
-        <div class="provider-section">
-          <h3>
-            <input type="checkbox" id="ollama-enabled" class="provider-toggle">
-            <label for="ollama-enabled">Ollama (Local)</label>
-          </h3>
-          <div class="provider-config">
-            <div class="form-group">
-              <label for="ollama-host" data-i18n="labelHost">Host:</label>
-              <input type="text" id="ollama-host" class="form-control" placeholder="http://127.0.0.1:11434">
-            </div>
-            <div class="form-group">
-              <label for="ollama-model" data-i18n="labelModel">Model:</label>
-              <input type="text" id="ollama-model" class="form-control" placeholder="llama2">
-              <button id="ollama-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- OpenAI Compatible -->
-        <div class="provider-section">
-          <h3>
-            <input type="checkbox" id="openai-compatible-enabled" class="provider-toggle">
-            <label for="openai-compatible-enabled">OpenAI Compatible</label>
-          </h3>
-          <div class="provider-config">
-            <div class="form-group">
-              <label for="openai-compatible-base-url" data-i18n="labelBaseURL">Base URL:</label>
-              <input type="text" id="openai-compatible-base-url" class="form-control" placeholder="http://localhost:1234/v1">
-            </div>
-            <div class="form-group">
-              <label for="openai-compatible-api-key" data-i18n="labelAPIKey">API Key (optional):</label>
-              <input type="password" id="openai-compatible-api-key" class="form-control">
-            </div>
-            <div class="form-group">
-              <label for="openai-compatible-model" data-i18n="labelModel">Model:</label>
-              <input type="text" id="openai-compatible-model" class="form-control">
-              <button id="openai-compatible-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
-            </div>
-          </div>
-        </div>
-
         <!-- Anthropic Compatible -->
         <div class="provider-section">
-          <h3>
-            <input type="checkbox" id="anthropic-compatible-enabled" class="provider-toggle">
-            <label for="anthropic-compatible-enabled">Anthropic Compatible</label>
-          </h3>
+          <div class="provider-header">
+            <h3>Anthropic Compatible</h3>
+            <label class="toggle-switch">
+              <input type="checkbox" id="anthropic-compatible-enabled" class="provider-toggle" aria-label="Enable Anthropic Compatible">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
           <div class="provider-config">
             <div class="form-group">
               <label for="anthropic-compatible-base-url" data-i18n="labelBaseURL">Base URL:</label>
@@ -157,6 +101,80 @@
             </div>
           </div>
         </div>
+
+        <!-- OpenAI -->
+        <div class="provider-section">
+          <div class="provider-header">
+            <h3>OpenAI</h3>
+            <label class="toggle-switch">
+              <input type="checkbox" id="openai-enabled" class="provider-toggle" aria-label="Enable OpenAI">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="openai-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="openai-api-key" class="form-control" placeholder="sk-...">
+            </div>
+            <div class="form-group">
+              <label for="openai-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="openai-model" class="form-control" placeholder="gpt-3.5-turbo">
+              <button id="openai-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+            <div class="form-group">
+              <label for="openai-temperature" data-i18n="labelTemperature">Temperature:</label>
+              <input type="number" id="openai-temperature" class="form-control" min="0" max="2" step="0.1" value="0.3">
+            </div>
+          </div>
+        </div>
+
+        <!-- OpenAI Compatible -->
+        <div class="provider-section">
+          <div class="provider-header">
+            <h3>OpenAI Compatible</h3>
+            <label class="toggle-switch">
+              <input type="checkbox" id="openai-compatible-enabled" class="provider-toggle" aria-label="Enable OpenAI Compatible">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="openai-compatible-base-url" data-i18n="labelBaseURL">Base URL:</label>
+              <input type="text" id="openai-compatible-base-url" class="form-control" placeholder="http://localhost:1234/v1">
+            </div>
+            <div class="form-group">
+              <label for="openai-compatible-api-key" data-i18n="labelAPIKey">API Key (optional):</label>
+              <input type="password" id="openai-compatible-api-key" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="openai-compatible-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="openai-compatible-model" class="form-control">
+              <button id="openai-compatible-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ollama -->
+        <div class="provider-section">
+          <div class="provider-header">
+            <h3>Ollama (Local)</h3>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ollama-enabled" class="provider-toggle" aria-label="Enable Ollama (Local)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="ollama-host" data-i18n="labelHost">Host:</label>
+              <input type="text" id="ollama-host" class="form-control" placeholder="http://127.0.0.1:11434">
+            </div>
+            <div class="form-group">
+              <label for="ollama-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="ollama-model" class="form-control" placeholder="llama2">
+              <button id="ollama-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Common Settings Tab -->
@@ -166,12 +184,12 @@
         <div class="form-group">
           <label for="default-provider" data-i18n="labelDefaultProvider">Default Provider:</label>
           <select id="default-provider" class="form-control">
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic (Claude)</option>
             <option value="gemini">Gemini</option>
-            <option value="ollama">Ollama</option>
-            <option value="openai-compatible">OpenAI Compatible</option>
+            <option value="anthropic">Anthropic (Claude)</option>
             <option value="anthropic-compatible">Anthropic Compatible</option>
+            <option value="openai">OpenAI</option>
+            <option value="openai-compatible">OpenAI Compatible</option>
+            <option value="ollama">Ollama</option>
           </select>
         </div>
 

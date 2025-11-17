@@ -8,14 +8,15 @@ import { GeminiProvider } from './gemini-provider.js';
 import { OllamaProvider } from './ollama-provider.js';
 import { OpenAICompatibleProvider } from './openai-compatible-provider.js';
 import { AnthropicCompatibleProvider } from './anthropic-compatible-provider.js';
+import { PROVIDER_ORDER } from './provider-meta.js';
 
 export const PROVIDERS = {
-  openai: OpenAIProvider,
-  anthropic: AnthropicProvider,
   gemini: GeminiProvider,
-  ollama: OllamaProvider,
+  anthropic: AnthropicProvider,
+  'anthropic-compatible': AnthropicCompatibleProvider,
+  openai: OpenAIProvider,
   'openai-compatible': OpenAICompatibleProvider,
-  'anthropic-compatible': AnthropicCompatibleProvider
+  ollama: OllamaProvider
 };
 
 /**
@@ -39,7 +40,7 @@ export function createProvider(providerName, config) {
  * @returns {string[]} Array of provider names
  */
 export function getAvailableProviders() {
-  return Object.keys(PROVIDERS);
+  return [...PROVIDER_ORDER];
 }
 
 export {

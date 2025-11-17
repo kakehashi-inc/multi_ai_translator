@@ -74,40 +74,46 @@ export class Translator {
       const nodes = getTranslatableNodes();
       console.log(`[Translator] Found ${nodes.length} translatable nodes`);
 
+      if (nodes.length === 0) {
+        throw new Error('No translatable text found on this page.');
+      }
+
       // Group nodes by parent element to reduce API calls
       const textGroups = this.groupNodesByParent(nodes);
 
       // Translate each group
       let translated = 0;
       for (const group of textGroups) {
+        showLoadingIndicator(group.parent);
+
         try {
           const text = group.nodes.map(n => n.textContent).join(' ');
 
-          showLoadingIndicator(group.parent);
-
           const result = await this.translateText(text, target, 'auto', provider);
 
-          if (result.success) {
-            // Split translation back to nodes (simple approach)
-            const translations = this.splitTranslation(result.translation, group.nodes.length);
-
-            group.nodes.forEach((node, index) => {
-              if (translations[index]) {
-                replaceNodeContent(node, translations[index], provider);
-              }
-            });
-
-            translated++;
+          if (!result?.success) {
+            throw new Error(result?.error || 'Translation failed');
           }
 
-          hideLoadingIndicator(group.parent);
+          // Split translation back to nodes (simple approach)
+          const translations = this.splitTranslation(result.translation, group.nodes.length);
 
-          // Add small delay to avoid rate limiting
-          await this.delay(100);
+          group.nodes.forEach((node, index) => {
+            if (translations[index]) {
+              replaceNodeContent(node, translations[index], provider);
+            }
+          });
+
+          translated++;
         } catch (error) {
           console.error('[Translator] Error translating group:', error);
+          throw error;
+        } finally {
           hideLoadingIndicator(group.parent);
         }
+
+        // Add small delay to avoid rate limiting
+        await this.delay(100);
       }
 
       console.log(`[Translator] Translated ${translated}/${textGroups.length} groups`);
@@ -119,7 +125,7 @@ export class Translator {
   /**
    * Translate selection
    */
-  async translateSelection(text = null, showPopup = true) {
+  async translateSelection(text = null, showPopup = true, targetLanguage = null, providerName = null) {
     try {
       // Get settings if not loaded
       if (!this.settings) {
@@ -140,8 +146,8 @@ export class Translator {
         position = { x: selection.x, y: selection.y };
       }
 
-      const target = this.settings.common.defaultTargetLanguage;
-      const provider = this.settings.common.defaultProvider;
+      const target = targetLanguage || this.settings.common.defaultTargetLanguage;
+      const provider = providerName || this.settings.common.defaultProvider;
 
       console.log(`[Translator] Translating selection to ${target} using ${provider}`);
 
