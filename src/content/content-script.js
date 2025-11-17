@@ -5,6 +5,7 @@
 import browser from 'webextension-polyfill';
 import { Translator } from './translator.js';
 import { getMessage } from '../utils/i18n.js';
+import { isPageTranslated } from '../utils/dom-manager.js';
 
 // Initialize translator
 const translator = new Translator();
@@ -61,10 +62,16 @@ async function handleMessage(request) {
     case 'restore-original':
       translator.restoreOriginal();
       return { success: true };
+
     case 'has-selection': {
       const selection = window.getSelection();
       const hasSelection = !!selection && selection.toString().trim().length > 0;
       return { success: true, hasSelection };
+    }
+
+    case 'get-translation-state': {
+      const translated = isPageTranslated();
+      return { success: true, isTranslated: translated };
     }
 
     default:

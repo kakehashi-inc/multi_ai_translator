@@ -10,7 +10,6 @@ import { ConstVariables } from '../utils/const-variables.js';
 
 let isPageTranslating = false;
 let isSelectionTranslating = false;
-let hasTranslationStarted = false;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -35,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
 
     // Initialize button states
-    updateRestoreButtonVisibility();
+    await updateRestoreButtonVisibility();
     await updateSelectionButtonState();
   } catch (error) {
     console.error('[Popup] Initialization error:', error);
@@ -167,7 +166,7 @@ function setupEventListeners() {
         isSelectionTranslating = false;
         showStatus(getMessage('statusCancelled'), 'info');
         updateTranslationButtons();
-        updateRestoreButtonVisibility();
+        await updateRestoreButtonVisibility();
         await updateSelectionButtonState();
         return;
       }
@@ -179,9 +178,8 @@ function setupEventListeners() {
 
       isPageTranslating = true;
       isSelectionTranslating = false;
-      hasTranslationStarted = true;
       updateTranslationButtons();
-      updateRestoreButtonVisibility();
+      await updateRestoreButtonVisibility();
 
       showStatus(getMessage('statusTranslatingPage'), 'info');
 
@@ -209,7 +207,7 @@ function setupEventListeners() {
     } finally {
       isPageTranslating = false;
       updateTranslationButtons();
-      updateRestoreButtonVisibility();
+      await updateRestoreButtonVisibility();
     }
   });
 
@@ -227,7 +225,7 @@ function setupEventListeners() {
         isPageTranslating = false;
         showStatus(getMessage('statusCancelled'), 'info');
         updateTranslationButtons();
-        updateRestoreButtonVisibility();
+        await updateRestoreButtonVisibility();
         await updateSelectionButtonState();
         return;
       }
@@ -239,9 +237,8 @@ function setupEventListeners() {
 
       isSelectionTranslating = true;
       isPageTranslating = false;
-      hasTranslationStarted = true;
       updateTranslationButtons();
-      updateRestoreButtonVisibility();
+      await updateRestoreButtonVisibility();
 
       showStatus(getMessage('statusTranslatingSelection'), 'info');
 
@@ -269,7 +266,7 @@ function setupEventListeners() {
     } finally {
       isSelectionTranslating = false;
       updateTranslationButtons();
-      updateRestoreButtonVisibility();
+      await updateRestoreButtonVisibility();
       await updateSelectionButtonState();
     }
   });
@@ -278,14 +275,6 @@ function setupEventListeners() {
   document.getElementById('restore-btn').addEventListener('click', async () => {
     try {
       await handleCancelTranslation();
-      const response = await sendMessageToActiveTab({
-        action: 'restore-original'
-      });
-
-      if (!response?.success) {
-        throw new Error(response?.error || getMessage('errorRestoreFailed'));
-      }
-
       showStatus(getMessage('statusOriginalContentRestored'), 'success');
     } catch (error) {
       console.error('[Popup] Restore error:', error);
@@ -294,7 +283,7 @@ function setupEventListeners() {
       isPageTranslating = false;
       isSelectionTranslating = false;
       updateTranslationButtons();
-      updateRestoreButtonVisibility();
+      await updateRestoreButtonVisibility();
     }
   });
 
@@ -359,15 +348,18 @@ async function updateSelectionButtonState() {
 }
 
 /**
- * Show/hide restore button depending on whether translation has started
+ * Show/hide restore button depending on whether page is currently translated
  */
-function updateRestoreButtonVisibility() {
+async function updateRestoreButtonVisibility() {
   const restoreBtn = document.getElementById('restore-btn');
   if (!restoreBtn) return;
 
-  if (hasTranslationStarted) {
-    restoreBtn.style.display = 'block';
-  } else {
+  try {
+    const response = await sendMessageToActiveTab({ action: 'get-translation-state' });
+    const canRestore = !!response?.isTranslated;
+    restoreBtn.style.display = canRestore ? 'block' : 'none';
+  } catch {
+    // If we cannot determine page state (e.g. no suitable content tab), hide the button
     restoreBtn.style.display = 'none';
   }
 }
