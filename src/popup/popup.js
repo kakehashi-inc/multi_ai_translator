@@ -163,6 +163,12 @@ function setupEventListeners() {
       // If already translating page, treat as cancel (restore original)
       if (isPageTranslating) {
         await handleCancelTranslation();
+        isPageTranslating = false;
+        isSelectionTranslating = false;
+        showStatus(getMessage('statusCancelled'), 'info');
+        updateTranslationButtons();
+        updateRestoreButtonVisibility();
+        await updateSelectionButtonState();
         return;
       }
 
@@ -217,6 +223,12 @@ function setupEventListeners() {
       // If already translating selection, treat as cancel (restore original)
       if (isSelectionTranslating) {
         await handleCancelTranslation();
+        isSelectionTranslating = false;
+        isPageTranslating = false;
+        showStatus(getMessage('statusCancelled'), 'info');
+        updateTranslationButtons();
+        updateRestoreButtonVisibility();
+        await updateSelectionButtonState();
         return;
       }
 

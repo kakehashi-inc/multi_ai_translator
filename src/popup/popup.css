@@ -170,18 +170,8 @@ body {
   text-align: center;
 }
 
-.btn-link {
-  background: none;
-  border: none;
-  color: #667eea;
-  font-size: 13px;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.btn-link:hover {
-  color: #5568d3;
-  text-decoration: underline;
+.footer-btn {
+  width: 100%;
 }
 
 /* Dark mode */

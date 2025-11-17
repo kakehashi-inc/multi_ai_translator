@@ -219,6 +219,10 @@
       }
     }
   },
+  "statusCancelled": {
+    "message": "Translation cancelled.",
+    "description": "Status message when translation is cancelled by the user"
+  },
   "errorFailedToInitialize": {
     "message": "Failed to initialize popup",
     "description": "Error message when popup initialization fails"

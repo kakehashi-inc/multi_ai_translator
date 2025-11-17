@@ -219,6 +219,10 @@
       }
     }
   },
+  "statusCancelled": {
+    "message": "翻訳をキャンセルしました。",
+    "description": "ユーザーが翻訳をキャンセルしたときのステータスメッセージ"
+  },
   "errorFailedToInitialize": {
     "message": "ポップアップの初期化に失敗しました",
     "description": "ポップアップの初期化が失敗したときのエラーメッセージ"

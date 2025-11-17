@@ -242,6 +242,14 @@ export function hideLoadingIndicator(element) {
 }
 
 /**
+ * Clear all loading indicators on the page
+ */
+export function clearAllLoadingIndicators() {
+  const loadingElements = document.querySelectorAll('.translation-loading');
+  loadingElements.forEach((el) => el.classList.remove('translation-loading'));
+}
+
+/**
  * Update translation status overlay
  * @param {string} message
  * @param {'info'|'success'|'error'} type

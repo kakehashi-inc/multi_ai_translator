@@ -12,6 +12,7 @@ import {
   getSelection,
   showLoadingIndicator,
   hideLoadingIndicator,
+  clearAllLoadingIndicators,
   updateTranslationStatus,
   clearTranslationStatus
 } from '../utils/dom-manager.js';
@@ -111,6 +112,10 @@ export class Translator {
       // Process batches one at a time and free memory immediately after each batch
       const processBatch = async (batchTexts, batchRefs, batchEntries) => {
         if (this.cancelRequested) {
+          // Ensure loading indicators for this batch are cleared
+          batchEntries.forEach((entry) => {
+            hideLoadingIndicator(entry.group.parent);
+          });
           return 0;
         }
         batchNumber++;
@@ -138,6 +143,9 @@ export class Translator {
 
           // If cancel was requested while waiting for the provider, skip applying results
           if (this.cancelRequested) {
+            batchEntries.forEach((entry) => {
+              hideLoadingIndicator(entry.group.parent);
+            });
             return 0;
           }
 
@@ -185,6 +193,9 @@ export class Translator {
       };
 
       for (const group of textGroups) {
+        if (this.cancelRequested) {
+          break;
+        }
         batchIndexCounter++;
         showLoadingIndicator(group.parent);
 
@@ -257,7 +268,10 @@ export class Translator {
         `[Translator] Processed ${totalBatches} batches, translated ${finalTranslated}/${totalGroups} groups`
       );
 
-      if (finalErrors > 0) {
+      if (this.cancelRequested) {
+        // Cancelled by user
+        updateTranslationStatus(getMessage('statusCancelled'), 'info');
+      } else if (finalErrors > 0) {
         updateTranslationStatus(
           getMessage('statusCompletedWithErrors', [
             totalBatches.toString(),
@@ -278,6 +292,7 @@ export class Translator {
     } finally {
       this.isTranslating = false;
       this.cancelRequested = false;
+      clearAllLoadingIndicators();
       clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
     }
   }
