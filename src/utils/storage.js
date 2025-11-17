@@ -130,7 +130,7 @@ export async function getSettings() {
     const result = await browser.storage.local.get('settings');
     return normalizeSettings(result.settings);
   } catch (error) {
-    console.warn('Failed to load settings, falling back to defaults', error);
+    console.error('Failed to load settings, falling back to defaults', error);
     // Fallback for testing
     return getDefaultSettings();
   }

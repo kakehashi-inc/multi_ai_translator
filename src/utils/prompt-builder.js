@@ -91,8 +91,8 @@ ${requestPayload}`;
       }
 
       return translations;
-    } catch (error) {
-      console.warn('Failed to parse structured translation response', error);
+    } catch {
+      // If parsing fails, fall back to caller-defined behavior (e.g. simple split).
       return [];
     }
   }

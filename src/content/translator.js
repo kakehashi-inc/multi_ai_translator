@@ -74,11 +74,8 @@ export class Translator {
       const provider = providerName || this.settings.common.defaultProvider;
       const source = sourceLanguage || this.settings.common.defaultSourceLanguage || 'auto';
 
-      console.log(`[Translator] Translating page from ${source} to ${target} using ${provider}`);
-
       // Get translatable nodes
       const nodes = getTranslatableNodes();
-      console.log(`[Translator] Found ${nodes.length} translatable nodes`);
 
       if (nodes.length === 0) {
         throw new Error(getMessage('errorNoTranslatableText'));
@@ -151,15 +148,20 @@ export class Translator {
 
           // Apply translations immediately as they are parsed
           let batchTranslated = 0;
+          let emptyTranslations = 0;
           batchRefs.forEach((ref, idx) => {
             const translatedText = translations[idx];
-            if (translatedText && translatedText.trim() && translatedText !== ref.original) {
+            const hasTranslatedText = translatedText && translatedText.trim();
+
+            if (hasTranslatedText && translatedText !== ref.original) {
               replaceNodeContent(ref.node, translatedText, provider);
               ref.entry.completed = (ref.entry.completed || 0) + 1;
-            } else if (!translatedText || !translatedText.trim()) {
-              console.warn(`[Translator] Empty translation for item ${idx}, keeping original`);
-              ref.entry.completed = (ref.entry.completed || 0) + 1;
             } else {
+              if (!hasTranslatedText) {
+                // Provider returned an empty or whitespace-only string.
+                // This is not an error – we simply keep the original text.
+                emptyTranslations++;
+              }
               ref.entry.completed = (ref.entry.completed || 0) + 1;
             }
 
@@ -170,16 +172,33 @@ export class Translator {
             }
           });
 
+          // Log summary of empty translations once per batch (non-fatal).
+          // Empty translations are not treated as errors – we just keep the original text –
+          // but this information can be useful during debugging.
+          if (emptyTranslations > 0 && process.env.NODE_ENV !== 'production') {
+            console.info(
+              `[Translator] ${emptyTranslations} items returned empty translation in batch ${batchNumber}, keeping original text`
+            );
+          }
+
           // Free memory: clear processed data references
           // Note: DOM nodes are kept as they are needed for display
           // Only clear the temporary batch data structures
           return batchTranslated;
         } catch (error) {
-          console.error('[Translator] Error translating batch:', error);
+          // Collect errors for this batch. Actual logging is done after all batches complete
+          // to avoid duplicated messages from multiple layers.
+          const blockIndexes = [];
           batchEntries.forEach((entry) => {
             hideLoadingIndicator(entry.group.parent);
-            errors.push(`Block ${entry.index}: ${error.message}`);
+            blockIndexes.push(entry.index);
           });
+
+          const label =
+            blockIndexes.length === 1
+              ? `Block ${blockIndexes[0]}`
+              : `Blocks ${blockIndexes.join(', ')}`;
+          errors.push(`${label}: ${error.message}`);
           return 0;
         }
       };
@@ -264,10 +283,6 @@ export class Translator {
       const finalErrors = errors.length;
       const totalBatches = batchNumber;
 
-      console.log(
-        `[Translator] Processed ${totalBatches} batches, translated ${finalTranslated}/${totalGroups} groups`
-      );
-
       if (this.cancelRequested) {
         // Cancelled by user
         updateTranslationStatus(getMessage('statusCancelled'), 'info');
@@ -316,24 +331,19 @@ export class Translator {
       let textToTranslate = text;
       let position = null;
 
-      // If no text provided, get selection
-      if (!textToTranslate) {
-        const selection = getSelection();
-        if (!selection) {
-          console.warn('[Translator] No text selected');
-          return;
+        // If no text provided, get selection
+        if (!textToTranslate) {
+          const selection = getSelection();
+          if (!selection) {
+            return;
+          }
+          textToTranslate = selection.text;
+          position = { x: selection.x, y: selection.y };
         }
-        textToTranslate = selection.text;
-        position = { x: selection.x, y: selection.y };
-      }
 
       const target = targetLanguage || this.settings.common.defaultTargetLanguage;
       const provider = providerName || this.settings.common.defaultProvider;
       const source = sourceLanguage || this.settings.common.defaultSourceLanguage || 'auto';
-
-      console.log(
-        `[Translator] Translating selection from ${source} to ${target} using ${provider}`
-      );
 
       const requestPayload = PromptBuilder.buildRequestPayload([textToTranslate]);
       const result = await this.translateText(requestPayload, target, source, provider);
@@ -363,7 +373,6 @@ export class Translator {
    * Restore original content
    */
   restoreOriginal() {
-    console.log('[Translator] Restoring original content');
     this.cancelRequested = true;
     this.isTranslating = false;
     restoreOriginalContent();

@@ -9,7 +9,9 @@ import { isPageTranslated, hasTranslationPopup } from '../utils/dom-manager.js';
 
 // Initialize translator
 const translator = new Translator();
-translator.initialize().catch(console.error);
+translator.initialize().catch((error) => {
+  console.error('[Content Script] Failed to initialize translator:', error);
+});
 
 /**
  * Listen for messages from background script
@@ -95,9 +97,8 @@ document.addEventListener('mouseup', () => {
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0) {
       // Could show a floating button here
-      console.log('[Content Script] Text selected:', selection.toString().substring(0, 50));
     }
   }, 300);
 });
 
-console.log('[Multi-AI Translator] Content script loaded');
+console.info('[Multi-AI Translator] Content script loaded');

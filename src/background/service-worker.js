@@ -9,6 +9,8 @@ import { getMessage } from '../utils/i18n.js';
 
 // Cache for last used provider (for performance)
 let lastUsedProviderCache = null;
+// Ensure we only log the session storage fallback once to avoid noisy console output
+let sessionStorageWarningLogged = false;
 
 /**
  * Get last used provider from storage
@@ -27,7 +29,13 @@ async function getLastUsedProvider() {
       return lastUsedProviderCache;
     }
   } catch (error) {
-    console.warn('[Service Worker] Session storage not available, using local storage', error);
+    if (!sessionStorageWarningLogged) {
+      console.warn(
+        '[Service Worker] Session storage not available, using local storage',
+        error
+      );
+      sessionStorageWarningLogged = true;
+    }
   }
 
   // Fallback to local storage (persists until browser restart)
@@ -55,7 +63,13 @@ async function setLastUsedProvider(provider) {
       return;
     }
   } catch (error) {
-    console.warn('[Service Worker] Session storage not available, using local storage', error);
+    if (!sessionStorageWarningLogged) {
+      console.warn(
+        '[Service Worker] Session storage not available, using local storage',
+        error
+      );
+      sessionStorageWarningLogged = true;
+    }
   }
 
   // Fallback to local storage (persists until browser restart)
@@ -70,14 +84,14 @@ async function setLastUsedProvider(provider) {
  * Initialize extension
  */
 browser.runtime.onInstalled.addListener(async (details) => {
-  console.log('[Multi-AI Translator] Extension installed', details);
+  console.info('[Multi-AI Translator] Extension installed', details);
 
   // Create context menus
   await createContextMenus();
 
   // Set default settings on first install
   if (details.reason === 'install') {
-    console.log('[Multi-AI Translator] First install, setting default settings');
+    console.info('[Multi-AI Translator] First install, setting default settings');
   }
 });
 
@@ -453,4 +467,4 @@ function isContentTab(tab) {
   );
 }
 
-console.log('[Multi-AI Translator] Service worker loaded');
+console.info('[Multi-AI Translator] Service worker loaded');

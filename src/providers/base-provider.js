@@ -97,7 +97,11 @@ export class BaseProvider {
    * @throws {Error} Formatted error with helpful message
    */
   handleError(error) {
-    console.error(`[${this.name}] Error:`, error);
+    // In development we keep detailed provider-level diagnostics, but avoid
+    // emitting multiple error-level logs for the same failure from different layers.
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(`[${this.name}] Error:`, error);
+    }
 
     if (error.message.includes('API key')) {
       throw new Error(`Invalid API key for ${this.name}`);
