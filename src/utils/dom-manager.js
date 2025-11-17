@@ -342,3 +342,10 @@ export function getTranslationState() {
 export function isPageTranslated() {
   return translationState.translations.size > 0;
 }
+
+/**
+ * Check if selection translation popup exists
+ */
+export function hasTranslationPopup() {
+  return !!document.getElementById('multi-ai-translator-popup');
+}

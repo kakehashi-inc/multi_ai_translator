@@ -348,7 +348,8 @@ async function updateSelectionButtonState() {
 }
 
 /**
- * Show/hide restore button depending on whether page is currently translated
+ * Show/hide restore button depending on whether there is anything to restore
+ * (page translation or selection translation popup)
  */
 async function updateRestoreButtonVisibility() {
   const restoreBtn = document.getElementById('restore-btn');
@@ -356,7 +357,7 @@ async function updateRestoreButtonVisibility() {
 
   try {
     const response = await sendMessageToActiveTab({ action: 'get-translation-state' });
-    const canRestore = !!response?.isTranslated;
+    const canRestore = response?.canRestore ?? (!!response?.isTranslated || !!response?.hasPopup);
     restoreBtn.style.display = canRestore ? 'block' : 'none';
   } catch {
     // If we cannot determine page state (e.g. no suitable content tab), hide the button

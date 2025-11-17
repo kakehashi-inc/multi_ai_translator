@@ -5,7 +5,7 @@
 import browser from 'webextension-polyfill';
 import { Translator } from './translator.js';
 import { getMessage } from '../utils/i18n.js';
-import { isPageTranslated } from '../utils/dom-manager.js';
+import { isPageTranslated, hasTranslationPopup } from '../utils/dom-manager.js';
 
 // Initialize translator
 const translator = new Translator();
@@ -71,7 +71,13 @@ async function handleMessage(request) {
 
     case 'get-translation-state': {
       const translated = isPageTranslated();
-      return { success: true, isTranslated: translated };
+      const hasPopup = hasTranslationPopup();
+      return {
+        success: true,
+        isTranslated: translated,
+        hasPopup,
+        canRestore: translated || hasPopup
+      };
     }
 
     default:
