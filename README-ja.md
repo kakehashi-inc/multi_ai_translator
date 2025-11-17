@@ -6,7 +6,7 @@
 
 ## 機能
 
-- 🌐 **複数のAIプロバイダ対応**: OpenAI、Claude、Gemini、Ollama、OpenAI互換APIから選択可能
+- 🌐 **複数のAIプロバイダ対応**: OpenAI、Anthropic（Claude）、Gemini、Ollama、OpenAI互換APIから選択可能
 - 🦊 **マルチブラウザ対応**: Chrome、Edge、Firefoxでシームレスに動作
 - 📄 **ページ翻訳**: ワンクリックでWebページ全体を翻訳
 - ✨ **選択範囲翻訳**: 選択したテキストをポップアップで翻訳
@@ -21,7 +21,7 @@
 | プロバイダ | モデル | APIキー必須 |
 |----------|--------|------------|
 | OpenAI | GPT-4, GPT-3.5-turbo | ✅ 必要 |
-| Claude | Claude 3 (Opus, Sonnet, Haiku) | ✅ 必要 |
+| Anthropic（Claude） | Claude 3 (Opus, Sonnet, Haiku) | ✅ 必要 |
 | Gemini | Gemini Pro, Ultra | ✅ 必要 |
 | Ollama | ローカルモデル | ❌ 不要（ローカル） |
 | OpenAI互換 | LM Studio, LocalAI等 | 状況による |
@@ -92,7 +92,7 @@ yarn build
 - [OpenAI Platform](https://platform.openai.com/)からAPIキーを取得
 - 推奨モデル: `gpt-3.5-turbo`（高速でコスト効率が良い）
 
-### Claude (Anthropic)
+### Anthropic（Claude）
 - [Anthropic Console](https://console.anthropic.com/)からAPIキーを取得
 - 推奨モデル: `claude-3-sonnet-20240229`
 

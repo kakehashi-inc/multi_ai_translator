@@ -1,3 +1,4 @@
+import { OpenAI } from 'openai';
 import { OpenAIProvider } from './openai-provider.js';
 
 /**
@@ -16,14 +17,15 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
    * Overrides parent to support custom baseURL and optional API key
    */
   async initialize() {
-    if (!this.validateConfig()) {
-      throw new Error('Invalid OpenAI-compatible configuration');
+    if (this.client) {
+      return;
+    }
+
+    if (!this.config.baseUrl) {
+      throw new Error('Base URL is required for OpenAI-compatible providers');
     }
 
     try {
-      // Dynamic import for OpenAI SDK
-      const { OpenAI } = await import('openai');
-
       this.client = new OpenAI({
         apiKey: this.config.apiKey || 'dummy-key', // Some compatible services don't require API key
         baseURL: this.config.baseUrl, // Custom baseURL is required

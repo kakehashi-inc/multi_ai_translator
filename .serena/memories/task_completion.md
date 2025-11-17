@@ -1,0 +1,1 @@
+Before finishing a task: ensure code follows project patterns, update relevant docs, run yarn lint/format (or yarn check) and build/test via yarn dev/build as appropriate, and verify imports use .js extensions. Reload extension in browser (chrome://extensions etc.) or re-test to confirm behavior.

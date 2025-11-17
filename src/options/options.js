@@ -9,7 +9,8 @@ import {
   saveSettings,
   resetSettings,
   exportSettings,
-  importSettings
+  importSettings,
+  getBrowserLanguage
 } from '../utils/storage.js';
 
 // Initialize options page
@@ -116,12 +117,20 @@ function setupEventListeners() {
   });
 
   // Fetch models buttons
-  document.getElementById('openai-fetch-models').addEventListener('click', async () => {
-    await fetchModels('openai');
-  });
-
-  document.getElementById('ollama-fetch-models').addEventListener('click', async () => {
-    await fetchModels('ollama');
+  [
+    { id: 'openai-fetch-models', provider: 'openai' },
+    { id: 'anthropic-fetch-models', provider: 'anthropic' },
+    { id: 'gemini-fetch-models', provider: 'gemini' },
+    { id: 'ollama-fetch-models', provider: 'ollama' },
+    { id: 'openai-compatible-fetch-models', provider: 'openai-compatible' },
+    { id: 'anthropic-compatible-fetch-models', provider: 'anthropic-compatible' }
+  ].forEach(({ id, provider }) => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.addEventListener('click', async () => {
+        await fetchModels(provider);
+      });
+    }
   });
 }
 
@@ -178,7 +187,8 @@ function loadSettingsToUI(settings) {
 
   const defaultTargetLanguage = document.getElementById('default-target-language');
   if (defaultTargetLanguage) {
-    defaultTargetLanguage.value = settings.common.defaultTargetLanguage;
+    defaultTargetLanguage.value =
+      settings.common.defaultTargetLanguage || getBrowserLanguage();
   }
 
   const autoDetect = document.getElementById('auto-detect-language');
@@ -251,14 +261,15 @@ function collectSettingsFromUI() {
       settings.providers[provider].baseUrl = document.getElementById('anthropic-compatible-base-url')?.value || '';
       settings.providers[provider].apiKey = document.getElementById('anthropic-compatible-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('anthropic-compatible-model')?.value || '';
-      settings.providers[provider].maxTokens = 2000;
+      settings.providers[provider].maxTokens = parseInt(document.getElementById('anthropic-compatible-max-tokens')?.value || '2000');
       settings.providers[provider].temperature = 0.3;
     }
   });
 
   // Common settings
   settings.common.defaultProvider = document.getElementById('default-provider')?.value || 'openai';
-  settings.common.defaultTargetLanguage = document.getElementById('default-target-language')?.value || 'en';
+  settings.common.defaultTargetLanguage =
+    document.getElementById('default-target-language')?.value || getBrowserLanguage();
   settings.common.autoDetectLanguage = document.getElementById('auto-detect-language')?.checked || true;
   settings.common.uiLanguage = 'en';
 
@@ -301,15 +312,13 @@ function populateLanguages() {
  */
 async function fetchModels(providerName) {
   try {
-    showStatus(`Fetching models from ${providerName}...`, 'info');
+    const displayName = formatProviderName(providerName);
+    showStatus(`Fetching models from ${displayName}...`, 'info');
 
-    // Get current provider config
-    const config = {};
-    if (providerName === 'openai') {
-      config.apiKey = document.getElementById('openai-api-key').value;
-    } else if (providerName === 'ollama') {
-      config.host = document.getElementById('ollama-host').value;
-      config.model = 'dummy'; // Required but not used for listing
+    const { config, error } = buildModelFetchConfig(providerName);
+    if (error) {
+      showStatus(error, 'error');
+      return;
     }
 
     const response = await browser.runtime.sendMessage({
@@ -339,12 +348,71 @@ async function fetchModels(providerName) {
       });
 
       showStatus(`Found ${response.models.length} models`, 'success');
+    } else if (response.success) {
+      showStatus('No models found. Please enter a model manually.', 'info');
     } else {
       showStatus(response.error || 'No models found', 'error');
     }
   } catch (error) {
     console.error('[Options] Fetch models error:', error);
     showStatus('Failed to fetch models: ' + error.message, 'error');
+  }
+}
+
+function buildModelFetchConfig(providerName) {
+  const getValue = id => document.getElementById(id)?.value?.trim() || '';
+
+  switch (providerName) {
+    case 'openai': {
+      const apiKey = getValue('openai-api-key');
+      return apiKey
+        ? { config: { apiKey } }
+        : { error: 'OpenAI API key is required to fetch models.' };
+    }
+    case 'anthropic': {
+      const apiKey = getValue('anthropic-api-key');
+      return apiKey
+        ? { config: { apiKey } }
+        : { error: 'Anthropic API key is required to fetch models.' };
+    }
+    case 'gemini': {
+      const apiKey = getValue('gemini-api-key');
+      return apiKey
+        ? { config: { apiKey } }
+        : { error: 'Gemini API key is required to fetch models.' };
+    }
+    case 'ollama': {
+      const host = getValue('ollama-host') || 'http://127.0.0.1:11434';
+      return { config: { host } };
+    }
+    case 'openai-compatible': {
+      const baseUrl = getValue('openai-compatible-base-url');
+      if (!baseUrl) {
+        return { error: 'Base URL is required to fetch models from OpenAI-compatible providers.' };
+      }
+      return {
+        config: {
+          baseUrl,
+          apiKey: getValue('openai-compatible-api-key')
+        }
+      };
+    }
+    case 'anthropic-compatible': {
+      const baseUrl = getValue('anthropic-compatible-base-url');
+      if (!baseUrl) {
+        return {
+          error: 'Base URL is required to fetch models from Anthropic-compatible providers.'
+        };
+      }
+      return {
+        config: {
+          baseUrl,
+          apiKey: getValue('anthropic-compatible-api-key')
+        }
+      };
+    }
+    default:
+      return { config: {} };
   }
 }
 
@@ -361,4 +429,19 @@ function showStatus(message, type = 'info') {
       statusEl.className = 'status-message';
     }, 5000);
   }
+}
+
+/**
+ * Format provider name for display
+ */
+function formatProviderName(name) {
+  const names = {
+    'openai': 'OpenAI',
+    'anthropic': 'Anthropic (Claude)',
+    'gemini': 'Gemini',
+    'ollama': 'Ollama',
+    'openai-compatible': 'OpenAI Compatible',
+    'anthropic-compatible': 'Anthropic Compatible'
+  };
+  return names[name] || name;
 }

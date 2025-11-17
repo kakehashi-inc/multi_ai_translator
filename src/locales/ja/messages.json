@@ -4,7 +4,7 @@
     "description": "拡張機能の名前"
   },
   "extensionDescription": {
-    "message": "複数のAIプロバイダ（OpenAI、Claude、Gemini、Ollama）を使用してWebページを翻訳",
+    "message": "複数のAIプロバイダ（OpenAI、Anthropic（Claude）、Gemini、Ollama）を使用してWebページを翻訳",
     "description": "拡張機能の説明"
   },
   "commandTranslatePage": {

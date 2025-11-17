@@ -13,7 +13,7 @@ browser.runtime.onInstalled.addListener(async (details) => {
   console.log('[Multi-AI Translator] Extension installed', details);
 
   // Create context menus
-  createContextMenus();
+  await createContextMenus();
 
   // Set default settings on first install
   if (details.reason === 'install') {
@@ -24,26 +24,38 @@ browser.runtime.onInstalled.addListener(async (details) => {
 /**
  * Create context menus
  */
-function createContextMenus() {
-  browser.contextMenus.removeAll(() => {
-    browser.contextMenus.create({
+async function createContextMenus() {
+  try {
+    await browser.contextMenus.removeAll();
+  } catch (error) {
+    console.warn('[Multi-AI Translator] Failed to clear context menus before creating new ones', error);
+  }
+
+  const menuItems = [
+    {
       id: 'translate-selection',
       title: 'Translate selection',
       contexts: ['selection']
-    });
-
-    browser.contextMenus.create({
+    },
+    {
       id: 'translate-page',
       title: 'Translate page',
       contexts: ['page']
-    });
-
-    browser.contextMenus.create({
+    },
+    {
       id: 'restore-original',
       title: 'Restore original',
       contexts: ['page']
-    });
-  });
+    }
+  ];
+
+  for (const item of menuItems) {
+    try {
+      await browser.contextMenus.create(item);
+    } catch (error) {
+      console.error('[Multi-AI Translator] Failed to create context menu', item.id, error);
+    }
+  }
 }
 
 /**

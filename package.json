@@ -21,7 +21,7 @@
     "ai",
     "llm",
     "openai",
-    "claude",
+    "anthropic",
     "gemini",
     "ollama"
   ],

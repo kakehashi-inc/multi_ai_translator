@@ -1,3 +1,4 @@
+import { OpenAI } from 'openai';
 import { BaseProvider } from './base-provider.js';
 
 /**
@@ -15,14 +16,15 @@ export class OpenAIProvider extends BaseProvider {
    * Initialize OpenAI client
    */
   async initialize() {
-    if (!this.validateConfig()) {
-      throw new Error('Invalid OpenAI configuration');
+    if (this.client) {
+      return;
+    }
+
+    if (!this.config.apiKey) {
+      throw new Error('OpenAI API key is required');
     }
 
     try {
-      // Dynamic import for OpenAI
-      const { OpenAI } = await import('openai');
-
       this.client = new OpenAI({
         apiKey: this.config.apiKey,
         baseURL: this.config.baseURL,
@@ -44,6 +46,10 @@ export class OpenAIProvider extends BaseProvider {
    * Translate text using OpenAI
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
+    if (!this.validateConfig()) {
+      throw new Error('Invalid OpenAI configuration');
+    }
+
     await this.ensureInitialized();
 
     return await this.withErrorHandling(async () => {

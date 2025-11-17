@@ -1,3 +1,4 @@
+import { GoogleGenAI } from '@google/genai';
 import { BaseProvider } from './base-provider.js';
 
 /**
@@ -16,14 +17,15 @@ export class GeminiProvider extends BaseProvider {
    * Initialize Gemini client
    */
   async initialize() {
-    if (!this.validateConfig()) {
-      throw new Error('Invalid Gemini configuration');
+    if (this.client) {
+      return;
+    }
+
+    if (!this.config.apiKey) {
+      throw new Error('Gemini API key is required');
     }
 
     try {
-      // Dynamic import for Google Gen AI SDK
-      const { GoogleGenAI } = await import('@google/genai');
-
       this.client = new GoogleGenAI({ apiKey: this.config.apiKey });
       this.modelName = this.config.model;
       this.generationConfig = {
@@ -46,6 +48,10 @@ export class GeminiProvider extends BaseProvider {
    * Translate text using Gemini
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
+    if (!this.validateConfig()) {
+      throw new Error('Invalid Gemini configuration');
+    }
+
     await this.ensureInitialized();
 
     return await this.withErrorHandling(async () => {
@@ -68,10 +74,21 @@ export class GeminiProvider extends BaseProvider {
     try {
       await this.ensureInitialized();
 
-      const response = await this.client.models.list();
-      return response.models
-        .filter(model => model.name.includes('gemini'))
-        .map(model => model.name.replace('models/', ''));
+      const pager = await this.client.models.list({
+        config: {
+          pageSize: 100
+        }
+      });
+
+      const models = [];
+      for await (const model of pager) {
+        const name = model?.name?.replace('models/', '');
+        if (name && name.includes('gemini')) {
+          models.push(name);
+        }
+      }
+
+      return models;
     } catch (error) {
       console.warn('Failed to fetch models from Google Gen AI API', error);
       return [];

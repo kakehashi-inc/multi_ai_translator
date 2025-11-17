@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk';
 import { AnthropicProvider } from './anthropic-provider.js';
 
 /**
@@ -16,14 +17,15 @@ export class AnthropicCompatibleProvider extends AnthropicProvider {
    * Overrides parent to support custom baseURL and optional API key
    */
   async initialize() {
-    if (!this.validateConfig()) {
-      throw new Error('Invalid Anthropic-compatible configuration');
+    if (this.client) {
+      return;
+    }
+
+    if (!this.config.baseUrl) {
+      throw new Error('Base URL is required for Anthropic-compatible providers');
     }
 
     try {
-      // Dynamic import for Anthropic SDK
-      const Anthropic = (await import('@anthropic-ai/sdk')).default;
-
       this.client = new Anthropic({
         apiKey: this.config.apiKey || 'dummy-key', // Some compatible services may not require API key
         baseURL: this.config.baseUrl, // Custom baseURL is required

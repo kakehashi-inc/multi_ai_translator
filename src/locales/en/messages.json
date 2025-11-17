@@ -4,7 +4,7 @@
     "description": "Name of the extension"
   },
   "extensionDescription": {
-    "message": "Translate web pages using multiple AI providers (OpenAI, Claude, Gemini, Ollama)",
+    "message": "Translate web pages using multiple AI providers (OpenAI, Anthropic (Claude), Gemini, Ollama)",
     "description": "Description of the extension"
   },
   "commandTranslatePage": {

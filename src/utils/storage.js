@@ -4,73 +4,102 @@
  */
 import browser from 'webextension-polyfill';
 
-/**
- * Default settings
- */
-const DEFAULT_SETTINGS = {
-  common: {
-    defaultProvider: 'openai',
-    defaultTargetLanguage: 'en',
-    uiLanguage: 'en',
-    autoDetectLanguage: true
-  },
-  providers: {
-    openai: {
-      enabled: false,
-      apiKey: '',
-      model: '',
-      temperature: 0.3,
-      maxTokens: 2000
-    },
-    anthropic: {
-      enabled: false,
-      apiKey: '',
-      model: '',
-      maxTokens: 2000,
-      temperature: 0.3
-    },
-    gemini: {
-      enabled: false,
-      apiKey: '',
-      model: '',
-      temperature: 0.3,
-      maxOutputTokens: 2000
-    },
-    ollama: {
-      enabled: false,
-      host: 'http://127.0.0.1:11434',
-      model: '',
-      temperature: 0.3
-    },
-    'openai-compatible': {
-      enabled: false,
-      baseUrl: '',
-      apiKey: '',
-      model: '',
-      temperature: 0.3
-    },
-    'anthropic-compatible': {
-      enabled: false,
-      baseUrl: '',
-      apiKey: '',
-      model: '',
-      maxTokens: 2000,
-      temperature: 0.3
-    }
-  },
-  ui: {
-    theme: 'auto',
-    fontSize: 14,
-    showOriginalText: true,
-    highlightTranslated: true
-  },
-  shortcuts: {
-    translatePage: 'Ctrl+Shift+T',
-    translateSelection: 'Ctrl+Shift+S',
-    showPopup: 'Ctrl+Shift+P',
-    restoreOriginal: 'Ctrl+Shift+R'
+function normalizeLanguageCode(language) {
+  if (!language || typeof language !== 'string') {
+    return 'en';
   }
-};
+
+  const [code] = language.split(/[-_]/);
+  return code?.toLowerCase() || 'en';
+}
+
+export function getBrowserLanguage() {
+  try {
+    if (browser?.i18n?.getUILanguage) {
+      return normalizeLanguageCode(browser.i18n.getUILanguage());
+    }
+  } catch (error) {
+    console.warn('Failed to read browser UI language', error);
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    return normalizeLanguageCode(navigator.language);
+  }
+
+  return 'en';
+}
+
+/**
+ * Default settings factory
+ */
+function createDefaultSettings() {
+  const browserLanguage = getBrowserLanguage();
+
+  return {
+    common: {
+      defaultProvider: 'openai',
+      defaultTargetLanguage: browserLanguage,
+      uiLanguage: browserLanguage,
+      autoDetectLanguage: true
+    },
+    providers: {
+      openai: {
+        enabled: false,
+        apiKey: '',
+        model: '',
+        temperature: 0.3,
+        maxTokens: 2000
+      },
+      anthropic: {
+        enabled: false,
+        apiKey: '',
+        model: '',
+        maxTokens: 2000,
+        temperature: 0.3
+      },
+      gemini: {
+        enabled: false,
+        apiKey: '',
+        model: '',
+        temperature: 0.3,
+        maxOutputTokens: 2000
+      },
+      ollama: {
+        enabled: false,
+        host: 'http://127.0.0.1:11434',
+        model: '',
+        temperature: 0.3
+      },
+      'openai-compatible': {
+        enabled: false,
+        baseUrl: '',
+        apiKey: '',
+        model: '',
+        temperature: 0.3
+      },
+      'anthropic-compatible': {
+        enabled: false,
+        baseUrl: '',
+        apiKey: '',
+        model: '',
+        maxTokens: 2000,
+        temperature: 0.3
+      }
+    },
+    ui: {
+      theme: 'auto',
+      fontSize: 14,
+      showOriginalText: true,
+      highlightTranslated: true
+    },
+    shortcuts: {
+      translatePage: 'Ctrl+Shift+T',
+      translateSelection: 'Ctrl+Shift+S',
+      showPopup: 'Ctrl+Shift+P',
+      restoreOriginal: 'Ctrl+Shift+R'
+    }
+  };
+}
 
 /**
  * Get all settings
@@ -79,10 +108,10 @@ const DEFAULT_SETTINGS = {
 export async function getSettings() {
   try {
     const result = await browser.storage.local.get('settings');
-    return result.settings || DEFAULT_SETTINGS;
+    return normalizeSettings(result.settings);
   } catch (error) {
     // Fallback for testing
-    return DEFAULT_SETTINGS;
+    return getDefaultSettings();
   }
 }
 
@@ -140,7 +169,7 @@ export async function getEnabledProviders() {
  * @returns {Promise<void>}
  */
 export async function resetSettings() {
-  await saveSettings(DEFAULT_SETTINGS);
+  await saveSettings(getDefaultSettings());
 }
 
 /**
@@ -219,5 +248,49 @@ export async function clearHistory() {
  * @returns {object} Default settings
  */
 export function getDefaultSettings() {
-  return JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+  return JSON.parse(JSON.stringify(createDefaultSettings()));
+}
+
+function normalizeSettings(storedSettings) {
+  const normalized = getDefaultSettings();
+
+  if (!storedSettings) {
+    return normalized;
+  }
+
+  if (storedSettings.common) {
+    normalized.common = {
+      ...normalized.common,
+      ...storedSettings.common
+    };
+  }
+
+  normalized.providers = normalized.providers || {};
+  const providerNames = new Set([
+    ...Object.keys(normalized.providers),
+    ...(storedSettings.providers ? Object.keys(storedSettings.providers) : [])
+  ]);
+
+  providerNames.forEach(name => {
+    normalized.providers[name] = {
+      ...(normalized.providers[name] || {}),
+      ...(storedSettings.providers?.[name] || {})
+    };
+  });
+
+  normalized.ui = {
+    ...normalized.ui,
+    ...(storedSettings.ui || {})
+  };
+
+  normalized.shortcuts = {
+    ...normalized.shortcuts,
+    ...(storedSettings.shortcuts || {})
+  };
+
+  if (!normalized.common.defaultTargetLanguage) {
+    normalized.common.defaultTargetLanguage = getBrowserLanguage();
+  }
+
+  return normalized;
 }

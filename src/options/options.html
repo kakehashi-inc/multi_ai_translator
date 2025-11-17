@@ -47,24 +47,25 @@
           </div>
         </div>
 
-        <!-- Claude -->
+        <!-- Anthropic -->
         <div class="provider-section">
           <h3>
-            <input type="checkbox" id="claude-enabled" class="provider-toggle">
-            <label for="claude-enabled">Claude (Anthropic)</label>
+            <input type="checkbox" id="anthropic-enabled" class="provider-toggle">
+            <label for="anthropic-enabled">Anthropic (Claude)</label>
           </h3>
           <div class="provider-config">
             <div class="form-group">
-              <label for="claude-api-key" data-i18n="labelAPIKey">API Key:</label>
-              <input type="password" id="claude-api-key" class="form-control" placeholder="sk-ant-...">
+              <label for="anthropic-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="anthropic-api-key" class="form-control" placeholder="sk-ant-...">
             </div>
             <div class="form-group">
-              <label for="claude-model" data-i18n="labelModel">Model:</label>
-              <input type="text" id="claude-model" class="form-control" placeholder="claude-3-sonnet-20240229">
+              <label for="anthropic-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="anthropic-model" class="form-control" placeholder="claude-3-sonnet-20240229">
+              <button id="anthropic-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
             </div>
             <div class="form-group">
-              <label for="claude-max-tokens" data-i18n="labelMaxTokens">Max Tokens:</label>
-              <input type="number" id="claude-max-tokens" class="form-control" value="2000">
+              <label for="anthropic-max-tokens" data-i18n="labelMaxTokens">Max Tokens:</label>
+              <input type="number" id="anthropic-max-tokens" class="form-control" value="2000">
             </div>
           </div>
         </div>
@@ -83,6 +84,7 @@
             <div class="form-group">
               <label for="gemini-model" data-i18n="labelModel">Model:</label>
               <input type="text" id="gemini-model" class="form-control" placeholder="gemini-pro">
+              <button id="gemini-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
             </div>
           </div>
         </div>
@@ -124,6 +126,34 @@
             <div class="form-group">
               <label for="openai-compatible-model" data-i18n="labelModel">Model:</label>
               <input type="text" id="openai-compatible-model" class="form-control">
+              <button id="openai-compatible-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anthropic Compatible -->
+        <div class="provider-section">
+          <h3>
+            <input type="checkbox" id="anthropic-compatible-enabled" class="provider-toggle">
+            <label for="anthropic-compatible-enabled">Anthropic Compatible</label>
+          </h3>
+          <div class="provider-config">
+            <div class="form-group">
+              <label for="anthropic-compatible-base-url" data-i18n="labelBaseURL">Base URL:</label>
+              <input type="text" id="anthropic-compatible-base-url" class="form-control" placeholder="https://api.example.com">
+            </div>
+            <div class="form-group">
+              <label for="anthropic-compatible-api-key" data-i18n="labelAPIKey">API Key:</label>
+              <input type="password" id="anthropic-compatible-api-key" class="form-control" placeholder="sk-ant-...">
+            </div>
+            <div class="form-group">
+              <label for="anthropic-compatible-model" data-i18n="labelModel">Model:</label>
+              <input type="text" id="anthropic-compatible-model" class="form-control" placeholder="claude-3-opus-20240229">
+              <button id="anthropic-compatible-fetch-models" class="btn-sm" data-i18n="btnFetchModels">Fetch Models</button>
+            </div>
+            <div class="form-group">
+              <label for="anthropic-compatible-max-tokens" data-i18n="labelMaxTokens">Max Tokens:</label>
+              <input type="number" id="anthropic-compatible-max-tokens" class="form-control" value="2000">
             </div>
           </div>
         </div>
@@ -137,10 +167,11 @@
           <label for="default-provider" data-i18n="labelDefaultProvider">Default Provider:</label>
           <select id="default-provider" class="form-control">
             <option value="openai">OpenAI</option>
-            <option value="claude">Claude</option>
+            <option value="anthropic">Anthropic (Claude)</option>
             <option value="gemini">Gemini</option>
             <option value="ollama">Ollama</option>
             <option value="openai-compatible">OpenAI Compatible</option>
+            <option value="anthropic-compatible">Anthropic Compatible</option>
           </select>
         </div>
 

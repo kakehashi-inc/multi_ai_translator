@@ -1,3 +1,4 @@
+import { Ollama } from 'ollama/browser';
 import { BaseProvider } from './base-provider.js';
 
 /**
@@ -15,14 +16,11 @@ export class OllamaProvider extends BaseProvider {
    * Initialize Ollama client
    */
   async initialize() {
-    if (!this.validateConfig()) {
-      throw new Error('Invalid Ollama configuration');
+    if (this.client) {
+      return;
     }
 
     try {
-      // Dynamic import for Ollama
-      const { Ollama } = await import('ollama/browser');
-
       this.client = new Ollama({
         host: this.config.host || 'http://127.0.0.1:11434'
       });
@@ -42,6 +40,10 @@ export class OllamaProvider extends BaseProvider {
    * Translate text using Ollama
    */
   async translate(text, targetLanguage, sourceLanguage = 'auto') {
+    if (!this.validateConfig()) {
+      throw new Error('Invalid Ollama configuration');
+    }
+
     await this.ensureInitialized();
 
     return await this.withErrorHandling(async () => {

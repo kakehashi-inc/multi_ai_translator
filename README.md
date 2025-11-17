@@ -8,7 +8,7 @@ A powerful browser extension that translates web pages using multiple AI provide
 
 ## Features
 
-- 🌐 **Multiple AI Providers**: Choose from OpenAI, Claude, Gemini, Ollama, or OpenAI-compatible APIs
+- 🌐 **Multiple AI Providers**: Choose from OpenAI, Anthropic (Claude), Gemini, Ollama, or OpenAI-compatible APIs
 - 🦊 **Multi-Browser Support**: Works seamlessly on Chrome, Edge, and Firefox
 - 📄 **Page Translation**: Translate entire web pages with a single click
 - ✨ **Selection Translation**: Translate selected text with popup display
@@ -23,7 +23,7 @@ A powerful browser extension that translates web pages using multiple AI provide
 | Provider | Models | API Key Required |
 |----------|--------|------------------|
 | OpenAI | GPT-4, GPT-3.5-turbo | ✅ Yes |
-| Claude | Claude 3 (Opus, Sonnet, Haiku) | ✅ Yes |
+| Anthropic (Claude) | Claude 3 (Opus, Sonnet, Haiku) | ✅ Yes |
 | Gemini | Gemini Pro, Ultra | ✅ Yes |
 | Ollama | Any local model | ❌ No (local) |
 | OpenAI-compatible | LM Studio, LocalAI, etc. | Depends |
@@ -94,7 +94,7 @@ yarn build
 - Get API key from [OpenAI Platform](https://platform.openai.com/)
 - Recommended model: `gpt-3.5-turbo` (fast and cost-effective)
 
-### Claude (Anthropic)
+### Anthropic (Claude)
 - Get API key from [Anthropic Console](https://console.anthropic.com/)
 - Recommended model: `claude-3-sonnet-20240229`
 
