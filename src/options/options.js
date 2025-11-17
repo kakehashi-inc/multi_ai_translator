@@ -12,7 +12,24 @@ import {
   importSettings,
   getBrowserLanguage
 } from '../utils/storage.js';
-import { PROVIDER_ORDER, formatProviderName } from '../providers/provider-meta.js';
+import { ConstVariables } from '../utils/const-variables.js';
+
+const {
+  PROVIDER_ORDER,
+  DEFAULT_BATCH_MAX_ITEMS,
+  DEFAULT_BATCH_MAX_CHARS,
+  DEFAULT_OPENAI_TEMPERATURE,
+  DEFAULT_OPENAI_MAX_TOKENS,
+  DEFAULT_ANTHROPIC_TEMPERATURE,
+  DEFAULT_ANTHROPIC_MAX_TOKENS,
+  DEFAULT_GEMINI_TEMPERATURE,
+  DEFAULT_GEMINI_MAX_OUTPUT_TOKENS,
+  DEFAULT_OLLAMA_TEMPERATURE,
+  DEFAULT_OLLAMA_HOST,
+  DEFAULT_PROVIDER,
+  DEFAULT_LANGUAGE,
+  DEFAULT_FONT_SIZE
+} = ConstVariables;
 
 // Initialize options page
 document.addEventListener('DOMContentLoaded', async () => {
@@ -177,6 +194,26 @@ function loadSettingsToUI(settings) {
     });
   });
 
+  const openaiTempInput = document.getElementById('openai-temperature');
+  if (openaiTempInput) {
+    openaiTempInput.placeholder = `${DEFAULT_OPENAI_TEMPERATURE}`;
+  }
+
+  const anthropicTokensInput = document.getElementById('anthropic-max-tokens');
+  if (anthropicTokensInput) {
+    anthropicTokensInput.placeholder = `${DEFAULT_ANTHROPIC_MAX_TOKENS}`;
+  }
+
+  const anthropicCompatibleTokensInput = document.getElementById('anthropic-compatible-max-tokens');
+  if (anthropicCompatibleTokensInput) {
+    anthropicCompatibleTokensInput.placeholder = `${DEFAULT_ANTHROPIC_MAX_TOKENS}`;
+  }
+
+  const ollamaHostInput = document.getElementById('ollama-host');
+  if (ollamaHostInput) {
+    ollamaHostInput.placeholder = DEFAULT_OLLAMA_HOST;
+  }
+
   // Common settings
   const defaultProvider = document.getElementById('default-provider');
   if (defaultProvider) {
@@ -192,6 +229,20 @@ function loadSettingsToUI(settings) {
   const autoDetect = document.getElementById('auto-detect-language');
   if (autoDetect) {
     autoDetect.checked = settings.common.autoDetectLanguage;
+  }
+
+  const batchMaxItems = document.getElementById('batch-max-items');
+  if (batchMaxItems) {
+    batchMaxItems.placeholder = `${DEFAULT_BATCH_MAX_ITEMS}`;
+    const resolvedItems = Number(settings.common.batchMaxItems);
+    batchMaxItems.value = Number.isFinite(resolvedItems) ? resolvedItems : '';
+  }
+
+  const batchMaxChars = document.getElementById('batch-max-chars');
+  if (batchMaxChars) {
+    batchMaxChars.placeholder = `${DEFAULT_BATCH_MAX_CHARS}`;
+    const resolvedChars = Number(settings.common.batchMaxChars);
+    batchMaxChars.value = Number.isFinite(resolvedChars) ? resolvedChars : '';
   }
 
   // UI settings
@@ -218,8 +269,7 @@ function collectSettingsFromUI() {
   const settings = {
     common: {},
     providers: {},
-    ui: {},
-    shortcuts: {}
+    ui: {}
   };
 
   // Providers
@@ -232,38 +282,53 @@ function collectSettingsFromUI() {
     if (provider === 'openai') {
       settings.providers[provider].apiKey = document.getElementById('openai-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('openai-model')?.value || '';
-      settings.providers[provider].temperature = parseFloat(document.getElementById('openai-temperature')?.value || '0.3');
-      settings.providers[provider].maxTokens = 2000;
+      const openaiTempValue = document.getElementById('openai-temperature')?.value ?? '';
+      const parsedOpenaiTemp = parseFloat(openaiTempValue);
+      settings.providers[provider].temperature = Number.isFinite(parsedOpenaiTemp)
+        ? parsedOpenaiTemp
+        : DEFAULT_OPENAI_TEMPERATURE;
+      settings.providers[provider].maxTokens = DEFAULT_OPENAI_MAX_TOKENS;
     } else if (provider === 'anthropic') {
       settings.providers[provider].apiKey = document.getElementById('anthropic-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('anthropic-model')?.value || '';
-      settings.providers[provider].maxTokens = parseInt(document.getElementById('anthropic-max-tokens')?.value || '2000');
-      settings.providers[provider].temperature = 0.3;
+      const anthropicMaxTokens = parseInt(document.getElementById('anthropic-max-tokens')?.value ?? '', 10);
+      settings.providers[provider].maxTokens = Number.isFinite(anthropicMaxTokens)
+        ? anthropicMaxTokens
+        : DEFAULT_ANTHROPIC_MAX_TOKENS;
+      settings.providers[provider].temperature = DEFAULT_ANTHROPIC_TEMPERATURE;
     } else if (provider === 'gemini') {
       settings.providers[provider].apiKey = document.getElementById('gemini-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('gemini-model')?.value || '';
-      settings.providers[provider].temperature = 0.3;
-      settings.providers[provider].maxOutputTokens = 2000;
+      settings.providers[provider].temperature = DEFAULT_GEMINI_TEMPERATURE;
+      settings.providers[provider].maxOutputTokens = DEFAULT_GEMINI_MAX_OUTPUT_TOKENS;
     } else if (provider === 'ollama') {
-      settings.providers[provider].host = document.getElementById('ollama-host')?.value || 'http://127.0.0.1:11434';
+      const hostValue = document.getElementById('ollama-host')?.value || '';
+      settings.providers[provider].host = hostValue || DEFAULT_OLLAMA_HOST;
       settings.providers[provider].model = document.getElementById('ollama-model')?.value || '';
-      settings.providers[provider].temperature = 0.3;
+      settings.providers[provider].temperature = DEFAULT_OLLAMA_TEMPERATURE;
     } else if (provider === 'openai-compatible') {
       settings.providers[provider].baseUrl = document.getElementById('openai-compatible-base-url')?.value || '';
       settings.providers[provider].apiKey = document.getElementById('openai-compatible-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('openai-compatible-model')?.value || '';
-      settings.providers[provider].temperature = 0.3;
+      settings.providers[provider].temperature = DEFAULT_OPENAI_TEMPERATURE;
     } else if (provider === 'anthropic-compatible') {
       settings.providers[provider].baseUrl = document.getElementById('anthropic-compatible-base-url')?.value || '';
       settings.providers[provider].apiKey = document.getElementById('anthropic-compatible-api-key')?.value || '';
       settings.providers[provider].model = document.getElementById('anthropic-compatible-model')?.value || '';
-      settings.providers[provider].maxTokens = parseInt(document.getElementById('anthropic-compatible-max-tokens')?.value || '2000');
-      settings.providers[provider].temperature = 0.3;
+      const anthCompatibleMaxTokens = parseInt(
+        document.getElementById('anthropic-compatible-max-tokens')?.value ?? '',
+        10
+      );
+      settings.providers[provider].maxTokens = Number.isFinite(anthCompatibleMaxTokens)
+        ? anthCompatibleMaxTokens
+        : DEFAULT_ANTHROPIC_MAX_TOKENS;
+      settings.providers[provider].temperature = DEFAULT_ANTHROPIC_TEMPERATURE;
     }
   });
 
   // Common settings
-  settings.common.defaultProvider = document.getElementById('default-provider')?.value || 'openai';
+  settings.common.defaultProvider =
+    document.getElementById('default-provider')?.value || DEFAULT_PROVIDER;
   const targetLanguageField = document.getElementById('default-target-language');
   const selectedTargetLanguage = targetLanguageField?.value;
   settings.common.defaultTargetLanguage = selectedTargetLanguage && selectedTargetLanguage.trim()
@@ -271,7 +336,19 @@ function collectSettingsFromUI() {
     : getBrowserLanguage();
   settings.common.autoDetectLanguage =
     document.getElementById('auto-detect-language')?.checked ?? true;
-  settings.common.uiLanguage = 'en';
+  settings.common.uiLanguage = DEFAULT_LANGUAGE;
+
+  const batchItemsInput = document.getElementById('batch-max-items');
+  const parsedBatchItems = parseInt(batchItemsInput?.value ?? '', 10);
+  settings.common.batchMaxItems = Number.isFinite(parsedBatchItems)
+    ? parsedBatchItems
+    : DEFAULT_BATCH_MAX_ITEMS;
+
+  const batchCharsInput = document.getElementById('batch-max-chars');
+  const parsedBatchChars = parseInt(batchCharsInput?.value ?? '', 10);
+  settings.common.batchMaxChars = Number.isFinite(parsedBatchChars)
+    ? parsedBatchChars
+    : DEFAULT_BATCH_MAX_CHARS;
 
   // UI settings
   settings.ui.theme = document.getElementById('theme')?.value || 'auto';
@@ -279,15 +356,7 @@ function collectSettingsFromUI() {
     document.getElementById('show-original-text')?.checked ?? true;
   settings.ui.highlightTranslated =
     document.getElementById('highlight-translated')?.checked ?? true;
-  settings.ui.fontSize = 14;
-
-  // Shortcuts (keep existing)
-  settings.shortcuts = {
-    translatePage: 'Ctrl+Shift+T',
-    translateSelection: 'Ctrl+Shift+S',
-    showPopup: 'Ctrl+Shift+P',
-    restoreOriginal: 'Ctrl+Shift+R'
-  };
+  settings.ui.fontSize = DEFAULT_FONT_SIZE;
 
   return settings;
 }
@@ -325,7 +394,7 @@ function populateLanguages(selectedLanguage) {
  */
 async function fetchModels(providerName) {
   try {
-    const displayName = formatProviderName(providerName);
+    const displayName = ConstVariables.formatProviderName(providerName);
     showStatus(`Fetching models from ${displayName}...`, 'info');
 
     const { config, error } = buildModelFetchConfig(providerName);
@@ -395,7 +464,7 @@ function buildModelFetchConfig(providerName) {
         : { error: 'Gemini API key is required to fetch models.' };
     }
     case 'ollama': {
-      const host = getValue('ollama-host') || 'http://127.0.0.1:11434';
+      const host = getValue('ollama-host') || DEFAULT_OLLAMA_HOST;
       return { config: { host } };
     }
     case 'openai-compatible': {

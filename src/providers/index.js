@@ -8,7 +8,7 @@ import { GeminiProvider } from './gemini-provider.js';
 import { OllamaProvider } from './ollama-provider.js';
 import { OpenAICompatibleProvider } from './openai-compatible-provider.js';
 import { AnthropicCompatibleProvider } from './anthropic-compatible-provider.js';
-import { PROVIDER_ORDER } from './provider-meta.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 export const PROVIDERS = {
   gemini: GeminiProvider,
@@ -40,7 +40,7 @@ export function createProvider(providerName, config) {
  * @returns {string[]} Array of provider names
  */
 export function getAvailableProviders() {
-  return [...PROVIDER_ORDER];
+  return [...ConstVariables.PROVIDER_ORDER];
 }
 
 export {

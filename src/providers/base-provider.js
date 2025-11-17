@@ -1,4 +1,5 @@
-import { createTranslationPrompt, splitIntoChunks as splitText } from '../utils/text-utils.js';
+import { PromptBuilder } from '../utils/prompt-builder.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 /**
  * Base Provider Class
@@ -65,7 +66,7 @@ export class BaseProvider {
    * @param {string} sourceLanguage - Source language (optional)
    * @returns {Promise<string>} Translated text
    */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
+  async translate(text, targetLanguage, _sourceLanguage = 'auto') {
     throw new Error('translate must be implemented by subclass');
   }
 
@@ -88,7 +89,7 @@ export class BaseProvider {
    * @returns {string} Formatted prompt
    */
   createPrompt(text, targetLanguage, sourceLanguage) {
-    return createTranslationPrompt(text, targetLanguage, sourceLanguage);
+    return PromptBuilder.buildPrompt(text, targetLanguage, sourceLanguage);
   }
 
   /**
@@ -119,7 +120,33 @@ export class BaseProvider {
    * @param {number} maxLength - Maximum length per chunk
    * @returns {string[]} Array of text chunks
    */
-  splitIntoChunks(text, maxLength = 2000) {
-    return splitText(text, maxLength);
+  splitIntoChunks(text, maxLength = ConstVariables.DEFAULT_TEXT_CHUNK_LENGTH) {
+    if (text.length <= maxLength) {
+      return [text];
+    }
+
+    const chunks = [];
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    let currentChunk = '';
+
+    for (const sentence of sentences) {
+      if ((currentChunk + sentence).length > maxLength) {
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+          currentChunk = sentence;
+        } else {
+          chunks.push(sentence.substring(0, maxLength));
+          currentChunk = sentence.substring(maxLength);
+        }
+      } else {
+        currentChunk += sentence;
+      }
+    }
+
+    if (currentChunk) {
+      chunks.push(currentChunk.trim());
+    }
+
+    return chunks;
   }
 }

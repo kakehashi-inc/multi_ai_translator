@@ -15,6 +15,7 @@ export function initI18n() {
   try {
     currentLocale = browser.i18n.getUILanguage().split('-')[0];
   } catch (error) {
+    console.warn('Failed to detect UI language, defaulting to en', error);
     currentLocale = 'en';
   }
 }
@@ -29,6 +30,7 @@ export function getMessage(key, substitutions = []) {
   try {
     return browser.i18n.getMessage(key, substitutions) || key;
   } catch (error) {
+    console.warn('Failed to get localized message', key, error);
     // Fallback for testing environment
     return messages[key] || key;
   }

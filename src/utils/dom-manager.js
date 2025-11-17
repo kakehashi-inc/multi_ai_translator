@@ -3,6 +3,8 @@
  * Manages DOM manipulation for translation display
  */
 
+import { ConstVariables } from './const-variables.js';
+
 /**
  * Translation state for current page
  */
@@ -70,6 +72,8 @@ class PageTranslationState {
 
 // Global translation state
 const translationState = new PageTranslationState();
+let statusOverlay = null;
+let statusHideTimeout = null;
 
 /**
  * Get translatable text nodes
@@ -120,6 +124,10 @@ export function getTranslatableNodes(rootElement = document.body) {
 export function replaceNodeContent(node, translation, provider) {
   const parent = node.parentElement;
   if (!parent) return;
+
+  if (parent.closest('code, pre, kbd, samp')) {
+    return;
+  }
 
   // Store original content
   translationState.storeOriginal(parent, node.textContent);
@@ -222,7 +230,7 @@ export function highlightElement(element) {
   element.classList.add('translation-highlight');
   setTimeout(() => {
     element.classList.remove('translation-highlight');
-  }, 2000);
+  }, ConstVariables.HIGHLIGHT_DURATION_MS);
 }
 
 /**
@@ -239,6 +247,66 @@ export function showLoadingIndicator(element) {
  */
 export function hideLoadingIndicator(element) {
   element.classList.remove('translation-loading');
+}
+
+/**
+ * Update translation status overlay
+ * @param {string} message
+ * @param {'info'|'success'|'error'} type
+ */
+export function updateTranslationStatus(message, type = 'info') {
+  if (!statusOverlay) {
+    statusOverlay = document.createElement('div');
+    statusOverlay.id = 'multi-ai-translation-status';
+    statusOverlay.style.position = 'fixed';
+    statusOverlay.style.right = '16px';
+    statusOverlay.style.bottom = '16px';
+    statusOverlay.style.zIndex = '2147483647';
+    statusOverlay.style.maxWidth = '320px';
+    statusOverlay.style.padding = '12px 16px';
+    statusOverlay.style.borderRadius = '8px';
+    statusOverlay.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+    statusOverlay.style.fontFamily = 'system-ui, sans-serif';
+    statusOverlay.style.fontSize = '14px';
+    statusOverlay.style.lineHeight = '1.4';
+    document.body.appendChild(statusOverlay);
+  }
+
+  if (statusHideTimeout) {
+    clearTimeout(statusHideTimeout);
+    statusHideTimeout = null;
+  }
+
+  const colors = {
+    info: { bg: '#1e40af', text: '#fff' },
+    success: { bg: '#15803d', text: '#fff' },
+    error: { bg: '#b91c1c', text: '#fff' }
+  };
+
+  const palette = colors[type] || colors.info;
+  statusOverlay.style.background = palette.bg;
+  statusOverlay.style.color = palette.text;
+  statusOverlay.textContent = message;
+}
+
+export function clearTranslationStatus(delay = 0) {
+  if (!statusOverlay) return;
+
+  if (statusHideTimeout) {
+    clearTimeout(statusHideTimeout);
+  }
+
+  if (delay > 0) {
+    statusHideTimeout = setTimeout(() => {
+      statusOverlay.remove();
+      statusOverlay = null;
+      statusHideTimeout = null;
+    }, delay);
+  } else {
+    statusOverlay.remove();
+    statusOverlay = null;
+    statusHideTimeout = null;
+  }
 }
 
 /**

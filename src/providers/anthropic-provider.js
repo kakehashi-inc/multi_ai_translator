@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { BaseProvider } from './base-provider.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 /**
  * Anthropic Provider
@@ -57,8 +58,8 @@ export class AnthropicProvider extends BaseProvider {
 
       const response = await this.client.messages.create({
         model: this.config.model,
-        max_tokens: this.config.maxTokens || 2000,
-        temperature: this.config.temperature || 0.3,
+        max_tokens: this.config.maxTokens ?? ConstVariables.DEFAULT_ANTHROPIC_MAX_TOKENS,
+        temperature: this.config.temperature ?? ConstVariables.DEFAULT_ANTHROPIC_TEMPERATURE,
         messages: [
           {
             role: 'user',

@@ -3,15 +3,32 @@
  * Manages extension settings with Browser Storage API
  */
 import browser from 'webextension-polyfill';
-import { PROVIDER_ORDER } from '../providers/provider-meta.js';
+import { ConstVariables } from './const-variables.js';
+
+const {
+  PROVIDER_ORDER,
+  DEFAULT_BATCH_MAX_CHARS,
+  DEFAULT_BATCH_MAX_ITEMS,
+  DEFAULT_PROVIDER,
+  DEFAULT_LANGUAGE,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_OPENAI_TEMPERATURE,
+  DEFAULT_OPENAI_MAX_TOKENS,
+  DEFAULT_ANTHROPIC_TEMPERATURE,
+  DEFAULT_ANTHROPIC_MAX_TOKENS,
+  DEFAULT_GEMINI_TEMPERATURE,
+  DEFAULT_GEMINI_MAX_OUTPUT_TOKENS,
+  DEFAULT_OLLAMA_TEMPERATURE,
+  DEFAULT_OLLAMA_HOST
+} = ConstVariables;
 
 function normalizeLanguageCode(language) {
   if (!language || typeof language !== 'string') {
-    return 'en';
+    return DEFAULT_LANGUAGE;
   }
 
   const [code] = language.split(/[-_]/);
-  return code?.toLowerCase() || 'en';
+  return code?.toLowerCase() || DEFAULT_LANGUAGE;
 }
 
 export function getBrowserLanguage() {
@@ -27,7 +44,7 @@ export function getBrowserLanguage() {
     return normalizeLanguageCode(navigator.language);
   }
 
-  return 'en';
+  return DEFAULT_LANGUAGE;
 }
 
 /**
@@ -40,43 +57,43 @@ function createDefaultSettings() {
       enabled: false,
       apiKey: '',
       model: '',
-      temperature: 0.3,
-      maxOutputTokens: 2000
+      temperature: DEFAULT_GEMINI_TEMPERATURE,
+      maxOutputTokens: DEFAULT_GEMINI_MAX_OUTPUT_TOKENS
     },
     anthropic: {
       enabled: false,
       apiKey: '',
       model: '',
-      maxTokens: 2000,
-      temperature: 0.3
+      maxTokens: DEFAULT_ANTHROPIC_MAX_TOKENS,
+      temperature: DEFAULT_ANTHROPIC_TEMPERATURE
     },
     'anthropic-compatible': {
       enabled: false,
       baseUrl: '',
       apiKey: '',
       model: '',
-      maxTokens: 2000,
-      temperature: 0.3
+      maxTokens: DEFAULT_ANTHROPIC_MAX_TOKENS,
+      temperature: DEFAULT_ANTHROPIC_TEMPERATURE
     },
     openai: {
       enabled: false,
       apiKey: '',
       model: '',
-      temperature: 0.3,
-      maxTokens: 2000
+      temperature: DEFAULT_OPENAI_TEMPERATURE,
+      maxTokens: DEFAULT_OPENAI_MAX_TOKENS
     },
     'openai-compatible': {
       enabled: false,
       baseUrl: '',
       apiKey: '',
       model: '',
-      temperature: 0.3
+      temperature: DEFAULT_OPENAI_TEMPERATURE
     },
     ollama: {
       enabled: false,
-      host: 'http://127.0.0.1:11434',
+      host: DEFAULT_OLLAMA_HOST,
       model: '',
-      temperature: 0.3
+      temperature: DEFAULT_OLLAMA_TEMPERATURE
     }
   };
 
@@ -87,23 +104,19 @@ function createDefaultSettings() {
 
   return {
     common: {
-      defaultProvider: 'openai',
+      defaultProvider: DEFAULT_PROVIDER,
       defaultTargetLanguage: browserLanguage,
       uiLanguage: browserLanguage,
-      autoDetectLanguage: true
+      autoDetectLanguage: true,
+      batchMaxChars: DEFAULT_BATCH_MAX_CHARS,
+      batchMaxItems: DEFAULT_BATCH_MAX_ITEMS
     },
     providers,
     ui: {
       theme: 'auto',
-      fontSize: 14,
+      fontSize: DEFAULT_FONT_SIZE,
       showOriginalText: true,
       highlightTranslated: true
-    },
-    shortcuts: {
-      translatePage: 'Ctrl+Shift+T',
-      translateSelection: 'Ctrl+Shift+S',
-      showPopup: 'Ctrl+Shift+P',
-      restoreOriginal: 'Ctrl+Shift+R'
     }
   };
 }
@@ -117,6 +130,7 @@ export async function getSettings() {
     const result = await browser.storage.local.get('settings');
     return normalizeSettings(result.settings);
   } catch (error) {
+    console.warn('Failed to load settings, falling back to defaults', error);
     // Fallback for testing
     return getDefaultSettings();
   }
@@ -210,6 +224,7 @@ export async function importSettings(jsonString) {
     const settings = JSON.parse(jsonString);
     await saveSettings(settings);
   } catch (error) {
+    console.error('Invalid settings JSON provided', error);
     throw new Error('Invalid settings JSON');
   }
 }
@@ -225,6 +240,7 @@ export async function getTranslationHistory(limit = 50) {
     const history = result.translationHistory || [];
     return history.slice(0, limit);
   } catch (error) {
+    console.warn('Failed to read translation history', error);
     return [];
   }
 }
@@ -300,11 +316,6 @@ function normalizeSettings(storedSettings) {
   normalized.ui = {
     ...normalized.ui,
     ...(storedSettings.ui || {})
-  };
-
-  normalized.shortcuts = {
-    ...normalized.shortcuts,
-    ...(storedSettings.shortcuts || {})
   };
 
   if (!normalized.common.defaultTargetLanguage) {

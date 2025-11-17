@@ -52,6 +52,7 @@ export class AnthropicCompatibleProvider extends AnthropicProvider {
       await this.getModels();
       return true;
     } catch (error) {
+      console.warn('Anthropic-compatible provider test connection failed', error);
       return false;
     }
   }

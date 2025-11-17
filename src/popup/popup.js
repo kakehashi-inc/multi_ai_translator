@@ -6,7 +6,7 @@ import browser from 'webextension-polyfill';
 import { translatePage } from '../utils/i18n.js';
 import { getSettings, getEnabledProviders } from '../utils/storage.js';
 import { getSupportedLanguages } from '../utils/i18n.js';
-import { formatProviderName } from '../providers/provider-meta.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Populate languages
     populateLanguages(settings);
+
+    // Load last used provider
+    await loadLastUsedProvider();
 
     // Set up event listeners
     setupEventListeners();
@@ -54,17 +57,40 @@ async function populateProviders(settings) {
   enabledProviders.forEach(providerName => {
     const option = document.createElement('option');
     option.value = providerName;
-    option.textContent = formatProviderName(providerName);
+    option.textContent = ConstVariables.formatProviderName(providerName);
     select.appendChild(option);
   });
 
-  // Select default provider
+  // Select default provider (will be overridden by lastUsedProvider if available)
   if (settings.common.defaultProvider) {
     select.value = settings.common.defaultProvider;
   }
 
   if (!select.value && enabledProviders.length > 0) {
     select.value = enabledProviders[0];
+  }
+}
+
+/**
+ * Load last used provider and select it in dropdown
+ */
+async function loadLastUsedProvider() {
+  try {
+    const response = await browser.runtime.sendMessage({
+      action: 'getLastUsedProvider'
+    });
+
+    if (response?.provider) {
+      const select = document.getElementById('provider-select');
+      const enabledProviders = await getEnabledProviders();
+
+      // Only select if provider is still enabled
+      if (enabledProviders.includes(response.provider)) {
+        select.value = response.provider;
+      }
+    }
+  } catch (error) {
+    console.warn('[Popup] Failed to load last used provider:', error);
   }
 }
 
@@ -105,6 +131,12 @@ function setupEventListeners() {
 
       showStatus('Translating page...', 'info');
 
+      // Save last used provider
+      await browser.runtime.sendMessage({
+        action: 'setLastUsedProvider',
+        data: { provider }
+      });
+
       const response = await sendMessageToActiveTab({
         action: 'translate-page',
         provider,
@@ -134,6 +166,12 @@ function setupEventListeners() {
       }
 
       showStatus('Translating selection...', 'info');
+
+      // Save last used provider
+      await browser.runtime.sendMessage({
+        action: 'setLastUsedProvider',
+        data: { provider }
+      });
 
       const response = await sendMessageToActiveTab({
         action: 'translate-selection',

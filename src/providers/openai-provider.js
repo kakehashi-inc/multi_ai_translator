@@ -1,5 +1,6 @@
 import { OpenAI } from 'openai';
 import { BaseProvider } from './base-provider.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 /**
  * OpenAI Provider
@@ -67,8 +68,8 @@ export class OpenAIProvider extends BaseProvider {
             content: prompt
           }
         ],
-        temperature: this.config.temperature || 0.3,
-        max_tokens: this.config.maxTokens || 2000
+        temperature: this.config.temperature ?? ConstVariables.DEFAULT_OPENAI_TEMPERATURE,
+        max_tokens: this.config.maxTokens ?? ConstVariables.DEFAULT_OPENAI_MAX_TOKENS
       });
 
       return response.choices[0].message.content.trim();

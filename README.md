@@ -114,6 +114,10 @@ yarn build:firefox
 - Works with LM Studio, LocalAI, or any OpenAI-compatible API
 - Configure base URL and model name
 
+### Batch Settings (Common Tab)
+- **Batch size (items per request)**: Number of text chunks combined into a single API call (default 20). Increase for fewer requests, decrease if providers return payload-size errors.
+- **Batch size (max characters)**: Upper limit of total characters per request (default 100,000). The smaller of this limit or the item count triggers a new batch.
+
 ### Ollama (Local)
 - Install [Ollama](https://ollama.ai/)
 - Pull a model: `ollama pull llama2`

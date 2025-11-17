@@ -11,8 +11,19 @@ import {
   removeTranslationPopup,
   getSelection,
   showLoadingIndicator,
-  hideLoadingIndicator
+  hideLoadingIndicator,
+  updateTranslationStatus,
+  clearTranslationStatus
 } from '../utils/dom-manager.js';
+import { PromptBuilder } from '../utils/prompt-builder.js';
+import { ConstVariables } from '../utils/const-variables.js';
+
+const {
+  DEFAULT_BATCH_MAX_CHARS,
+  DEFAULT_BATCH_MAX_ITEMS,
+  STATUS_CLEAR_DELAY_MS,
+  BATCH_THROTTLE_DELAY_MS
+} = ConstVariables;
 
 /**
  * Translator class
@@ -34,18 +45,7 @@ export class Translator {
    * Get settings from background
    */
   async getSettings() {
-    return new Promise((resolve, reject) => {
-      browser.runtime.sendMessage(
-        { action: 'getSettings' },
-        (response) => {
-          if (browser.runtime.lastError) {
-            reject(browser.runtime.lastError);
-          } else {
-            resolve(response);
-          }
-        }
-      );
-    });
+    return browser.runtime.sendMessage({ action: 'getSettings' });
   }
 
   /**
@@ -59,6 +59,7 @@ export class Translator {
 
     this.isTranslating = true;
 
+    updateTranslationStatus('Scanning page for translatable text…');
     try {
       // Get settings if not loaded
       if (!this.settings) {
@@ -80,45 +81,118 @@ export class Translator {
 
       // Group nodes by parent element to reduce API calls
       const textGroups = this.groupNodesByParent(nodes);
+      updateTranslationStatus(`Found ${textGroups.length} text blocks to translate…`);
 
-      // Translate each group
+      const maxChars = Number(this.settings.common.batchMaxChars) || DEFAULT_BATCH_MAX_CHARS;
+      const maxItems = Number(this.settings.common.batchMaxItems) || DEFAULT_BATCH_MAX_ITEMS;
+      const totalGroups = textGroups.length;
       let translated = 0;
-      for (const group of textGroups) {
-        showLoadingIndicator(group.parent);
+      const errors = [];
+      let batchIndexCounter = 0;
+
+      const createBatch = () => ({
+        entries: [],
+        refs: [],
+        texts: [],
+        charCount: 0
+      });
+
+      let currentBatch = createBatch();
+
+      const flushBatch = async () => {
+        if (!currentBatch.texts.length) {
+          return;
+        }
 
         try {
-          const text = group.nodes.map(n => n.textContent).join(' ');
-
-          const result = await this.translateText(text, target, 'auto', provider);
+          const sourceLanguage = 'auto';
+          const requestPayload = PromptBuilder.buildRequestPayload(currentBatch.texts);
+          const result = await this.translateText(requestPayload, target, sourceLanguage, provider);
 
           if (!result?.success) {
             throw new Error(result?.error || 'Translation failed');
           }
 
-          // Split translation back to nodes (simple approach)
-          const translations = this.splitTranslation(result.translation, group.nodes.length);
+          let translations = PromptBuilder.parseResponsePayload(
+            result.translation,
+            currentBatch.texts
+          );
 
-          group.nodes.forEach((node, index) => {
-            if (translations[index]) {
-              replaceNodeContent(node, translations[index], provider);
+          if (!translations.length) {
+            translations = this.splitTranslation(result.translation, currentBatch.texts.length);
+          }
+
+          currentBatch.refs.forEach((ref, idx) => {
+            const translatedText = translations[idx] ?? ref.original;
+            if (translatedText) {
+              replaceNodeContent(ref.node, translatedText, provider);
+            }
+            ref.entry.completed = (ref.entry.completed || 0) + 1;
+            if (ref.entry.completed === ref.entry.textCount) {
+              translated++;
+              hideLoadingIndicator(ref.entry.group.parent);
+              updateTranslationStatus(`Translated ${translated}/${totalGroups} blocks`);
             }
           });
-
-          translated++;
         } catch (error) {
-          console.error('[Translator] Error translating group:', error);
-          throw error;
+          console.error('[Translator] Error translating batch:', error);
+          currentBatch.entries.forEach(entry => {
+            hideLoadingIndicator(entry.group.parent);
+            errors.push(`Block ${entry.index}: ${error.message}`);
+          });
         } finally {
-          hideLoadingIndicator(group.parent);
+          currentBatch = createBatch();
+          await this.delay(BATCH_THROTTLE_DELAY_MS);
         }
+      };
 
-        // Add small delay to avoid rate limiting
-        await this.delay(100);
+      for (const group of textGroups) {
+        batchIndexCounter++;
+        updateTranslationStatus(`Queuing block ${batchIndexCounter}/${totalGroups}…`);
+        showLoadingIndicator(group.parent);
+
+        const entry = {
+          group,
+          index: batchIndexCounter,
+          textCount: group.nodes.length,
+          completed: 0
+        };
+        currentBatch.entries.push(entry);
+
+        group.nodes.forEach((node) => {
+          const original = node.textContent;
+          currentBatch.texts.push(original);
+          currentBatch.refs.push({
+            entry,
+            node,
+            original
+          });
+          currentBatch.charCount += original.length;
+        });
+
+        if (currentBatch.texts.length >= maxItems || currentBatch.charCount >= maxChars) {
+          await flushBatch();
+        }
+      }
+
+      if (currentBatch.texts.length > 0) {
+        await flushBatch();
       }
 
       console.log(`[Translator] Translated ${translated}/${textGroups.length} groups`);
+
+      if (errors.length > 0) {
+        updateTranslationStatus(
+          `Translated ${translated}/${totalGroups} blocks. ${errors.length} blocks failed.`,
+          translated > 0 ? 'info' : 'error'
+        );
+        errors.forEach(message => console.error('[Translator] Block error:', message));
+      } else {
+        updateTranslationStatus(`Translation completed: ${translated}/${totalGroups} blocks translated.`, 'success');
+      }
     } finally {
       this.isTranslating = false;
+      clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
     }
   }
 
@@ -151,16 +225,24 @@ export class Translator {
 
       console.log(`[Translator] Translating selection to ${target} using ${provider}`);
 
-      const result = await this.translateText(textToTranslate, target, 'auto', provider);
+      const requestPayload = PromptBuilder.buildRequestPayload([textToTranslate]);
+      const result = await this.translateText(requestPayload, target, 'auto', provider);
 
-      if (result.success) {
-        if (showPopup && position) {
-          createTranslationPopup(result.translation, position.x, position.y);
-        }
-        return result.translation;
-      } else {
+      if (!result.success) {
         throw new Error(result.error);
       }
+
+      let translations = PromptBuilder.parseResponsePayload(result.translation, [textToTranslate]);
+      if (!translations.length) {
+        translations = [result.translation];
+      }
+
+      const translated = translations[0] ?? textToTranslate;
+
+      if (showPopup && position) {
+        createTranslationPopup(translated, position.x, position.y);
+      }
+      return translated;
     } catch (error) {
       console.error('[Translator] Error translating selection:', error);
       throw error;
@@ -180,25 +262,14 @@ export class Translator {
    * Translate text via background script
    */
   async translateText(text, targetLanguage, sourceLanguage, providerName) {
-    return new Promise((resolve, reject) => {
-      browser.runtime.sendMessage(
-        {
-          action: 'translate',
-          data: {
-            text,
-            targetLanguage,
-            sourceLanguage,
-            providerName
-          }
-        },
-        (response) => {
-          if (browser.runtime.lastError) {
-            reject(browser.runtime.lastError);
-          } else {
-            resolve(response);
-          }
-        }
-      );
+    return browser.runtime.sendMessage({
+      action: 'translate',
+      data: {
+        text,
+        targetLanguage,
+        sourceLanguage,
+        providerName
+      }
     });
   }
 

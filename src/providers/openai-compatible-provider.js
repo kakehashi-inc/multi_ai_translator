@@ -70,6 +70,7 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
       await this.getModels();
       return true;
     } catch (error) {
+      console.warn('OpenAI-compatible provider test connection failed', error);
       return false;
     }
   }

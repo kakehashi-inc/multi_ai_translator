@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { BaseProvider } from './base-provider.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 /**
  * Gemini Provider (Google)
@@ -29,8 +30,8 @@ export class GeminiProvider extends BaseProvider {
       this.client = new GoogleGenAI({ apiKey: this.config.apiKey });
       this.modelName = this.config.model;
       this.generationConfig = {
-        temperature: this.config.temperature || 0.3,
-        maxOutputTokens: this.config.maxOutputTokens || 2000
+        temperature: this.config.temperature ?? ConstVariables.DEFAULT_GEMINI_TEMPERATURE,
+        maxOutputTokens: this.config.maxOutputTokens ?? ConstVariables.DEFAULT_GEMINI_MAX_OUTPUT_TOKENS
       };
     } catch (error) {
       this.handleError(error);

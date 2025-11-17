@@ -4,7 +4,66 @@
  */
 import browser from 'webextension-polyfill';
 import { createProvider } from '../providers/index.js';
-import { getSettings, getProviderSettings, addToHistory } from '../utils/storage.js';
+import { getSettings, addToHistory } from '../utils/storage.js';
+
+// Cache for last used provider (for performance)
+let lastUsedProviderCache = null;
+
+/**
+ * Get last used provider from storage
+ * Works in both Chromium and Firefox
+ */
+async function getLastUsedProvider() {
+  if (lastUsedProviderCache !== null) {
+    return lastUsedProviderCache;
+  }
+
+  try {
+    // Try session storage first (Firefox 109+, Chromium)
+    if (browser.storage?.session) {
+      const result = await browser.storage.session.get('lastUsedProvider');
+      lastUsedProviderCache = result.lastUsedProvider || null;
+      return lastUsedProviderCache;
+    }
+  } catch (error) {
+    console.warn('[Service Worker] Session storage not available, using local storage', error);
+  }
+
+  // Fallback to local storage (persists until browser restart)
+  try {
+    const result = await browser.storage.local.get('lastUsedProvider');
+    lastUsedProviderCache = result.lastUsedProvider || null;
+    return lastUsedProviderCache;
+  } catch (error) {
+    console.warn('[Service Worker] Failed to get last used provider', error);
+    return null;
+  }
+}
+
+/**
+ * Set last used provider to storage
+ * Works in both Chromium and Firefox
+ */
+async function setLastUsedProvider(provider) {
+  lastUsedProviderCache = provider;
+
+  try {
+    // Try session storage first (Firefox 109+, Chromium)
+    if (browser.storage?.session) {
+      await browser.storage.session.set({ lastUsedProvider: provider });
+      return;
+    }
+  } catch (error) {
+    console.warn('[Service Worker] Session storage not available, using local storage', error);
+  }
+
+  // Fallback to local storage (persists until browser restart)
+  try {
+    await browser.storage.local.set({ lastUsedProvider: provider });
+  } catch (error) {
+    console.warn('[Service Worker] Failed to set last used provider', error);
+  }
+}
 
 /**
  * Initialize extension
@@ -107,8 +166,8 @@ browser.commands.onCommand.addListener(async (command) => {
 /**
  * Handle messages from content scripts and popup
  */
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  handleMessage(request, sender)
+browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  handleMessage(request)
     .then(sendResponse)
     .catch(error => {
       console.error('[Multi-AI Translator] Message error:', error);
@@ -121,7 +180,7 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
 /**
  * Handle message routing
  */
-async function handleMessage(request, sender) {
+async function handleMessage(request, _sender) {
   const { action, data } = request;
 
   switch (action) {
@@ -133,6 +192,11 @@ async function handleMessage(request, sender) {
       return await testProvider(data);
     case 'getModels':
       return await getProviderModels(data);
+    case 'setLastUsedProvider':
+      await setLastUsedProvider(data?.provider || null);
+      return { success: true };
+    case 'getLastUsedProvider':
+      return { provider: await getLastUsedProvider() };
     default:
       throw new Error(`Unknown action: ${action}`);
   }
@@ -144,7 +208,13 @@ async function handleMessage(request, sender) {
 async function translateText({ text, targetLanguage, sourceLanguage, providerName }) {
   try {
     const settings = await getSettings();
-    const provider = providerName || settings.common.defaultProvider;
+    const lastUsed = await getLastUsedProvider();
+    const provider = providerName || lastUsed || settings.common.defaultProvider;
+
+    // Save last used provider
+    if (provider) {
+      await setLastUsedProvider(provider);
+    }
     const providerConfig = settings.providers[provider];
 
     if (!providerConfig || !providerConfig.enabled) {
@@ -227,9 +297,13 @@ async function getProviderModels({ providerName, config }) {
  */
 async function handleTranslateSelection(info, tab) {
   const targetTab = await resolveContentTab(tab);
+  const settings = await getSettings();
+  const lastUsed = await getLastUsedProvider();
+  const provider = lastUsed || settings.common.defaultProvider;
   await sendMessageToTab(targetTab?.id, {
     action: 'translate-selection',
-    text: info?.selectionText
+    text: info?.selectionText,
+    provider
   });
 }
 
@@ -238,8 +312,12 @@ async function handleTranslateSelection(info, tab) {
  */
 async function handleTranslatePage(tab) {
   const targetTab = await resolveContentTab(tab);
+  const settings = await getSettings();
+  const lastUsed = await getLastUsedProvider();
+  const provider = lastUsed || settings.common.defaultProvider;
   await sendMessageToTab(targetTab?.id, {
-    action: 'translate-page'
+    action: 'translate-page',
+    provider
   });
 }
 

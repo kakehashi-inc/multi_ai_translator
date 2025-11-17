@@ -1,5 +1,6 @@
 import { Ollama } from 'ollama/browser';
 import { BaseProvider } from './base-provider.js';
+import { ConstVariables } from '../utils/const-variables.js';
 
 /**
  * Ollama Provider
@@ -22,7 +23,7 @@ export class OllamaProvider extends BaseProvider {
 
     try {
       this.client = new Ollama({
-        host: this.config.host || 'http://127.0.0.1:11434'
+        host: this.config.host || ConstVariables.DEFAULT_OLLAMA_HOST
       });
     } catch (error) {
       this.handleError(error);
@@ -54,7 +55,7 @@ export class OllamaProvider extends BaseProvider {
         prompt: prompt,
         stream: false,
         options: {
-          temperature: this.config.temperature || 0.3
+          temperature: this.config.temperature ?? ConstVariables.DEFAULT_OLLAMA_TEMPERATURE
         }
       });
 
@@ -85,6 +86,7 @@ export class OllamaProvider extends BaseProvider {
       await this.getModels();
       return true;
     } catch (error) {
+      console.warn('Ollama provider availability check failed', error);
       return false;
     }
   }
