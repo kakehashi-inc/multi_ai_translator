@@ -8,6 +8,10 @@ import { getSettings, getEnabledProviders } from '../utils/storage.js';
 import { getSupportedLanguages } from '../utils/i18n.js';
 import { ConstVariables } from '../utils/const-variables.js';
 
+let isPageTranslating = false;
+let isSelectionTranslating = false;
+let hasTranslationStarted = false;
+
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -29,6 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Set up event listeners
     setupEventListeners();
+
+    // Initialize button states
+    updateRestoreButtonVisibility();
+    await updateSelectionButtonState();
   } catch (error) {
     console.error('[Popup] Initialization error:', error);
     showStatus(getMessage('errorFailedToInitialize'), 'error');
@@ -152,10 +160,22 @@ function setupEventListeners() {
       const targetLanguage = document.getElementById('language-select').value;
       const sourceLanguage = document.getElementById('source-language-select').value;
 
+      // If already translating page, treat as cancel (restore original)
+      if (isPageTranslating) {
+        await handleCancelTranslation();
+        return;
+      }
+
       if (!provider) {
         showStatus(getMessage('errorPleaseSelectProvider'), 'error');
         return;
       }
+
+      isPageTranslating = true;
+      isSelectionTranslating = false;
+      hasTranslationStarted = true;
+      updateTranslationButtons();
+      updateRestoreButtonVisibility();
 
       showStatus(getMessage('statusTranslatingPage'), 'info');
 
@@ -180,6 +200,10 @@ function setupEventListeners() {
     } catch (error) {
       console.error('[Popup] Translation error:', error);
       showStatus(getMessage('errorTranslationFailedWithMessage', [error.message]), 'error');
+    } finally {
+      isPageTranslating = false;
+      updateTranslationButtons();
+      updateRestoreButtonVisibility();
     }
   });
 
@@ -190,10 +214,22 @@ function setupEventListeners() {
       const targetLanguage = document.getElementById('language-select').value;
       const sourceLanguage = document.getElementById('source-language-select').value;
 
+      // If already translating selection, treat as cancel (restore original)
+      if (isSelectionTranslating) {
+        await handleCancelTranslation();
+        return;
+      }
+
       if (!provider) {
         showStatus(getMessage('errorPleaseSelectProvider'), 'error');
         return;
       }
+
+      isSelectionTranslating = true;
+      isPageTranslating = false;
+      hasTranslationStarted = true;
+      updateTranslationButtons();
+      updateRestoreButtonVisibility();
 
       showStatus(getMessage('statusTranslatingSelection'), 'info');
 
@@ -218,12 +254,18 @@ function setupEventListeners() {
     } catch (error) {
       console.error('[Popup] Translation error:', error);
       showStatus(getMessage('errorTranslationFailedWithMessage', [error.message]), 'error');
+    } finally {
+      isSelectionTranslating = false;
+      updateTranslationButtons();
+      updateRestoreButtonVisibility();
+      await updateSelectionButtonState();
     }
   });
 
   // Restore button
   document.getElementById('restore-btn').addEventListener('click', async () => {
     try {
+      await handleCancelTranslation();
       const response = await sendMessageToActiveTab({
         action: 'restore-original'
       });
@@ -236,6 +278,11 @@ function setupEventListeners() {
     } catch (error) {
       console.error('[Popup] Restore error:', error);
       showStatus(getMessage('errorRestoreFailedWithMessage', [error.message]), 'error');
+    } finally {
+      isPageTranslating = false;
+      isSelectionTranslating = false;
+      updateTranslationButtons();
+      updateRestoreButtonVisibility();
     }
   });
 
@@ -243,6 +290,74 @@ function setupEventListeners() {
   document.getElementById('settings-btn').addEventListener('click', () => {
     browser.runtime.openOptionsPage();
   });
+}
+
+/**
+ * Handle cancel translation (used by buttons)
+ */
+async function handleCancelTranslation() {
+  // Cancel on content side by restoring original
+  await sendMessageToActiveTab({ action: 'restore-original' });
+}
+
+/**
+ * Update translation buttons (text / disabled state)
+ */
+function updateTranslationButtons() {
+  const pageBtn = document.getElementById('translate-page-btn');
+  const selectionBtn = document.getElementById('translate-selection-btn');
+
+  if (!pageBtn || !selectionBtn) return;
+
+  if (isPageTranslating) {
+    pageBtn.textContent = getMessage('btnCancelTranslation');
+    pageBtn.disabled = false;
+    selectionBtn.disabled = true;
+  } else if (isSelectionTranslating) {
+    selectionBtn.textContent = getMessage('btnCancelTranslation');
+    selectionBtn.disabled = false;
+    pageBtn.disabled = true;
+  } else {
+    pageBtn.textContent = getMessage('btnTranslatePage');
+    selectionBtn.textContent = getMessage('btnTranslateSelection');
+    pageBtn.disabled = false;
+  }
+}
+
+/**
+ * Update selection button enabled state based on current page selection
+ */
+async function updateSelectionButtonState() {
+  const btn = document.getElementById('translate-selection-btn');
+  if (!btn) return;
+
+  if (isPageTranslating) {
+    btn.disabled = true;
+    return;
+  }
+
+  try {
+    const response = await sendMessageToActiveTab({ action: 'has-selection' });
+    const hasSelection = !!response?.hasSelection;
+    btn.disabled = !hasSelection || isSelectionTranslating;
+  } catch {
+    // If we can't detect selection, fall back to allowing click unless translating
+    btn.disabled = isSelectionTranslating;
+  }
+}
+
+/**
+ * Show/hide restore button depending on whether translation has started
+ */
+function updateRestoreButtonVisibility() {
+  const restoreBtn = document.getElementById('restore-btn');
+  if (!restoreBtn) return;
+
+  if (hasTranslationStarted) {
+    restoreBtn.style.display = 'block';
+  } else {
+    restoreBtn.style.display = 'none';
+  }
 }
 
 /**

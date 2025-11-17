@@ -124,8 +124,12 @@
     "description": "選択範囲翻訳ボタン"
   },
   "btnRestore": {
-    "message": "元に戻す",
-    "description": "復元ボタン"
+    "message": "原文に戻す",
+    "description": "原文に戻すボタン"
+  },
+  "btnCancelTranslation": {
+    "message": "翻訳をキャンセル",
+    "description": "現在の翻訳をキャンセルするボタン"
   },
   "btnSettings": {
     "message": "設定",

@@ -61,6 +61,11 @@ async function handleMessage(request) {
     case 'restore-original':
       translator.restoreOriginal();
       return { success: true };
+    case 'has-selection': {
+      const selection = window.getSelection();
+      const hasSelection = !!selection && selection.toString().trim().length > 0;
+      return { success: true, hasSelection };
+    }
 
     default:
       throw new Error(getMessage('errorUnknownAction', [action]));

@@ -124,8 +124,12 @@
     "description": "Translate selection button"
   },
   "btnRestore": {
-    "message": "Restore Original",
-    "description": "Restore button"
+    "message": "Restore Original Text",
+    "description": "Restore original text button"
+  },
+  "btnCancelTranslation": {
+    "message": "Cancel Translation",
+    "description": "Cancel current translation button"
   },
   "btnSettings": {
     "message": "Settings",

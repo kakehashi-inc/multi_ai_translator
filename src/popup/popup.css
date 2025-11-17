@@ -79,6 +79,10 @@ body {
   margin-bottom: 12px;
 }
 
+.button-group + .button-group {
+  margin-top: 4px;
+}
+
 .btn {
   width: 100%;
   padding: 10px 16px;

@@ -47,8 +47,8 @@ ${requestPayload}`;
   }
 
   static buildRequestPayload(texts = []) {
-    const items = texts.map((text) => `<item>${escapeXml(text)}</item>`).join('');
-    return `<request>${items}</request>`;
+    const items = texts.map((text) => `<item>${escapeXml(text)}</item>`).join('\n');
+    return `<request>\n${items}\n</request>`;
   }
 
   static parseResponsePayload(response, originals = []) {

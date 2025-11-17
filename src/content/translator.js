@@ -33,6 +33,7 @@ export class Translator {
   constructor() {
     this.isTranslating = false;
     this.settings = null;
+    this.cancelRequested = false;
   }
 
   /**
@@ -59,6 +60,7 @@ export class Translator {
     }
 
     this.isTranslating = true;
+    this.cancelRequested = false;
 
     updateTranslationStatus(getMessage('statusScanning'));
     try {
@@ -108,6 +110,9 @@ export class Translator {
 
       // Process batches one at a time and free memory immediately after each batch
       const processBatch = async (batchTexts, batchRefs, batchEntries) => {
+        if (this.cancelRequested) {
+          return 0;
+        }
         batchNumber++;
         // Update max batch number if we exceed the estimate
         maxBatchNumber = Math.max(maxBatchNumber, batchNumber);
@@ -129,6 +134,11 @@ export class Translator {
           if (!translations.length) {
             console.warn('[Translator] Failed to parse structured response, using fallback');
             translations = this.splitTranslation(result.translation, batchTexts.length);
+          }
+
+          // If cancel was requested while waiting for the provider, skip applying results
+          if (this.cancelRequested) {
+            return 0;
           }
 
           // Apply translations immediately as they are parsed
@@ -267,6 +277,7 @@ export class Translator {
       errors.length = 0;
     } finally {
       this.isTranslating = false;
+      this.cancelRequested = false;
       clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
     }
   }
@@ -338,6 +349,8 @@ export class Translator {
    */
   restoreOriginal() {
     console.log('[Translator] Restoring original content');
+    this.cancelRequested = true;
+    this.isTranslating = false;
     restoreOriginalContent();
     removeTranslationPopup();
   }
