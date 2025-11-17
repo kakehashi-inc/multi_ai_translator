@@ -83,12 +83,12 @@ let statusHideTimeout = null;
 export function getTranslatableNodes(rootElement = document.body) {
   const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT, {
     acceptNode: (node) => {
-      // Skip script, style, and other non-visible elements
+      // Skip script, style, code and other non-visible / non-translatable elements
       const parent = node.parentElement;
       if (!parent) return NodeFilter.FILTER_REJECT;
 
       const tagName = parent.tagName.toLowerCase();
-      if (['script', 'style', 'noscript', 'iframe', 'object'].includes(tagName)) {
+      if (['script', 'style', 'noscript', 'iframe', 'object', 'code'].includes(tagName)) {
         return NodeFilter.FILTER_REJECT;
       }
 
