@@ -1,0 +1,47 @@
+<svg width="32" height="32" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg-32" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F172A"></stop>
+      <stop offset="100%" stop-color="#0B3B5E"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg-32)"></rect>
+
+  <!-- 地球 -->
+  <circle cx="64" cy="56" r="30" fill="#FFFFFF"></circle>
+
+  <!-- 緯線・経線（1本ずつに減らす） -->
+  <g stroke="#BAE6FD" stroke-width="2" fill="none">
+    <ellipse cx="64" cy="56" rx="26" ry="12"></ellipse>
+    <path d="M64 26 A30 30 0 0 1 64 86"></path>
+  </g>
+
+  <!-- ネットワーク（ノードを4つに） -->
+  <g stroke="#38BDF8" stroke-width="2" stroke-linecap="round" fill="#38BDF8">
+    <circle cx="54" cy="46" r="2.4"></circle>
+    <circle cx="76" cy="46" r="2.4"></circle>
+    <circle cx="78" cy="68" r="2.4"></circle>
+    <circle cx="52" cy="66" r="2.4"></circle>
+
+    <line x1="54" y1="46" x2="76" y2="46"></line>
+    <line x1="76" y1="46" x2="78" y2="68"></line>
+    <line x1="78" y1="68" x2="52" y2="66"></line>
+    <line x1="52" y1="66" x2="54" y2="46"></line>
+  </g>
+
+  <!-- 双方向アーチ矢印（同じ形・やや太め） -->
+  <g stroke="#38BDF8" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M36 86 A34 26 0 0 0 92 86"></path>
+    <path d="M84 80 L92 86 L84 92"></path>
+    <path d="M92 74 A34 26 0 0 0 36 74"></path>
+    <path d="M44 68 L36 74 L44 80"></path>
+  </g>
+
+  <!-- トークン（各アーチ1つ） -->
+  <g fill="#E0F2FE">
+    <!-- 下側 -->
+    <rect x="63" y="84" width="7" height="7" rx="2"></rect>
+    <!-- 上側 -->
+    <rect x="63" y="72" width="7" height="7" rx="2"></rect>
+  </g>
+</svg>

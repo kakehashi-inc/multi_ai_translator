@@ -1,16 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<svg width="16" height="16" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    <linearGradient id="bg-16" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F172A"></stop>
+      <stop offset="100%" stop-color="#0B3B5E"></stop>
     </linearGradient>
   </defs>
-  <rect width="16" height="16" fill="url(#grad)" rx="2.4"/>
-  <text x="50%" y="50%" text-anchor="middle" dy="1.6"
-        font-family="Arial, sans-serif" font-size="8"
-        font-weight="bold" fill="white">AI</text>
-  <text x="50%" y="75%" text-anchor="middle" dy="0.8"
-        font-family="Arial, sans-serif" font-size="2.4"
-        fill="white" opacity="0.9">T</text>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg-16)"></rect>
+
+  <!-- 地球（ディテール控えめ） -->
+  <circle cx="64" cy="56" r="30" fill="#FFFFFF"></circle>
+
+  <!-- 地球内部を簡略化した「ネットワーク」 -->
+  <g stroke="#38BDF8" stroke-width="3" stroke-linecap="round" fill="#38BDF8">
+    <!-- 斜めの2本線（×印） -->
+    <line x1="52" y1="44" x2="76" y2="68"></line>
+    <line x1="76" y1="44" x2="52" y2="68"></line>
+    <!-- 中央ノード -->
+    <circle cx="64" cy="56" r="3"></circle>
+  </g>
+
+  <!-- 双方向アーチ矢印（形だけは維持） -->
+  <g stroke="#38BDF8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M38 86 A30 22 0 0 0 90 86"></path>
+    <path d="M82 80 L90 86 L82 92"></path>
+    <path d="M90 74 A30 22 0 0 0 38 74"></path>
+    <path d="M46 68 L38 74 L46 80"></path>
+  </g>
+
+  <!-- トークン（下側アーチに1つだけ） -->
+  <rect x="62" y="83" width="8" height="8" rx="2" fill="#E0F2FE"></rect>
 </svg>
