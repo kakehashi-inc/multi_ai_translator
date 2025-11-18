@@ -366,7 +366,11 @@ async function updateRestoreButtonVisibility() {
 async function fetchSelectionText(): Promise<string> {
   try {
     const response = await sendMessageToActiveTab({ action: 'get-selection-text' });
-    return (response?.text || '').trim();
+    const raw = typeof response?.text === 'string' ? response.text : '';
+    if (!raw.trim()) {
+      return '';
+    }
+    return raw;
   } catch (error) {
     console.error('[Popup] Failed to get selection text:', error);
     throw error;
