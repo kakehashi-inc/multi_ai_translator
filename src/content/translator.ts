@@ -7,16 +7,12 @@ import {
   getTranslatableNodes,
   replaceNodeContent,
   restoreOriginalContent,
-  createTranslationPopup,
-  removeTranslationPopup,
-  getSelection,
   showLoadingIndicator,
   hideLoadingIndicator,
   clearAllLoadingIndicators,
   updateTranslationStatus,
   clearTranslationStatus
 } from '../utils/dom-manager';
-import type { SelectionPosition } from '../utils/dom-manager';
 import { PromptBuilder } from '../utils/prompt-builder';
 import { ConstVariables } from '../utils/const-variables';
 import { getMessage } from '../utils/i18n';
@@ -58,6 +54,7 @@ export class Translator {
   private isTranslating = false;
   private settings: Settings | null = null;
   private cancelRequested = false;
+  private selectionInProgress = false;
 
   /**
    * Initialize translator
@@ -232,7 +229,8 @@ export class Translator {
             blockIndexes.length === 1
               ? `Block ${blockIndexes[0]}`
               : `Blocks ${blockIndexes.join(', ')}`;
-          errors.push(`${label}: ${error.message}`);
+          const message = error instanceof Error ? error.message : String(error);
+          errors.push(`${label}: ${message}`);
           return 0;
         }
       };
@@ -331,56 +329,49 @@ export class Translator {
   }
 
   /**
-   * Translate selection
+   * Translate selection text while showing status overlay
    */
-  async translateSelection(
-    text: string | null = null,
-    showPopup = true,
+  async translateSelectionText(
+    text: string,
     targetLanguage: string | null = null,
     providerName: string | null = null,
     sourceLanguage: string | null = null
-  ): Promise<string | undefined> {
+  ): Promise<string> {
+    if (this.selectionInProgress) {
+      throw new Error(getMessage('statusTranslatingSelection'));
+    }
+
     try {
+      this.selectionInProgress = true;
+      updateTranslationStatus(getMessage('statusTranslatingSelection'));
+
       const settings = await this.ensureSettings();
-
-      let textToTranslate = text;
-      let position: SelectionPosition | null = null;
-
-      // If no text provided, get selection
-      if (!textToTranslate) {
-        const selection = getSelection();
-        if (!selection) {
-          return undefined;
-        }
-        textToTranslate = selection.text;
-        position = { x: selection.x, y: selection.y };
-      }
-
       const target = targetLanguage || settings.common.defaultTargetLanguage;
       const provider = providerName || settings.common.defaultProvider;
       const source = sourceLanguage || settings.common.defaultSourceLanguage || 'auto';
 
-      const requestPayload = PromptBuilder.buildRequestPayload([textToTranslate]);
+      const requestPayload = PromptBuilder.buildRequestPayload([text]);
       const result = await this.translateText(requestPayload, target, source, provider);
 
       if (!result.success) {
         throw new Error(result.error);
       }
 
-      let translations = PromptBuilder.parseResponsePayload(result.translation, [textToTranslate]);
-      if (!translations.length) {
-        translations = [result.translation];
-      }
+      const translations = PromptBuilder.parseResponsePayload(result.translation, [text]);
+      const translated = translations[0] ?? result.translation ?? text;
 
-      const translated = translations[0] ?? textToTranslate;
-
-      if (showPopup && position) {
-        createTranslationPopup(translated, position.x, position.y);
-      }
+      updateTranslationStatus(getMessage('statusSelectionTranslated'), 'success');
+      clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
       return translated;
     } catch (error) {
-      console.error('[Translator] Error translating selection:', error);
+      updateTranslationStatus(
+        error instanceof Error ? error.message : getMessage('errorTranslationFailed'),
+        'error'
+      );
+      clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
       throw error;
+    } finally {
+      this.selectionInProgress = false;
     }
   }
 
@@ -391,7 +382,6 @@ export class Translator {
     this.cancelRequested = true;
     this.isTranslating = false;
     restoreOriginalContent();
-    removeTranslationPopup();
   }
 
   /**

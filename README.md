@@ -76,9 +76,9 @@ yarn build:firefox
    - Choose **Translate Page**
 
 3. **Translate Selection**:
-   - Highlight any text
-   - Right-click → **Translate selection**
-   - Use the context menu entry provided by the extension
+   - Highlight any text on the page
+   - Open the extension popup
+   - Click **Translate Selection** to see the translated text inside the popup
 
 ## Development
 

@@ -5,7 +5,7 @@
 import browser from 'webextension-polyfill';
 import { Translator } from './translator';
 import { getMessage } from '../utils/i18n';
-import { isPageTranslated, hasTranslationPopup } from '../utils/dom-manager';
+import { isPageTranslated } from '../utils/dom-manager';
 
 type ContentRequest =
   | {
@@ -15,14 +15,15 @@ type ContentRequest =
       sourceLanguage?: string;
     }
   | {
-      action: 'translate-selection';
-      text?: string;
+      action: 'translate-selection-text';
+      text: string;
       language?: string;
       provider?: string;
       sourceLanguage?: string;
     }
   | { action: 'restore-original' }
   | { action: 'has-selection' }
+  | { action: 'get-selection-text' }
   | { action: 'get-translation-state' };
 
 // Initialize translator
@@ -34,8 +35,8 @@ translator.initialize().catch((error) => {
 /**
  * Listen for messages from background script
  */
-browser.runtime.onMessage.addListener((request: ContentRequest, _sender, sendResponse) => {
-  handleMessage(request)
+browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  handleMessage(request as ContentRequest)
     .then(sendResponse)
     .catch((error) => {
       console.error('[Content Script] Error:', error);
@@ -56,28 +57,15 @@ async function handleMessage(request: ContentRequest) {
       await translator.translatePage(request.language, request.provider, request.sourceLanguage);
       return { success: true };
 
-    case 'translate-selection':
-      if (request.text) {
-        // Translate provided text (from context menu)
-        const translation = await translator.translateSelection(
-          request.text,
-          false,
-          request.language,
-          request.provider,
-          request.sourceLanguage
-        );
-        return { success: true, translation };
-      } else {
-        // Translate current selection
-        await translator.translateSelection(
-          null,
-          true,
-          request.language,
-          request.provider,
-          request.sourceLanguage
-        );
-        return { success: true };
-      }
+    case 'translate-selection-text': {
+      const translation = await translator.translateSelectionText(
+        request.text,
+        request.language,
+        request.provider,
+        request.sourceLanguage
+      );
+      return { success: true, translation };
+    }
 
     case 'restore-original':
       translator.restoreOriginal();
@@ -89,14 +77,18 @@ async function handleMessage(request: ContentRequest) {
       return { success: true, hasSelection };
     }
 
+    case 'get-selection-text': {
+      const selection = window.getSelection();
+      const text = selection?.toString().trim() || '';
+      return { success: true, text };
+    }
+
     case 'get-translation-state': {
       const translated = isPageTranslated();
-      const hasPopup = hasTranslationPopup();
       return {
         success: true,
         isTranslated: translated,
-        hasPopup,
-        canRestore: translated || hasPopup
+        canRestore: translated
       };
     }
 

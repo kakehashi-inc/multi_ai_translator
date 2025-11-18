@@ -10,6 +10,8 @@ import { ConstVariables } from '../utils/const-variables';
 
 let isPageTranslating = false;
 let isSelectionTranslating = false;
+const selectionResultId = 'selection-result';
+const selectionResultTextId = 'selection-result-text';
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
@@ -36,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize button states
     await updateRestoreButtonVisibility();
     await updateSelectionButtonState();
+    clearSelectionResult();
   } catch (error) {
     console.error('[Popup] Initialization error:', error);
     showStatus(getMessage('errorFailedToInitialize'), 'error');
@@ -176,6 +179,7 @@ function setupEventListeners() {
         return;
       }
 
+      clearSelectionResult();
       isPageTranslating = true;
       isSelectionTranslating = false;
       updateTranslationButtons();
@@ -218,15 +222,7 @@ function setupEventListeners() {
       const targetLanguage = document.getElementById('language-select').value;
       const sourceLanguage = document.getElementById('source-language-select').value;
 
-      // If already translating selection, treat as cancel (restore original)
       if (isSelectionTranslating) {
-        await handleCancelTranslation();
-        isSelectionTranslating = false;
-        isPageTranslating = false;
-        showStatus(getMessage('statusCancelled'), 'info');
-        updateTranslationButtons();
-        await updateRestoreButtonVisibility();
-        await updateSelectionButtonState();
         return;
       }
 
@@ -235,6 +231,7 @@ function setupEventListeners() {
         return;
       }
 
+      clearSelectionResult();
       isSelectionTranslating = true;
       isPageTranslating = false;
       updateTranslationButtons();
@@ -248,10 +245,23 @@ function setupEventListeners() {
         data: { provider }
       });
 
+      const selectionText = await fetchSelectionText();
+      if (!selectionText) {
+        showStatus(getMessage('errorNoSelectionText'), 'error');
+        return;
+      }
+
+      // Save last used provider
+      await browser.runtime.sendMessage({
+        action: 'setLastUsedProvider',
+        data: { provider }
+      });
+
       const response = await sendMessageToActiveTab({
-        action: 'translate-selection',
-        provider,
+        action: 'translate-selection-text',
+        text: selectionText,
         language: targetLanguage,
+        provider,
         sourceLanguage
       });
 
@@ -259,10 +269,12 @@ function setupEventListeners() {
         throw new Error(response?.error || getMessage('errorTranslationFailed'));
       }
 
+      showSelectionResult(response.translation);
       showStatus(getMessage('statusSelectionTranslated'), 'success');
     } catch (error) {
       console.error('[Popup] Translation error:', error);
       showStatus(getMessage('errorTranslationFailedWithMessage', [error.message]), 'error');
+      clearSelectionResult();
     } finally {
       isSelectionTranslating = false;
       updateTranslationButtons();
@@ -276,6 +288,7 @@ function setupEventListeners() {
     try {
       await handleCancelTranslation();
       showStatus(getMessage('statusOriginalContentRestored'), 'success');
+      clearSelectionResult();
     } catch (error) {
       console.error('[Popup] Restore error:', error);
       showStatus(getMessage('errorRestoreFailedWithMessage', [error.message]), 'error');
@@ -314,14 +327,17 @@ function updateTranslationButtons() {
     pageBtn.textContent = getMessage('btnCancelTranslation');
     pageBtn.disabled = false;
     selectionBtn.disabled = true;
-  } else if (isSelectionTranslating) {
-    selectionBtn.textContent = getMessage('btnCancelTranslation');
-    selectionBtn.disabled = false;
-    pageBtn.disabled = true;
   } else {
     pageBtn.textContent = getMessage('btnTranslatePage');
-    selectionBtn.textContent = getMessage('btnTranslateSelection');
     pageBtn.disabled = false;
+  }
+
+  if (isSelectionTranslating) {
+    selectionBtn.textContent = getMessage('btnTranslateSelection');
+    selectionBtn.disabled = true;
+    pageBtn.disabled = true;
+  } else if (!isPageTranslating) {
+    selectionBtn.textContent = getMessage('btnTranslateSelection');
   }
 }
 
@@ -357,12 +373,42 @@ async function updateRestoreButtonVisibility() {
 
   try {
     const response = await sendMessageToActiveTab({ action: 'get-translation-state' });
-    const canRestore = response?.canRestore ?? (!!response?.isTranslated || !!response?.hasPopup);
+    const canRestore = response?.canRestore ?? !!response?.isTranslated;
     restoreBtn.style.display = canRestore ? 'block' : 'none';
   } catch {
     // If we cannot determine page state (e.g. no suitable content tab), hide the button
     restoreBtn.style.display = 'none';
   }
+}
+
+async function fetchSelectionText(): Promise<string> {
+  try {
+    const response = await sendMessageToActiveTab({ action: 'get-selection-text' });
+    return (response?.text || '').trim();
+  } catch (error) {
+    console.error('[Popup] Failed to get selection text:', error);
+    throw error;
+  }
+}
+
+function showSelectionResult(text: string): void {
+  const container = document.getElementById(selectionResultId);
+  const textEl = document.getElementById(selectionResultTextId);
+  if (!container || !textEl) {
+    return;
+  }
+  textEl.textContent = text;
+  container.classList.add('is-visible');
+}
+
+function clearSelectionResult(): void {
+  const container = document.getElementById(selectionResultId);
+  const textEl = document.getElementById(selectionResultTextId);
+  if (!container || !textEl) {
+    return;
+  }
+  textEl.textContent = '';
+  container.classList.remove('is-visible');
 }
 
 /**

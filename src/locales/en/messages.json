@@ -167,6 +167,10 @@
     "message": "Source Language",
     "description": "Source language label"
   },
+  "labelSelectionTranslation": {
+    "message": "Selection Translation",
+    "description": "Label for the translated selection result shown in the popup"
+  },
   "statusScanning": {
     "message": "Scanning page for translatable text…",
     "description": "Status message when scanning page"
@@ -230,6 +234,10 @@
   "errorPleaseSelectProvider": {
     "message": "Please select a provider",
     "description": "Error message when no provider is selected"
+  },
+  "errorNoSelectionText": {
+    "message": "Select text on the page before translating.",
+    "description": "Error shown when no text is selected for translation"
   },
   "statusTranslatingPage": {
     "message": "Translating page...",

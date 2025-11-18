@@ -167,6 +167,10 @@
     "message": "元言語",
     "description": "元言語ラベル"
   },
+  "labelSelectionTranslation": {
+    "message": "選択範囲の翻訳結果",
+    "description": "ポップアップに表示する選択範囲の翻訳結果ラベル"
+  },
   "statusScanning": {
     "message": "翻訳可能なテキストをスキャン中…",
     "description": "ページをスキャン中のステータスメッセージ"
@@ -230,6 +234,10 @@
   "errorPleaseSelectProvider": {
     "message": "プロバイダを選択してください",
     "description": "プロバイダが選択されていないときのエラーメッセージ"
+  },
+  "errorNoSelectionText": {
+    "message": "翻訳したいテキストをページ上で選択してください。",
+    "description": "選択範囲がない場合のエラーメッセージ"
   },
   "statusTranslatingPage": {
     "message": "ページを翻訳中...",

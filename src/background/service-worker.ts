@@ -3,7 +3,7 @@
  * Handles extension lifecycle, context menus, and message passing
  */
 import browser from 'webextension-polyfill';
-import type { Menus, Tabs } from 'webextension-polyfill';
+import type { Tabs } from 'webextension-polyfill';
 import { createProvider } from '../providers';
 import { getSettings, addToHistory } from '../utils/storage';
 import { getMessage } from '../utils/i18n';
@@ -138,11 +138,6 @@ async function createContextMenus(): Promise<void> {
 
   const menuItems = [
     {
-      id: 'translate-selection',
-      title: 'Translate selection',
-      contexts: ['selection']
-    },
-    {
       id: 'translate-page',
       title: 'Translate page',
       contexts: ['page']
@@ -169,9 +164,6 @@ async function createContextMenus(): Promise<void> {
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     switch (info.menuItemId) {
-      case 'translate-selection':
-        await handleTranslateSelection(info, tab);
-        break;
       case 'translate-page':
         await handleTranslatePage(tab);
         break;
@@ -195,9 +187,6 @@ browser.commands.onCommand.addListener(async (command) => {
     switch (command) {
       case 'translate-page':
         await handleTranslatePage(tab);
-        break;
-      case 'translate-selection':
-        await handleTranslateSelection(null, tab);
         break;
       case 'restore-original':
         await handleRestoreOriginal(tab);
@@ -351,26 +340,6 @@ async function getProviderModels({
       models: []
     };
   }
-}
-
-/**
- * Handle translate selection
- */
-async function handleTranslateSelection(
-  info: Menus.OnClickData | null,
-  tab?: Tabs.Tab
-): Promise<void> {
-  const targetTab = await resolveContentTab(tab);
-  const settings = await getSettings();
-  const lastUsed = await getLastUsedProvider();
-  const provider = lastUsed || settings.common.defaultProvider;
-  const sourceLanguage = settings.common.defaultSourceLanguage || 'auto';
-  await sendMessageToTab(targetTab?.id, {
-    action: 'translate-selection',
-    text: info?.selectionText,
-    provider,
-    sourceLanguage
-  });
 }
 
 /**

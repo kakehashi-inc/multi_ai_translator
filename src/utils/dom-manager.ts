@@ -13,12 +13,6 @@ type TranslationRecord = {
 
 type StatusType = 'info' | 'success' | 'error';
 
-export type SelectionPosition = {
-  text: string;
-  x: number;
-  y: number;
-};
-
 class PageTranslationState {
   private readonly translations = new Map<string, TranslationRecord>();
   private readonly originalContents = new Map<string, string>();
@@ -138,35 +132,6 @@ export function restoreOriginalContent(
   translationState.clear();
 }
 
-export function createTranslationPopup(translation: string, x: number, y: number): HTMLDivElement {
-  removeTranslationPopup();
-
-  const popup = document.createElement('div');
-  popup.id = 'multi-ai-translator-popup';
-  popup.className = 'translation-popup';
-  popup.textContent = translation;
-
-  popup.style.position = 'fixed';
-  popup.style.left = `${x}px`;
-  popup.style.top = `${y}px`;
-  popup.style.zIndex = '2147483647';
-
-  document.body.appendChild(popup);
-
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '×';
-  closeBtn.className = 'popup-close';
-  closeBtn.onclick = removeTranslationPopup;
-  popup.appendChild(closeBtn);
-
-  return popup;
-}
-
-export function removeTranslationPopup(): void {
-  const popup = document.getElementById('multi-ai-translator-popup');
-  popup?.remove();
-}
-
 export function highlightElement(element: HTMLElement): void {
   element.classList.add('translation-highlight');
   window.setTimeout(() => {
@@ -246,35 +211,10 @@ export function clearTranslationStatus(delay = 0): void {
   }
 }
 
-export function getSelection(): SelectionPosition | null {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) {
-    return null;
-  }
-
-  const text = selection.toString().trim();
-  if (!text) {
-    return null;
-  }
-
-  const range = selection.getRangeAt(0);
-  const rect = range.getBoundingClientRect();
-
-  return {
-    text,
-    x: rect.left + rect.width / 2,
-    y: rect.bottom + 10
-  };
-}
-
 export function getTranslationState(): PageTranslationState {
   return translationState;
 }
 
 export function isPageTranslated(): boolean {
   return translationState.getTranslationCount() > 0;
-}
-
-export function hasTranslationPopup(): boolean {
-  return !!document.getElementById('multi-ai-translator-popup');
 }
