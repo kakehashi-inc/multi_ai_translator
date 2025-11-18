@@ -2,7 +2,7 @@
 
 ## Overview
 
-Multi-AI Translator runs as a cross-browser extension: Manifest V3 for Chromium (Chrome / Edge) and Manifest V2 for Firefox. The codebase is shared through TypeScript + Vite and relies on `webextension-polyfill` so that browser-specific APIs are abstracted behind a single surface. This document explains the overall architecture, component structure, and data flow.
+Multi-AI Translator runs as a cross-browser extension: Manifest V3 for Chrome (Chrome / Edge) and Manifest V2 for Firefox. The codebase is shared through TypeScript + Vite and relies on `webextension-polyfill` so that browser-specific APIs are abstracted behind a single surface. This document explains the overall architecture, component structure, and data flow.
 
 ## Architecture Diagram
 
@@ -62,7 +62,7 @@ browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 ```
 
 **Characteristics**:
-- MV3 service worker on Chromium, MV2 background script (built via esbuild) on Firefox
+- MV3 service worker on Chrome, MV2 background script (built via esbuild) on Firefox
 - Event-driven, spins up on demand
 
 ### 2. Content Scripts
@@ -90,7 +90,7 @@ browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 **Injection**:
 - `matches`: `<all_urls>`
 - `run_at`: `document_idle`
-- Built as module for Chromium, bundled to IIFE for Firefox
+- Built as module for Chrome, bundled to IIFE for Firefox
 
 ### 3. Popup UI
 

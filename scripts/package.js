@@ -10,17 +10,20 @@ import archiver from 'archiver';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const distDirChromium = path.join(__dirname, '..', 'dist');
-const distDirFirefox = path.join(__dirname, '..', 'dist-firefox');
-const outputDir = path.join(__dirname, '..', 'packages');
+const projectRoot = path.join(__dirname, '..');
+const distDirChrome = path.join(projectRoot, 'dist');
+const distDirFirefox = path.join(projectRoot, 'dist-firefox');
+const outputDir = path.join(projectRoot, 'packages');
+const manifestChromePath = path.join(projectRoot, 'manifest.json');
+const manifestFirefoxPath = path.join(projectRoot, 'manifest.firefox.json');
 
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir);
 }
 
 // Check if dist directory exists
-if (!fs.existsSync(distDirChromium)) {
-  console.error('Error: dist directory not found. Run "yarn build:chromium" first.');
+if (!fs.existsSync(distDirChrome)) {
+  console.error('Error: dist directory not found. Run "yarn build:chrome" first.');
   process.exit(1);
 }
 
@@ -29,11 +32,36 @@ if (!fs.existsSync(distDirFirefox)) {
   process.exit(1);
 }
 
+function readManifestVersion(manifestPath) {
+  try {
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+
+    if (!manifest.version) {
+      throw new Error('version field is missing');
+    }
+
+    return manifest.version;
+  } catch (error) {
+    console.error(`Error reading manifest version from ${manifestPath}: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+function sanitizeVersionForFilename(version) {
+  return version.replace(/[<>:"/\\|?*]/g, '-');
+}
+
+function getOutputFileName(baseName, version) {
+  const safeVersion = sanitizeVersionForFilename(version);
+  return `${baseName}-${safeVersion}.zip`;
+}
+
 /**
  * Create a ZIP package
  */
-function createPackage(name, sourceDir, description) {
-  const outputFile = path.join(outputDir, `${name}.zip`);
+function createPackage({ name, version, sourceDir, description }) {
+  const fileName = getOutputFileName(name, version);
+  const outputFile = path.join(outputDir, fileName);
 
   // Remove existing zip file
   if (fs.existsSync(outputFile)) {
@@ -48,8 +76,8 @@ function createPackage(name, sourceDir, description) {
 
     output.on('close', () => {
       const sizeInMB = (archive.pointer() / 1024 / 1024).toFixed(2);
-      console.log(`✓ ${description}: ${name}.zip (${sizeInMB} MB)`);
-      resolve();
+      console.log(`✓ ${description}: ${fileName} (${sizeInMB} MB)`);
+      resolve(fileName);
     });
 
     archive.on('error', (err) => {
@@ -65,18 +93,35 @@ function createPackage(name, sourceDir, description) {
   });
 }
 
+const chromeVersion = readManifestVersion(manifestChromePath);
+const firefoxVersion = readManifestVersion(manifestFirefoxPath);
+
 // Create packages
 console.log('\nCreating multi-browser packages...\n');
 
 Promise.all([
-  createPackage('multi-ai-translator-chrome', distDirChromium, 'Chrome/Edge package'),
-  createPackage('multi-ai-translator-firefox', distDirFirefox, 'Firefox package')
+  createPackage({
+    name: 'multi-ai-translator-chrome',
+    version: chromeVersion,
+    sourceDir: distDirChrome,
+    description: 'Chrome/Edge package'
+  }),
+  createPackage({
+    name: 'multi-ai-translator-firefox',
+    version: firefoxVersion,
+    sourceDir: distDirFirefox,
+    description: 'Firefox package'
+  })
 ])
   .then(() => {
     console.log('\n✓ All packages created successfully!');
     console.log('\nPackages:');
-    console.log('  - multi-ai-translator-chrome.zip (for Chrome and Edge)');
-    console.log('  - multi-ai-translator-firefox.zip (for Firefox)');
+    console.log(
+      `  - ${getOutputFileName('multi-ai-translator-chrome', chromeVersion)} (for Chrome and Edge)`
+    );
+    console.log(
+      `  - ${getOutputFileName('multi-ai-translator-firefox', firefoxVersion)} (for Firefox)`
+    );
   })
   .catch((err) => {
     console.error('Error creating packages:', err);

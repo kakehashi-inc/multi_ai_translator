@@ -18,8 +18,8 @@ yarn install
 
 | Command | Purpose |
 | --- | --- |
-| `yarn dev` | Watch build for Chromium (outputs to `dist/`) |
-| `yarn build:chromium` | Production build for Chrome / Edge |
+| `yarn dev` | Watch build for Chrome (outputs to `dist/`) |
+| `yarn build:chrome` | Production build for Chrome / Edge |
 | `yarn build:firefox` | Firefox (MV2) build → `dist-firefox/` |
 | `yarn lint` / `yarn format` | Run ESLint / Prettier |
 | `yarn clean` | Remove `dist/`, `dist-firefox/`, `packages/` |
@@ -27,7 +27,7 @@ yarn install
 ## Loading the Extension
 
 ### Chrome / Edge
-1. Run `yarn dev` (watch) or `yarn build:chromium`
+1. Run `yarn dev` (watch) or `yarn build:chrome`
 2. Open `chrome://extensions/` or `edge://extensions/`
 3. Enable **Developer mode**
 4. Click **Load unpacked** and select `dist/`
@@ -67,7 +67,7 @@ multi-ai-translator/
 ├── icons/                  # Extension icons
 ├── scripts/                # Packaging scripts
 ├── Documents/              # Documentation
-├── dist/                   # Chromium build output
+├── dist/                   # Chrome build output
 └── dist-firefox/           # Firefox build output
 ```
 

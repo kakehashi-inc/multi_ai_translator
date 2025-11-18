@@ -2,13 +2,13 @@
 
 ## Building for Production
 
-1. Build the Chromium + Firefox targets:
+1. Build the Chrome + Firefox targets:
 ```bash
 yarn build
 ```
 
-This produces optimized bundles in `dist/` (Chromium) and `dist-firefox/` (Firefox).
-Use `yarn build:chromium` or `yarn build:firefox` if you need individual builds.
+This produces optimized bundles in `dist/` (Chrome) and `dist-firefox/` (Firefox).
+Use `yarn build:chrome` or `yarn build:firefox` if you need individual builds.
 
 2. Create distribution packages:
 ```bash
@@ -134,7 +134,7 @@ This writes ZIP files to `packages/`:
 
 2. **Submit Extension**
    - Click "New Extension"
-   - Upload `packages/multi-ai-translator-chrome.zip` (Edge also consumes the Chromium build)
+   - Upload `packages/multi-ai-translator-chrome.zip` (Edge also consumes the Chrome build)
    - Fill required fields (similar to Chrome)
 
 3. **Review Process**

@@ -18,8 +18,8 @@ yarn install
 
 | コマンド | 用途 |
 | --- | --- |
-| `yarn dev` | Chromium 用ウォッチビルド（`dist/`） |
-| `yarn build:chromium` | Chrome / Edge への配布用ビルド |
+| `yarn dev` | Chrome 用ウォッチビルド（`dist/`） |
+| `yarn build:chrome` | Chrome / Edge への配布用ビルド |
 | `yarn build:firefox` | Firefox (MV2) 用ビルド（`dist-firefox/`） |
 | `yarn lint` / `yarn format` | ESLint / Prettier |
 | `yarn clean` | `dist/`, `dist-firefox/`, `packages/` を削除 |
@@ -27,7 +27,7 @@ yarn install
 ## ブラウザへの読み込み
 
 ### Chrome / Edge
-1. `yarn dev` で開発用ウォッチ、または `yarn build:chromium` で本番ビルド
+1. `yarn dev` で開発用ウォッチ、または `yarn build:chrome` で本番ビルド
 2. `chrome://extensions/` もしくは `edge://extensions/` を開く
 3. 右上で「デベロッパーモード」を ON
 4. 「パッケージ化されていない拡張機能を読み込む」で `dist/` を指定
@@ -67,7 +67,7 @@ multi-ai-translator/
 ├── icons/                  # アイコン
 ├── scripts/                # ビルドスクリプト
 ├── Documents/              # ドキュメント
-├── dist/                   # Chromium 向け出力
+├── dist/                   # Chrome 向け出力
 └── dist-firefox/           # Firefox 向け出力
 ```
 

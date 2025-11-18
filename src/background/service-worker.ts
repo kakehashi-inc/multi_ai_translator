@@ -48,7 +48,7 @@ let sessionStorageWarningLogged = false;
 
 /**
  * Get last used provider from storage
- * Works in both Chromium and Firefox
+ * Works in both Chrome and Firefox
  */
 async function getLastUsedProvider(): Promise<string | null> {
   if (lastUsedProviderCache !== null) {
@@ -56,7 +56,7 @@ async function getLastUsedProvider(): Promise<string | null> {
   }
 
   try {
-    // Try session storage first (Firefox 109+, Chromium)
+    // Try session storage first (Firefox 109+, Chrome)
     if (browser.storage?.session) {
       const result = await browser.storage.session.get('lastUsedProvider');
       lastUsedProviderCache = (result.lastUsedProvider as string | undefined) || null;
@@ -82,13 +82,13 @@ async function getLastUsedProvider(): Promise<string | null> {
 
 /**
  * Set last used provider to storage
- * Works in both Chromium and Firefox
+ * Works in both Chrome and Firefox
  */
 async function setLastUsedProvider(provider: string | null): Promise<void> {
   lastUsedProviderCache = provider;
 
   try {
-    // Try session storage first (Firefox 109+, Chromium)
+    // Try session storage first (Firefox 109+, Chrome)
     if (browser.storage?.session) {
       await browser.storage.session.set({ lastUsedProvider: provider ?? null });
       return;

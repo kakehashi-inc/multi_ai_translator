@@ -2,13 +2,13 @@
 
 ## 本番環境用ビルド
 
-1. 拡張機能をビルドする（Chromium + Firefox）：
+1. 拡張機能をビルドする（Chrome + Firefox）：
 ```bash
 yarn build
 ```
 
-`dist/`（Chromium 用）と `dist-firefox/`（Firefox 用）が生成されます。
-Chromium だけ、あるいは Firefox だけを個別に更新する場合は `yarn build:chromium` / `yarn build:firefox` を使用します。
+`dist/`（Chrome 用）と `dist-firefox/`（Firefox 用）が生成されます。
+Chrome だけ、あるいは Firefox だけを個別に更新する場合は `yarn build:chrome` / `yarn build:firefox` を使用します。
 
 2. 配布パッケージを作成する：
 ```bash
@@ -134,7 +134,7 @@ yarn package
 
 2. **拡張機能を提出**
    - 「新しい拡張機能」をクリック
-   - `packages/multi-ai-translator-chrome.zip` をアップロード（Edge も Chromium ビルドを使用）
+   - `packages/multi-ai-translator-chrome.zip` をアップロード（Edge も Chrome ビルドを使用）
    - 必須フィールドを記入（Chromeと同様）
 
 3. **審査プロセス**

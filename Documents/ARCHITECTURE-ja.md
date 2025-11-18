@@ -2,7 +2,7 @@
 
 ## 概要
 
-Multi-AI Translatorは、Chromium（Chrome / Edge）向けには Manifest V3、Firefox 向けには Manifest V2 で動作するクロスブラウザ拡張機能です。実装は TypeScript + Vite を用い、共通のコードベースを `webextension-polyfill` で抽象化しています。このドキュメントでは、拡張機能のアーキテクチャ、コンポーネント構成、データフローについて説明します。
+Multi-AI Translatorは、Chrome（Chrome / Edge）向けには Manifest V3、Firefox 向けには Manifest V2 で動作するクロスブラウザ拡張機能です。実装は TypeScript + Vite を用い、共通のコードベースを `webextension-polyfill` で抽象化しています。このドキュメントでは、拡張機能のアーキテクチャ、コンポーネント構成、データフローについて説明します。
 
 ## アーキテクチャ図
 

@@ -1,18 +1,21 @@
 {
   "name": "multi-ai-translator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser extension for translating web pages using multiple AI providers",
   "type": "module",
   "scripts": {
+    "sync:version": "node scripts/sync-manifest-version.js",
+    "sync:version:chrome": "node scripts/sync-manifest-version.js chrome",
+    "sync:version:firefox": "node scripts/sync-manifest-version.js firefox",
     "dev": "vite build --config vite.config.ts --watch",
     "dev:firefox": "vite build --config vite.firefox.config.ts --watch",
-    "build": "yarn build:chromium && yarn build:firefox",
-    "build:chromium": "vite build --config vite.config.ts",
-    "build:firefox": "vite build --config vite.firefox.config.ts",
+    "build": "yarn build:chrome && yarn build:firefox",
+    "build:chrome": "yarn sync:version:chrome && vite build --config vite.config.ts",
+    "build:firefox": "yarn sync:version:firefox && vite build --config vite.firefox.config.ts",
     "clean": "gulp clean",
     "lint": "gulp lint",
-    "format": "gulp format",
-    "package": "gulp packageExt",
+    "format": "prettier --write \"src/**/*.{ts,js,css}\"",
+    "package": "node scripts/package.js",
     "release": "yarn clean && yarn format && yarn lint && yarn build && yarn package"
   },
   "keywords": [
