@@ -15,10 +15,12 @@ import {
   clearAllLoadingIndicators,
   updateTranslationStatus,
   clearTranslationStatus
-} from '../utils/dom-manager.js';
-import { PromptBuilder } from '../utils/prompt-builder.js';
-import { ConstVariables } from '../utils/const-variables.js';
-import { getMessage } from '../utils/i18n.js';
+} from '../utils/dom-manager';
+import type { SelectionPosition } from '../utils/dom-manager';
+import { PromptBuilder } from '../utils/prompt-builder';
+import { ConstVariables } from '../utils/const-variables';
+import { getMessage } from '../utils/i18n';
+import type { Settings } from '../types/settings';
 
 const {
   DEFAULT_BATCH_MAX_CHARS,
@@ -27,34 +29,65 @@ const {
   BATCH_THROTTLE_DELAY_MS
 } = ConstVariables;
 
+type TranslationGroup = {
+  parent: HTMLElement;
+  nodes: Text[];
+};
+
+type BatchEntry = {
+  group: TranslationGroup;
+  index: number;
+  textCount: number;
+  completed: number;
+};
+
+type NodeReference = {
+  entry: BatchEntry;
+  node: Text;
+  original: string;
+};
+
+type TranslateMessageResponse =
+  | { success: true; translation: string; provider: string }
+  | { success: false; error: string };
+
 /**
  * Translator class
  */
 export class Translator {
-  constructor() {
-    this.isTranslating = false;
-    this.settings = null;
-    this.cancelRequested = false;
-  }
+  private isTranslating = false;
+  private settings: Settings | null = null;
+  private cancelRequested = false;
 
   /**
    * Initialize translator
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     this.settings = await this.getSettings();
   }
 
   /**
    * Get settings from background
    */
-  async getSettings() {
-    return browser.runtime.sendMessage({ action: 'getSettings' });
+  private async getSettings(): Promise<Settings> {
+    return browser.runtime.sendMessage({ action: 'getSettings' }) as Promise<Settings>;
+  }
+
+  private async ensureSettings(): Promise<Settings> {
+    if (!this.settings) {
+      this.settings = await this.getSettings();
+    }
+    return this.settings;
   }
 
   /**
    * Translate page
    */
-  async translatePage(targetLanguage = null, providerName = null, sourceLanguage = null) {
+  async translatePage(
+    targetLanguage: string | null = null,
+    providerName: string | null = null,
+    sourceLanguage: string | null = null
+  ): Promise<void> {
     if (this.isTranslating) {
       console.warn('[Translator] Translation already in progress');
       return;
@@ -65,14 +98,11 @@ export class Translator {
 
     updateTranslationStatus(getMessage('statusScanning'));
     try {
-      // Get settings if not loaded
-      if (!this.settings) {
-        await this.initialize();
-      }
+      const settings = await this.ensureSettings();
 
-      const target = targetLanguage || this.settings.common.defaultTargetLanguage;
-      const provider = providerName || this.settings.common.defaultProvider;
-      const source = sourceLanguage || this.settings.common.defaultSourceLanguage || 'auto';
+      const target = targetLanguage || settings.common.defaultTargetLanguage;
+      const provider = providerName || settings.common.defaultProvider;
+      const source = sourceLanguage || settings.common.defaultSourceLanguage || 'auto';
 
       // Get translatable nodes
       const nodes = getTranslatableNodes();
@@ -86,14 +116,14 @@ export class Translator {
       const totalGroups = textGroups.length;
       updateTranslationStatus(getMessage('statusFoundBlocks', [totalGroups.toString()]));
 
-      const maxChars = Number(this.settings.common.batchMaxChars) || DEFAULT_BATCH_MAX_CHARS;
-      const maxItems = Number(this.settings.common.batchMaxItems) || DEFAULT_BATCH_MAX_ITEMS;
+      const maxChars = Number(settings.common.batchMaxChars) || DEFAULT_BATCH_MAX_CHARS;
+      const maxItems = Number(settings.common.batchMaxItems) || DEFAULT_BATCH_MAX_ITEMS;
 
       // Estimate total batches based on groups and batch size
       // This is an approximation since batches are created dynamically
       // Calculate average characters per group to better estimate batches
       const avgCharsPerGroup =
-        nodes.reduce((sum, node) => sum + node.textContent.length, 0) / totalGroups;
+        nodes.reduce((sum, node) => sum + (node.textContent?.length ?? 0), 0) / totalGroups;
       const itemsPerBatch = Math.min(
         maxItems,
         Math.floor(maxChars / Math.max(avgCharsPerGroup, 1))
@@ -101,13 +131,17 @@ export class Translator {
       const estimatedTotalBatches = Math.max(1, Math.ceil(totalGroups / itemsPerBatch));
 
       let translated = 0;
-      const errors = [];
+      const errors: string[] = [];
       let batchIndexCounter = 0;
       let batchNumber = 0;
       let maxBatchNumber = estimatedTotalBatches;
 
       // Process batches one at a time and free memory immediately after each batch
-      const processBatch = async (batchTexts, batchRefs, batchEntries) => {
+      const processBatch = async (
+        batchTexts: string[],
+        batchRefs: NodeReference[],
+        batchEntries: BatchEntry[]
+      ): Promise<number> => {
         if (this.cancelRequested) {
           // Ensure loading indicators for this batch are cleared
           batchEntries.forEach((entry) => {
@@ -188,7 +222,7 @@ export class Translator {
         } catch (error) {
           // Collect errors for this batch. Actual logging is done after all batches complete
           // to avoid duplicated messages from multiple layers.
-          const blockIndexes = [];
+          const blockIndexes: number[] = [];
           batchEntries.forEach((entry) => {
             hideLoadingIndicator(entry.group.parent);
             blockIndexes.push(entry.index);
@@ -204,12 +238,14 @@ export class Translator {
       };
 
       // Build and process batches incrementally
-      let currentBatch = {
-        texts: [],
-        refs: [],
-        entries: [],
+      const createEmptyBatch = () => ({
+        texts: [] as string[],
+        refs: [] as NodeReference[],
+        entries: [] as BatchEntry[],
         charCount: 0
-      };
+      });
+
+      let currentBatch = createEmptyBatch();
 
       for (const group of textGroups) {
         if (this.cancelRequested) {
@@ -218,7 +254,7 @@ export class Translator {
         batchIndexCounter++;
         showLoadingIndicator(group.parent);
 
-        const entry = {
+        const entry: BatchEntry = {
           group,
           index: batchIndexCounter,
           textCount: group.nodes.length,
@@ -226,10 +262,10 @@ export class Translator {
         };
 
         // Collect nodes for this group
-        const groupTexts = [];
-        const groupRefs = [];
+        const groupTexts: string[] = [];
+        const groupRefs: NodeReference[] = [];
         group.nodes.forEach((node) => {
-          const original = node.textContent;
+          const original = node.textContent ?? '';
           groupTexts.push(original);
           groupRefs.push({
             entry,
@@ -246,17 +282,8 @@ export class Translator {
 
         // Process batch when limits are reached
         if (currentBatch.texts.length >= maxItems || currentBatch.charCount >= maxChars) {
-          const batchTexts = currentBatch.texts;
-          const batchRefs = currentBatch.refs;
-          const batchEntries = currentBatch.entries;
-
-          await processBatch(batchTexts, batchRefs, batchEntries);
-
-          // Free memory: clear batch data immediately after processing
-          currentBatch.texts = [];
-          currentBatch.refs = [];
-          currentBatch.entries = [];
-          currentBatch.charCount = 0;
+          await processBatch(currentBatch.texts, currentBatch.refs, currentBatch.entries);
+          currentBatch = createEmptyBatch();
 
           await this.delay(BATCH_THROTTLE_DELAY_MS);
         }
@@ -264,17 +291,8 @@ export class Translator {
 
       // Process remaining batch
       if (currentBatch.texts.length > 0) {
-        const batchTexts = currentBatch.texts;
-        const batchRefs = currentBatch.refs;
-        const batchEntries = currentBatch.entries;
-
-        await processBatch(batchTexts, batchRefs, batchEntries);
-
-        // Free memory: clear batch data
-        currentBatch.texts = null;
-        currentBatch.refs = null;
-        currentBatch.entries = null;
-        currentBatch = null;
+        await processBatch(currentBatch.texts, currentBatch.refs, currentBatch.entries);
+        currentBatch = createEmptyBatch();
       }
 
       // Free memory: clear textGroups reference after processing
@@ -316,34 +334,31 @@ export class Translator {
    * Translate selection
    */
   async translateSelection(
-    text = null,
+    text: string | null = null,
     showPopup = true,
-    targetLanguage = null,
-    providerName = null,
-    sourceLanguage = null
-  ) {
+    targetLanguage: string | null = null,
+    providerName: string | null = null,
+    sourceLanguage: string | null = null
+  ): Promise<string | undefined> {
     try {
-      // Get settings if not loaded
-      if (!this.settings) {
-        await this.initialize();
-      }
+      const settings = await this.ensureSettings();
 
       let textToTranslate = text;
-      let position = null;
+      let position: SelectionPosition | null = null;
 
-        // If no text provided, get selection
-        if (!textToTranslate) {
-          const selection = getSelection();
-          if (!selection) {
-            return;
-          }
-          textToTranslate = selection.text;
-          position = { x: selection.x, y: selection.y };
+      // If no text provided, get selection
+      if (!textToTranslate) {
+        const selection = getSelection();
+        if (!selection) {
+          return undefined;
         }
+        textToTranslate = selection.text;
+        position = { x: selection.x, y: selection.y };
+      }
 
-      const target = targetLanguage || this.settings.common.defaultTargetLanguage;
-      const provider = providerName || this.settings.common.defaultProvider;
-      const source = sourceLanguage || this.settings.common.defaultSourceLanguage || 'auto';
+      const target = targetLanguage || settings.common.defaultTargetLanguage;
+      const provider = providerName || settings.common.defaultProvider;
+      const source = sourceLanguage || settings.common.defaultSourceLanguage || 'auto';
 
       const requestPayload = PromptBuilder.buildRequestPayload([textToTranslate]);
       const result = await this.translateText(requestPayload, target, source, provider);
@@ -372,7 +387,7 @@ export class Translator {
   /**
    * Restore original content
    */
-  restoreOriginal() {
+  restoreOriginal(): void {
     this.cancelRequested = true;
     this.isTranslating = false;
     restoreOriginalContent();
@@ -382,7 +397,12 @@ export class Translator {
   /**
    * Translate text via background script
    */
-  async translateText(text, targetLanguage, sourceLanguage, providerName) {
+  private async translateText(
+    text: string,
+    targetLanguage: string,
+    sourceLanguage: string,
+    providerName: string | null
+  ): Promise<TranslateMessageResponse> {
     return browser.runtime.sendMessage({
       action: 'translate',
       data: {
@@ -391,33 +411,36 @@ export class Translator {
         sourceLanguage,
         providerName
       }
-    });
+    }) as Promise<TranslateMessageResponse>;
   }
 
   /**
    * Group nodes by parent element
    */
-  groupNodesByParent(nodes) {
-    const groups = new Map();
+  private groupNodesByParent(nodes: Text[]): TranslationGroup[] {
+    const groups = new Map<HTMLElement, Text[]>();
 
     nodes.forEach((node) => {
       const parent = node.parentElement;
+      if (!parent) {
+        return;
+      }
       if (!groups.has(parent)) {
         groups.set(parent, []);
       }
-      groups.get(parent).push(node);
+      groups.get(parent)?.push(node);
     });
 
-    return Array.from(groups.entries()).map(([parent, nodes]) => ({
+    return Array.from(groups.entries()).map(([parent, groupedNodes]) => ({
       parent,
-      nodes
+      nodes: groupedNodes
     }));
   }
 
   /**
    * Split translation back to match node count
    */
-  splitTranslation(translation, nodeCount) {
+  private splitTranslation(translation: string, nodeCount: number): string[] {
     if (nodeCount === 1) {
       return [translation];
     }
@@ -436,7 +459,7 @@ export class Translator {
   /**
    * Delay helper
    */
-  delay(ms) {
+  private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

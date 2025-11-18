@@ -1,13 +1,23 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { BaseProvider } from './base-provider.js';
-import { ConstVariables } from '../utils/const-variables.js';
+import { BaseProvider } from './base-provider';
+import { ConstVariables } from '../utils/const-variables';
+import type { ProviderSettings } from '../types/settings';
+
+export interface AnthropicProviderConfig extends ProviderSettings {
+  apiKey?: string;
+  baseUrl?: string;
+  baseURL?: string;
+  model?: string;
+  maxTokens?: number;
+  temperature?: number;
+}
 
 /**
  * Anthropic Provider
  * Supports Claude 3 and 4 models via Anthropic API
  */
-export class AnthropicProvider extends BaseProvider {
-  constructor(config) {
+export class AnthropicProvider extends BaseProvider<AnthropicProviderConfig, Anthropic> {
+  constructor(config: AnthropicProviderConfig) {
     super(config);
     this.name = 'anthropic';
     this.client = null;
@@ -16,7 +26,7 @@ export class AnthropicProvider extends BaseProvider {
   /**
    * Initialize Anthropic client
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this.client) {
       return;
     }
@@ -28,7 +38,7 @@ export class AnthropicProvider extends BaseProvider {
     try {
       this.client = new Anthropic({
         apiKey: this.config.apiKey,
-        baseURL: this.config.baseURL,
+        baseURL: this.config.baseUrl ?? this.config.baseURL,
         dangerouslyAllowBrowser: true
       });
     } catch (error) {
@@ -39,14 +49,14 @@ export class AnthropicProvider extends BaseProvider {
   /**
    * Validate configuration
    */
-  validateConfig() {
+  validateConfig(): boolean {
     return !!(this.config.apiKey && this.config.model);
   }
 
   /**
    * Translate text using Anthropic API
    */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
+  async translate(text: string, targetLanguage: string, sourceLanguage = 'auto'): Promise<string> {
     if (!this.validateConfig()) {
       throw new Error('Invalid Anthropic configuration');
     }
@@ -55,6 +65,10 @@ export class AnthropicProvider extends BaseProvider {
 
     return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
+
+      if (!this.client) {
+        throw new Error('Anthropic client not initialized');
+      }
 
       const response = await this.client.messages.create({
         model: this.config.model,
@@ -68,16 +82,20 @@ export class AnthropicProvider extends BaseProvider {
         ]
       });
 
-      return response.content[0].text.trim();
+      const content = response.content[0];
+      return 'text' in content ? content.text.trim() : '';
     });
   }
 
   /**
    * Get available models
    */
-  async getModels() {
+  async getModels(): Promise<string[]> {
     try {
       await this.ensureInitialized();
+      if (!this.client) {
+        return [];
+      }
 
       const response = await this.client.models.list();
       return response.data.map((model) => model.id);

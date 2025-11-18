@@ -1,4 +1,4 @@
-function escapeXml(text = '') {
+function escapeXml(text: string = ''): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -7,7 +7,7 @@ function escapeXml(text = '') {
     .replace(/'/g, '&apos;');
 }
 
-function unescapeXml(text = '') {
+function unescapeXml(text: string = ''): string {
   return text
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -16,12 +16,16 @@ function unescapeXml(text = '') {
     .replace(/&apos;/g, "'");
 }
 
-function normalizeForMatch(text = '') {
+function normalizeForMatch(text: string = ''): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
 export class PromptBuilder {
-  static buildPrompt(requestPayload, targetLanguage, sourceLanguage) {
+  static buildPrompt(
+    requestPayload: string,
+    targetLanguage: string,
+    sourceLanguage: string
+  ): string {
     const sourceLangText =
       sourceLanguage === 'auto' ? 'the detected source language' : sourceLanguage;
 
@@ -46,29 +50,29 @@ Request:
 ${requestPayload}`;
   }
 
-  static buildRequestPayload(texts = []) {
+  static buildRequestPayload(texts: string[] = []): string {
     const items = texts.map((text) => `<item>${escapeXml(text)}</item>`).join('\n');
     return `<request>\n${items}\n</request>`;
   }
 
-  static parseResponsePayload(response, originals = []) {
+  static parseResponsePayload(response: string, originals: string[] = []): string[] {
     try {
       if (!response?.includes('<item')) {
         return [];
       }
 
-      const normalizedMap = new Map();
+      const normalizedMap = new Map<string, number[]>();
       originals.forEach((text, index) => {
         const key = normalizeForMatch(text);
         if (!normalizedMap.has(key)) {
           normalizedMap.set(key, []);
         }
-        normalizedMap.get(key).push(index);
+        normalizedMap.get(key)?.push(index);
       });
 
-      const translations = new Array(originals.length).fill('');
+      const translations = new Array<string>(originals.length).fill('');
       const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-      let match;
+      let match: RegExpExecArray | null;
 
       while ((match = itemRegex.exec(response)) !== null) {
         const block = match[1];

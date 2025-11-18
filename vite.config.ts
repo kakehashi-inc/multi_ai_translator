@@ -17,16 +17,16 @@ export default defineConfig({
     })
   ],
   build: {
-    rollupOptions: {
-      input: {
-        // CRXJS will automatically handle these from manifest.json
-      }
-    },
     // Ensure compatibility with older browsers
     target: 'es2020',
     // Optimize output
     minify: 'esbuild',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        // CRXJS will automatically handle these from manifest.json
+      }
+    }
   },
   resolve: {
     alias: {

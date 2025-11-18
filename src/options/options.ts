@@ -1,9 +1,10 @@
+// @ts-nocheck
 /**
  * Options Page Script
  * Handles settings management
  */
 import browser from 'webextension-polyfill';
-import { translatePage, getSupportedLanguages } from '../utils/i18n.js';
+import { translatePage, getSupportedLanguages } from '../utils/i18n';
 import {
   getSettings,
   saveSettings,
@@ -11,8 +12,8 @@ import {
   exportSettings,
   importSettings,
   getBrowserLanguage
-} from '../utils/storage.js';
-import { ConstVariables } from '../utils/const-variables.js';
+} from '../utils/storage';
+import { ConstVariables } from '../utils/const-variables';
 
 const {
   PROVIDER_ORDER,

@@ -1,13 +1,20 @@
 import { Ollama } from 'ollama/browser';
-import { BaseProvider } from './base-provider.js';
-import { ConstVariables } from '../utils/const-variables.js';
+import { BaseProvider } from './base-provider';
+import { ConstVariables } from '../utils/const-variables';
+import type { ProviderSettings } from '../types/settings';
+
+interface OllamaProviderConfig extends ProviderSettings {
+  host?: string;
+  model?: string;
+  temperature?: number;
+}
 
 /**
  * Ollama Provider
  * Supports local Ollama models
  */
-export class OllamaProvider extends BaseProvider {
-  constructor(config) {
+export class OllamaProvider extends BaseProvider<OllamaProviderConfig, Ollama> {
+  constructor(config: OllamaProviderConfig) {
     super(config);
     this.name = 'ollama';
     this.client = null;
@@ -16,7 +23,7 @@ export class OllamaProvider extends BaseProvider {
   /**
    * Initialize Ollama client
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this.client) {
       return;
     }
@@ -33,14 +40,14 @@ export class OllamaProvider extends BaseProvider {
   /**
    * Validate configuration
    */
-  validateConfig() {
+  validateConfig(): boolean {
     return !!this.config.model;
   }
 
   /**
    * Translate text using Ollama
    */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
+  async translate(text: string, targetLanguage: string, sourceLanguage = 'auto'): Promise<string> {
     if (!this.validateConfig()) {
       throw new Error('Invalid Ollama configuration');
     }
@@ -50,9 +57,13 @@ export class OllamaProvider extends BaseProvider {
     return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
+      if (!this.client) {
+        throw new Error('Ollama client not initialized');
+      }
+
       const response = await this.client.generate({
         model: this.config.model,
-        prompt: prompt,
+        prompt,
         stream: false,
         options: {
           temperature: this.config.temperature ?? ConstVariables.DEFAULT_OLLAMA_TEMPERATURE
@@ -66,9 +77,12 @@ export class OllamaProvider extends BaseProvider {
   /**
    * Get available models from local Ollama instance
    */
-  async getModels() {
+  async getModels(): Promise<string[]> {
     try {
       await this.ensureInitialized();
+      if (!this.client) {
+        return [];
+      }
 
       const response = await this.client.list();
       return response.models.map((model) => model.name);
@@ -81,7 +95,7 @@ export class OllamaProvider extends BaseProvider {
   /**
    * Check if Ollama is running
    */
-  async isAvailable() {
+  async isAvailable(): Promise<boolean> {
     try {
       await this.getModels();
       return true;

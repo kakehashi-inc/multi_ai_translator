@@ -1,12 +1,12 @@
+// @ts-nocheck
 /**
  * Popup Script
  * Handles popup UI interactions
  */
 import browser from 'webextension-polyfill';
-import { translatePage, getMessage } from '../utils/i18n.js';
-import { getSettings, getEnabledProviders } from '../utils/storage.js';
-import { getSupportedLanguages } from '../utils/i18n.js';
-import { ConstVariables } from '../utils/const-variables.js';
+import { translatePage, getMessage, getSupportedLanguages } from '../utils/i18n';
+import { getSettings, getEnabledProviders } from '../utils/storage';
+import { ConstVariables } from '../utils/const-variables';
 
 let isPageTranslating = false;
 let isSelectionTranslating = false;

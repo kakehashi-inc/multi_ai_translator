@@ -2,57 +2,50 @@
 
 ## 前提条件
 
-- Node.js 22以上
-- yarn 4
-- Chrome または Edge ブラウザ
+- Node.js 22 以上
+- Yarn 4
+- Chrome / Edge / Firefox
 
 ## セットアップ
 
-1. リポジトリをクローン：
 ```bash
 git clone https://github.com/yourusername/multi-ai-translator.git
 cd multi-ai-translator
-```
-
-2. 依存関係をインストール：
-```bash
 yarn install
 ```
 
-## 開発ワークフロー
+## よく使うコマンド
 
-### 開発用ビルド
+| コマンド | 用途 |
+| --- | --- |
+| `yarn dev` | Chromium 用ウォッチビルド（`dist/`） |
+| `yarn build:chromium` | Chrome / Edge への配布用ビルド |
+| `yarn build:firefox` | Firefox (MV2) 用ビルド（`dist-firefox/`） |
+| `yarn lint` / `yarn format` | ESLint / Prettier |
+| `yarn clean` | `dist/`, `dist-firefox/`, `packages/` を削除 |
 
-自動リビルド付きのウォッチモード：
-```bash
-yarn dev
-```
+## ブラウザへの読み込み
 
-これにより：
-- 開発モードで拡張機能をビルド
-- ファイル変更を監視
-- 変更時に自動的にリビルド
+### Chrome / Edge
+1. `yarn dev` で開発用ウォッチ、または `yarn build:chromium` で本番ビルド
+2. `chrome://extensions/` もしくは `edge://extensions/` を開く
+3. 右上で「デベロッパーモード」を ON
+4. 「パッケージ化されていない拡張機能を読み込む」で `dist/` を指定
+5. コード変更後は Vite の再ビルド完了を待ち、拡張機能カードの更新アイコンでリロード
 
-### ブラウザで拡張機能を読み込む
+### Firefox
+1. `yarn build:firefox` を実行して `dist-firefox/` を生成
+2. `about:debugging#/runtime/this-firefox` を開く
+3. 「一時的なアドオンを読み込む」→ `dist-firefox/manifest.json`
+4. 変更後は再ビルドし、「再読み込み」で反映
+5. 背景スクリプトのログは「検査」ボタンから確認
 
-#### Chrome
-1. `chrome://extensions/` を開く
-2. 「デベロッパーモード」を有効にする
-3. 「パッケージ化されていない拡張機能を読み込む」をクリック
-4. `dist` フォルダを選択
+## 変更のテスト
 
-#### Edge
-1. `edge://extensions/` を開く
-2. 「デベロッパーモード」を有効にする
-3. 「展開して読み込み」をクリック
-4. `dist` フォルダを選択
-
-### 変更のテスト
-
-1. ソースファイルを変更
-2. Vite のリビルドを待つ（ウォッチモード）
-3. ブラウザの拡張機能ページでリロードアイコンをクリック
-4. 変更をテスト
+1. ソースコードを編集
+2. ウォッチビルドの完了、または手動ビルドを待つ
+3. 読み込んでいるブラウザで拡張機能を更新
+4. ポップアップ／オプション／翻訳動作を確認
 
 ## プロジェクト構造
 
@@ -60,23 +53,24 @@ yarn dev
 multi-ai-translator/
 ├── src/
 │   ├── background/         # バックグラウンドサービスワーカー
-│   ├── content/           # コンテンツスクリプト
-│   ├── options/           # オプションページ
-│   ├── popup/             # ポップアップ UI
-│   ├── providers/         # AI プロバイダー実装
-│   ├── utils/             # ユーティリティ関数
-│   └── locales/           # 翻訳
-├── icons/                 # 拡張機能アイコン
-├── scripts/               # ビルドスクリプト
-├── Documents/             # ドキュメンテーション
-└── dist/                  # ビルド出力
+│   ├── content/            # コンテンツスクリプト
+│   ├── options/            # オプションページ
+│   ├── popup/              # ポップアップ UI
+│   ├── providers/          # AI プロバイダー実装
+│   ├── utils/              # ユーティリティ
+│   └── locales/            # 翻訳リソース
+├── icons/                  # アイコン
+├── scripts/                # ビルドスクリプト
+├── Documents/              # ドキュメント
+├── dist/                   # Chromium 向け出力
+└── dist-firefox/           # Firefox 向け出力
 ```
 
-## 新しいプロバイダーの追加
+## プロバイダーの追加
 
-1. `src/providers/your-provider.js` にプロバイダークラスを作成：
-```javascript
-import { BaseProvider } from './base-provider.js';
+1. `src/providers/your-provider.ts` を作成
+```ts
+import { BaseProvider } from './base-provider';
 
 export class YourProvider extends BaseProvider {
   constructor(config) {
@@ -85,10 +79,10 @@ export class YourProvider extends BaseProvider {
   }
 
   validateConfig() {
-    return !!(this.config.apiKey);
+    return !!this.config.apiKey;
   }
 
-  async translate(text, targetLanguage, sourceLanguage) {
+  async translate(text: string, targetLanguage: string, sourceLanguage = 'auto') {
     // 実装
   }
 
@@ -97,75 +91,18 @@ export class YourProvider extends BaseProvider {
   }
 }
 ```
-
-2. `src/providers/index.js` に登録
-3. `src/options/options.html` に UI を追加
-4. `src/utils/storage.js` にデフォルト設定を追加
+2. `src/providers/index.ts` に登録
+3. `src/options/options.html` / `options.ts` に UI とロジックを追加
+4. `src/utils/storage.ts` にデフォルト値を追加
 
 ## デバッグ
 
-### バックグラウンドサービスワーカー
-- `chrome://extensions/` を開く
-- Multi-AI Translator を見つける
-- 「Service Worker」リンクをクリック
-- DevTools が開く
+### バックグラウンド
+- `chrome://extensions/` → 対象拡張機能の「Service Worker」をクリック
+- Firefox の場合は `about:debugging` の「検査」からログ確認
 
 ### コンテンツスクリプト
-- 任意のウェブページを開く
-- F12 キーを押して DevTools を開く
-- コンソールタブでログを確認
-- コンテンツスクリプトのエラーがここに表示される
+- 任意のページで DevTools (F12) を開き Console を確認
 
-### ポップアップ/オプション
-- ポップアップまたはオプションページを右クリック
-- 「検証」を選択
-
-## コードスタイル
-
-ESLint と Prettier を使用：
-
-```bash
-# コードスタイルをチェック
-yarn lint
-
-# コードをフォーマット
-yarn format
-```
-
-## よくある問題
-
-### 拡張機能が読み込まれない
-- manifest.json の構文をチェック
-- vite.config.js のビルド設定を確認
-- ブラウザコンソールのエラーを確認
-
-### API 呼び出しが失敗する
-- CORS 設定を確認
-- API キーの設定を確認
-- バックグラウンドサービスワーカーのコンソールを確認
-
-### 翻訳が動作しない
-- プロバイダーの設定を確認
-- API キーが有効であることを確認
-- DevTools のネットワークタブを確認
-
-## パフォーマンスのヒント
-
-1. **大きなテキストを分割**：小さな断片に分割
-2. **翻訳をキャッシュ**：重複した API 呼び出しを避ける
-3. **レート制限**：リクエスト間に遅延を追加
-4. **DOM 操作を最小化**：バッチ更新
-
-## コントリビューション
-
-1. リポジトリをフォーク
-2. 機能ブランチを作成
-3. 変更を加える
-4. 徹底的にテスト
-5. プルリクエストを送信
-
-## リソース
-
-- [Chrome 拡張機能ドキュメント](https://developer.chrome.com/docs/extensions/)
-- [Manifest V3 移行](https://developer.chrome.com/docs/extensions/mv3/intro/)
-- [Service Workers](https://developer.chrome.com/docs/extensions/mv3/service_workers/)
+### ポップアップ / オプション
+- 対象 UI 上で右クリック → 「検証」

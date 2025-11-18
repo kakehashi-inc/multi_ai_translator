@@ -3,12 +3,46 @@
  * Handles extension lifecycle, context menus, and message passing
  */
 import browser from 'webextension-polyfill';
-import { createProvider } from '../providers/index.js';
-import { getSettings, addToHistory } from '../utils/storage.js';
-import { getMessage } from '../utils/i18n.js';
+import type { Menus, Tabs } from 'webextension-polyfill';
+import { createProvider } from '../providers';
+import { getSettings, addToHistory } from '../utils/storage';
+import { getMessage } from '../utils/i18n';
+import type { ProviderSettings } from '../types/settings';
+import type { BaseProvider } from '../providers/base-provider';
+
+type TranslatePayload = {
+  text: string;
+  targetLanguage?: string;
+  sourceLanguage?: string;
+  providerName?: string | null;
+};
+
+type ProviderRequestPayload = {
+  providerName: string;
+  config?: ProviderSettings;
+};
+
+type BackgroundRequest =
+  | { action: 'translate'; data: TranslatePayload }
+  | { action: 'getSettings' }
+  | { action: 'testProvider'; data: ProviderRequestPayload }
+  | { action: 'getModels'; data: ProviderRequestPayload }
+  | { action: 'setLastUsedProvider'; data?: { provider?: string | null } }
+  | { action: 'getLastUsedProvider' }
+  | { action: string; data?: unknown };
+
+type TranslateResponse =
+  | { success: true; translation: string; provider: string }
+  | { success: false; error: string };
+
+type ProviderResponse = { success: true } | { success: false; error: string };
+
+type ModelsResponse =
+  | { success: true; models: string[] }
+  | { success: false; error: string; models: string[] };
 
 // Cache for last used provider (for performance)
-let lastUsedProviderCache = null;
+let lastUsedProviderCache: string | null = null;
 // Ensure we only log the session storage fallback once to avoid noisy console output
 let sessionStorageWarningLogged = false;
 
@@ -16,7 +50,7 @@ let sessionStorageWarningLogged = false;
  * Get last used provider from storage
  * Works in both Chromium and Firefox
  */
-async function getLastUsedProvider() {
+async function getLastUsedProvider(): Promise<string | null> {
   if (lastUsedProviderCache !== null) {
     return lastUsedProviderCache;
   }
@@ -25,15 +59,12 @@ async function getLastUsedProvider() {
     // Try session storage first (Firefox 109+, Chromium)
     if (browser.storage?.session) {
       const result = await browser.storage.session.get('lastUsedProvider');
-      lastUsedProviderCache = result.lastUsedProvider || null;
+      lastUsedProviderCache = (result.lastUsedProvider as string | undefined) || null;
       return lastUsedProviderCache;
     }
   } catch (error) {
     if (!sessionStorageWarningLogged) {
-      console.warn(
-        '[Service Worker] Session storage not available, using local storage',
-        error
-      );
+      console.warn('[Service Worker] Session storage not available, using local storage', error);
       sessionStorageWarningLogged = true;
     }
   }
@@ -53,21 +84,18 @@ async function getLastUsedProvider() {
  * Set last used provider to storage
  * Works in both Chromium and Firefox
  */
-async function setLastUsedProvider(provider) {
+async function setLastUsedProvider(provider: string | null): Promise<void> {
   lastUsedProviderCache = provider;
 
   try {
     // Try session storage first (Firefox 109+, Chromium)
     if (browser.storage?.session) {
-      await browser.storage.session.set({ lastUsedProvider: provider });
+      await browser.storage.session.set({ lastUsedProvider: provider ?? null });
       return;
     }
   } catch (error) {
     if (!sessionStorageWarningLogged) {
-      console.warn(
-        '[Service Worker] Session storage not available, using local storage',
-        error
-      );
+      console.warn('[Service Worker] Session storage not available, using local storage', error);
       sessionStorageWarningLogged = true;
     }
   }
@@ -98,7 +126,7 @@ browser.runtime.onInstalled.addListener(async (details) => {
 /**
  * Create context menus
  */
-async function createContextMenus() {
+async function createContextMenus(): Promise<void> {
   try {
     await browser.contextMenus.removeAll();
   } catch (error) {
@@ -184,7 +212,7 @@ browser.commands.onCommand.addListener(async (command) => {
 /**
  * Handle messages from content scripts and popup
  */
-browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request: BackgroundRequest, _sender, sendResponse) => {
   handleMessage(request)
     .then(sendResponse)
     .catch((error) => {
@@ -198,20 +226,21 @@ browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
 /**
  * Handle message routing
  */
-async function handleMessage(request, _sender) {
-  const { action, data } = request;
+async function handleMessage(request: BackgroundRequest): Promise<unknown> {
+  const { action } = request;
+  const data = (request as { data?: unknown }).data;
 
   switch (action) {
     case 'translate':
-      return await translateText(data);
+      return await translateText((data || {}) as TranslatePayload);
     case 'getSettings':
       return await getSettings();
     case 'testProvider':
-      return await testProvider(data);
+      return await testProvider((data || {}) as ProviderRequestPayload);
     case 'getModels':
-      return await getProviderModels(data);
+      return await getProviderModels((data || {}) as ProviderRequestPayload);
     case 'setLastUsedProvider':
-      await setLastUsedProvider(data?.provider || null);
+      await setLastUsedProvider((data as { provider?: string | null })?.provider ?? null);
       return { success: true };
     case 'getLastUsedProvider':
       return { provider: await getLastUsedProvider() };
@@ -223,8 +252,16 @@ async function handleMessage(request, _sender) {
 /**
  * Translate text using specified provider
  */
-async function translateText({ text, targetLanguage, sourceLanguage, providerName }) {
+async function translateText({
+  text,
+  targetLanguage,
+  sourceLanguage,
+  providerName
+}: TranslatePayload): Promise<TranslateResponse> {
   try {
+    if (!text) {
+      throw new Error(getMessage('errorNoTranslatableText'));
+    }
     const settings = await getSettings();
     const lastUsed = await getLastUsedProvider();
     const provider = providerName || lastUsed || settings.common.defaultProvider;
@@ -240,7 +277,7 @@ async function translateText({ text, targetLanguage, sourceLanguage, providerNam
     }
 
     // Create and initialize provider
-    const providerInstance = createProvider(provider, providerConfig);
+    const providerInstance = createProvider(provider, providerConfig) as BaseProvider;
     const translation = await providerInstance.translate(
       text,
       targetLanguage || settings.common.defaultTargetLanguage,
@@ -252,8 +289,8 @@ async function translateText({ text, targetLanguage, sourceLanguage, providerNam
       original: text.substring(0, 100),
       translated: translation.substring(0, 100),
       provider,
-      targetLanguage,
-      sourceLanguage
+      targetLanguage: targetLanguage || null,
+      sourceLanguage: sourceLanguage || null
     });
 
     return {
@@ -265,7 +302,7 @@ async function translateText({ text, targetLanguage, sourceLanguage, providerNam
     console.error('[Multi-AI Translator] Translation error:', error);
     return {
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }
@@ -273,9 +310,12 @@ async function translateText({ text, targetLanguage, sourceLanguage, providerNam
 /**
  * Test provider connection
  */
-async function testProvider({ providerName, config }) {
+async function testProvider({
+  providerName,
+  config
+}: ProviderRequestPayload): Promise<ProviderResponse> {
   try {
-    const providerInstance = createProvider(providerName, config);
+    const providerInstance = createProvider(providerName, config) as BaseProvider;
 
     // Try to get models as connection test
     await providerInstance.getModels();
@@ -284,7 +324,7 @@ async function testProvider({ providerName, config }) {
   } catch (error) {
     return {
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     };
   }
 }
@@ -292,9 +332,12 @@ async function testProvider({ providerName, config }) {
 /**
  * Get available models for provider
  */
-async function getProviderModels({ providerName, config }) {
+async function getProviderModels({
+  providerName,
+  config
+}: ProviderRequestPayload): Promise<ModelsResponse> {
   try {
-    const providerInstance = createProvider(providerName, config);
+    const providerInstance = createProvider(providerName, config) as BaseProvider;
     const models = await providerInstance.getModels();
 
     return {
@@ -304,7 +347,7 @@ async function getProviderModels({ providerName, config }) {
   } catch (error) {
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       models: []
     };
   }
@@ -313,7 +356,10 @@ async function getProviderModels({ providerName, config }) {
 /**
  * Handle translate selection
  */
-async function handleTranslateSelection(info, tab) {
+async function handleTranslateSelection(
+  info: Menus.OnClickData | null,
+  tab?: Tabs.Tab
+): Promise<void> {
   const targetTab = await resolveContentTab(tab);
   const settings = await getSettings();
   const lastUsed = await getLastUsedProvider();
@@ -330,7 +376,7 @@ async function handleTranslateSelection(info, tab) {
 /**
  * Handle translate page
  */
-async function handleTranslatePage(tab) {
+async function handleTranslatePage(tab?: Tabs.Tab): Promise<void> {
   const targetTab = await resolveContentTab(tab);
   const settings = await getSettings();
   const lastUsed = await getLastUsedProvider();
@@ -346,7 +392,7 @@ async function handleTranslatePage(tab) {
 /**
  * Handle restore original
  */
-async function handleRestoreOriginal(tab) {
+async function handleRestoreOriginal(tab?: Tabs.Tab): Promise<void> {
   const targetTab = await resolveContentTab(tab);
   await sendMessageToTab(targetTab?.id, {
     action: 'restore-original'
@@ -356,7 +402,7 @@ async function handleRestoreOriginal(tab) {
 /**
  * Show notification
  */
-function showNotification(title, message) {
+function showNotification(title: string, message: string): void {
   browser.notifications.create({
     type: 'basic',
     iconUrl: '../icons/icon-128.png',
@@ -365,7 +411,10 @@ function showNotification(title, message) {
   });
 }
 
-async function sendMessageToTab(tabId, message) {
+async function sendMessageToTab(
+  tabId: number | undefined,
+  message: Record<string, unknown>
+): Promise<unknown> {
   if (!tabId) {
     throw new Error(getMessage('errorNoActiveTab'));
   }
@@ -381,39 +430,41 @@ async function sendMessageToTab(tabId, message) {
   }
 }
 
-function isMissingContentScriptError(error) {
-  if (!error?.message) return false;
+function isMissingContentScriptError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : '';
+  if (!message) return false;
   return (
-    error.message.includes('Receiving end does not exist') ||
-    error.message.includes('Could not establish connection')
+    message.includes('Receiving end does not exist') ||
+    message.includes('Could not establish connection')
   );
 }
 
-function isAccessDeniedError(error) {
-  if (!error?.message) return false;
+function isAccessDeniedError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : '';
+  if (!message) return false;
   return (
-    error.message.includes('Cannot access contents of the page') ||
-    error.message.includes('Cannot access contents of url') ||
-    error.message.includes('Extensions manifest must request permission') ||
-    error.message.includes('No tab with id') ||
-    error.message.includes('Frame with ID') ||
-    error.message.includes('blocked by the administrator')
+    message.includes('Cannot access contents of the page') ||
+    message.includes('Cannot access contents of url') ||
+    message.includes('Extensions manifest must request permission') ||
+    message.includes('No tab with id') ||
+    message.includes('Frame with ID') ||
+    message.includes('blocked by the administrator')
   );
 }
 
-function getContentScriptFiles() {
+function getContentScriptFiles(): string[] {
   const manifest = browser.runtime.getManifest();
   if (!manifest?.content_scripts) {
     return [];
   }
-  const files = [];
+  const files: string[] = [];
   manifest.content_scripts.forEach((script) => {
     (script.js || []).forEach((file) => files.push(file));
   });
   return files;
 }
 
-async function injectContentScript(tabId) {
+async function injectContentScript(tabId: number): Promise<void> {
   const files = getContentScriptFiles();
   if (files.length === 0) {
     throw new Error(getMessage('errorScriptPathMissing'));
@@ -430,7 +481,7 @@ async function injectContentScript(tabId) {
   }
 }
 
-async function executeContentScripts(tabId, files) {
+async function executeContentScripts(tabId: number, files: string[]): Promise<void> {
   if (browser.scripting?.executeScript) {
     await browser.scripting.executeScript({
       target: { tabId },
@@ -449,16 +500,16 @@ async function executeContentScripts(tabId, files) {
   throw new Error(getMessage('errorRuntimeNotSupported'));
 }
 
-async function resolveContentTab(tab) {
+async function resolveContentTab(tab?: Tabs.Tab | null): Promise<Tabs.Tab | undefined> {
   if (isContentTab(tab)) {
     return tab;
   }
 
   const tabs = await browser.tabs.query({ currentWindow: true });
-  return tabs.find(isContentTab);
+  return tabs.find((candidate) => isContentTab(candidate));
 }
 
-function isContentTab(tab) {
+function isContentTab(tab?: Tabs.Tab | null): tab is Tabs.Tab {
   if (!tab?.url) return false;
   return (
     !tab.url.startsWith('chrome://') &&

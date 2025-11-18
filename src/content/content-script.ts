@@ -3,9 +3,27 @@
  * Injected into web pages to handle translation
  */
 import browser from 'webextension-polyfill';
-import { Translator } from './translator.js';
-import { getMessage } from '../utils/i18n.js';
-import { isPageTranslated, hasTranslationPopup } from '../utils/dom-manager.js';
+import { Translator } from './translator';
+import { getMessage } from '../utils/i18n';
+import { isPageTranslated, hasTranslationPopup } from '../utils/dom-manager';
+
+type ContentRequest =
+  | {
+      action: 'translate-page';
+      language?: string;
+      provider?: string;
+      sourceLanguage?: string;
+    }
+  | {
+      action: 'translate-selection';
+      text?: string;
+      language?: string;
+      provider?: string;
+      sourceLanguage?: string;
+    }
+  | { action: 'restore-original' }
+  | { action: 'has-selection' }
+  | { action: 'get-translation-state' };
 
 // Initialize translator
 const translator = new Translator();
@@ -16,7 +34,7 @@ translator.initialize().catch((error) => {
 /**
  * Listen for messages from background script
  */
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((request: ContentRequest, _sender, sendResponse) => {
   handleMessage(request)
     .then(sendResponse)
     .catch((error) => {
@@ -30,8 +48,8 @@ browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
 /**
  * Handle messages
  */
-async function handleMessage(request) {
-  const { action, text } = request;
+async function handleMessage(request: ContentRequest) {
+  const { action } = request;
 
   switch (action) {
     case 'translate-page':
@@ -39,10 +57,10 @@ async function handleMessage(request) {
       return { success: true };
 
     case 'translate-selection':
-      if (text) {
+      if (request.text) {
         // Translate provided text (from context menu)
         const translation = await translator.translateSelection(
-          text,
+          request.text,
           false,
           request.language,
           request.provider,
@@ -90,10 +108,12 @@ async function handleMessage(request) {
 /**
  * Listen for selection changes to show translate button
  */
-let selectionTimeout;
+let selectionTimeout: number | null = null;
 document.addEventListener('mouseup', () => {
-  clearTimeout(selectionTimeout);
-  selectionTimeout = setTimeout(() => {
+  if (selectionTimeout) {
+    clearTimeout(selectionTimeout);
+  }
+  selectionTimeout = window.setTimeout(() => {
     const selection = window.getSelection();
     if (selection && selection.toString().trim().length > 0) {
       // Could show a floating button here

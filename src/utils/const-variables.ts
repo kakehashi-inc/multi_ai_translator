@@ -1,10 +1,12 @@
+import type { ProviderName } from '../types/settings';
+
 export class ConstVariables {
   // Language & UI defaults
-  static DEFAULT_LANGUAGE = 'en';
+  static DEFAULT_LANGUAGE: string = 'en';
   static DEFAULT_FONT_SIZE = 14;
 
   // Provider defaults
-  static DEFAULT_PROVIDER = 'openai';
+  static DEFAULT_PROVIDER: ProviderName = 'openai';
 
   // Provider-specific defaults (shared values but named for clarity)
   static DEFAULT_OPENAI_TEMPERATURE = 0.3;
@@ -26,7 +28,7 @@ export class ConstVariables {
   static HIGHLIGHT_DURATION_MS = 2000;
 
   // Provider order and labels
-  static PROVIDER_ORDER = Object.freeze([
+  static PROVIDER_ORDER = Object.freeze<ProviderName[]>([
     'gemini',
     'anthropic',
     'anthropic-compatible',
@@ -35,7 +37,7 @@ export class ConstVariables {
     'ollama'
   ]);
 
-  static PROVIDER_LABELS = Object.freeze({
+  static PROVIDER_LABELS = Object.freeze<Record<ProviderName, string>>({
     gemini: 'Gemini',
     anthropic: 'Anthropic (Claude)',
     'anthropic-compatible': 'Anthropic Compatible',
@@ -49,7 +51,7 @@ export class ConstVariables {
    * @param {string} name - Provider name
    * @returns {string} Formatted provider name
    */
-  static formatProviderName(name) {
-    return this.PROVIDER_LABELS[name] || name;
+  static formatProviderName(name: string): string {
+    return this.PROVIDER_LABELS[name as ProviderName] || name;
   }
 }

@@ -7,7 +7,7 @@ import eslint from 'gulp-eslint-new';
  * Clean dist directory
  */
 export function clean() {
-  return deleteAsync(['dist', '*.zip']);
+  return deleteAsync(['dist', 'dist-firefox', 'packages']);
 }
 
 /**
@@ -15,7 +15,7 @@ export function clean() {
  */
 export function lint() {
   return gulp
-    .src(['src/**/*.js'])
+    .src(['src/**/*.ts'])
     .pipe(eslint({ fix: false }))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
@@ -25,21 +25,7 @@ export function lint() {
  * Run Prettier to format code
  */
 export function format() {
-  return runCommand('prettier', ['--write', 'src/**/*.js', '*.js', '*.json']);
-}
-
-/**
- * Build extension with Vite
- */
-export function build() {
-  return runCommand('vite', ['build']);
-}
-
-/**
- * Build extension in watch mode
- */
-export function dev() {
-  return runCommand('vite', ['build', '--watch']);
+  return runCommand('prettier', ['--write', 'src/**/*.{ts,js,css}', '*.json']);
 }
 
 /**
@@ -48,21 +34,6 @@ export function dev() {
 export function packageExt() {
   return runCommand('node', ['scripts/package.js']);
 }
-
-/**
- * Run all checks (lint + build)
- */
-export const check = gulp.series(lint, build);
-
-/**
- * Full build pipeline (clean, lint, build, package)
- */
-export const dist = gulp.series(clean, lint, build, packageExt);
-
-/**
- * Default task
- */
-export default build;
 
 /**
  * Helper function to run command

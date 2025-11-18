@@ -1,20 +1,19 @@
 {
   "name": "multi-ai-translator",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Browser extension for translating web pages using multiple AI providers",
   "type": "module",
   "scripts": {
-    "dev": "gulp dev",
-    "dev:firefox": "vite build --config vite.firefox.config.js --watch",
+    "dev": "vite build --config vite.config.ts --watch",
+    "dev:firefox": "vite build --config vite.firefox.config.ts --watch",
     "build": "yarn build:chromium && yarn build:firefox",
-    "build:chromium": "gulp build",
-    "build:firefox": "vite build --config vite.firefox.config.js",
+    "build:chromium": "vite build --config vite.config.ts",
+    "build:firefox": "vite build --config vite.firefox.config.ts",
     "clean": "gulp clean",
     "lint": "gulp lint",
     "format": "gulp format",
-    "check": "gulp check",
     "package": "gulp packageExt",
-    "dist": "gulp dist"
+    "release": "yarn clean && yarn format && yarn lint && yarn build && yarn package"
   },
   "keywords": [
     "chrome-extension",
@@ -33,8 +32,10 @@
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.2.1",
     "@eslint/js": "^9.39.1",
-    "@types/chrome": "^0.1.28",
+    "@types/chrome": "^0.1.30",
     "@types/webextension-polyfill": "^0.12.4",
+    "@typescript-eslint/eslint-plugin": "^8.47.0",
+    "@typescript-eslint/parser": "^8.47.0",
     "archiver": "^7.0.1",
     "cross-env": "^10.1.0",
     "del": "^8.0.1",
@@ -43,15 +44,16 @@
     "gulp": "^5.0.1",
     "gulp-eslint-new": "^2.5.0",
     "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
     "vite": "^7.2.2",
     "vite-plugin-static-copy": "^3.1.4",
     "webextension-polyfill": "^0.12.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.68.0",
-    "@google/genai": "^1.29.0",
-    "ollama": "^0.6.2",
-    "openai": "^6.8.1"
+    "@anthropic-ai/sdk": "^0.69.0",
+    "@google/genai": "^1.29.1",
+    "ollama": "^0.6.3",
+    "openai": "^6.9.1"
   },
   "engines": {
     "node": ">=22.0.0"

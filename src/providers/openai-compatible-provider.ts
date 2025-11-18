@@ -1,13 +1,17 @@
 import { OpenAI } from 'openai';
-import { OpenAIProvider } from './openai-provider.js';
+import { OpenAIProvider, type OpenAIProviderConfig } from './openai-provider';
 
 /**
  * OpenAI-Compatible Provider
  * Supports any OpenAI API-compatible service (LM Studio, LocalAI, etc.)
  * Extends OpenAIProvider with custom baseURL support
  */
+export interface OpenAICompatibleConfig extends OpenAIProviderConfig {
+  baseUrl: string;
+}
+
 export class OpenAICompatibleProvider extends OpenAIProvider {
-  constructor(config) {
+  constructor(config: OpenAICompatibleConfig) {
     super(config);
     this.name = 'openai-compatible';
   }
@@ -16,7 +20,7 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
    * Initialize OpenAI client with custom baseURL
    * Overrides parent to support custom baseURL and optional API key
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this.client) {
       return;
     }
@@ -40,7 +44,7 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
    * Validate configuration
    * Requires baseUrl instead of apiKey
    */
-  validateConfig() {
+  validateConfig(): boolean {
     return !!(this.config.baseUrl && this.config.model);
   }
 
@@ -48,12 +52,15 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
    * Get available models without filtering
    * Compatible services may have non-GPT models
    */
-  async getModels() {
+  async getModels(): Promise<string[]> {
     if (!this.client) {
       await this.initialize();
     }
 
     try {
+      if (!this.client) {
+        return [];
+      }
       const response = await this.client.models.list();
       return response.data.map((model) => model.id);
     } catch (error) {
@@ -65,7 +72,7 @@ export class OpenAICompatibleProvider extends OpenAIProvider {
   /**
    * Test connection to the API
    */
-  async testConnection() {
+  async testConnection(): Promise<boolean> {
     try {
       await this.getModels();
       return true;

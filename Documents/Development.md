@@ -2,81 +2,75 @@
 
 ## Prerequisites
 
-- Node.js 22 or higher
-- yarn 4
-- Chrome or Edge browser
+- Node.js 22+
+- Yarn 4
+- Chrome / Edge / Firefox
 
 ## Setup
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/multi-ai-translator.git
 cd multi-ai-translator
-```
-
-2. Install dependencies:
-```bash
 yarn install
 ```
 
-## Development Workflow
+## Common Scripts
 
-### Build for Development
+| Command | Purpose |
+| --- | --- |
+| `yarn dev` | Watch build for Chromium (outputs to `dist/`) |
+| `yarn build:chromium` | Production build for Chrome / Edge |
+| `yarn build:firefox` | Firefox (MV2) build → `dist-firefox/` |
+| `yarn lint` / `yarn format` | Run ESLint / Prettier |
+| `yarn clean` | Remove `dist/`, `dist-firefox/`, `packages/` |
 
-Watch mode with automatic rebuild:
-```bash
-yarn dev
-```
+## Loading the Extension
 
-This will:
-- Build the extension in development mode
-- Watch for file changes
-- Automatically rebuild on changes
+### Chrome / Edge
+1. Run `yarn dev` (watch) or `yarn build:chromium`
+2. Open `chrome://extensions/` or `edge://extensions/`
+3. Enable **Developer mode**
+4. Click **Load unpacked** and select `dist/`
+5. After changes, wait for Vite to rebuild and click the refresh icon on the extension card
 
-### Load Extension in Browser
+### Firefox
+1. Run `yarn build:firefox`
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on** and pick `dist-firefox/manifest.json`
+4. Rebuild and press **Reload** after each change
+5. Use the **Inspect** button to view background logs
 
-#### Chrome
-1. Open `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Select the `dist` folder
+## Testing Changes
 
-#### Edge
-1. Open `edge://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Select the `dist` folder
-
-### Testing Changes
-
-1. Make changes to source files
-2. Wait for Vite to rebuild (watch mode)
-3. Click reload icon in browser extensions page
-4. Test your changes
+1. Edit the source
+2. Wait for the watcher/build to finish
+3. Reload the extension in the browser
+4. Exercise popup, options, and translation flows
 
 ## Project Structure
 
 ```
 multi-ai-translator/
 ├── src/
-│   ├── background/         # Background service worker
-│   ├── content/           # Content scripts
-│   ├── options/           # Options page
-│   ├── popup/             # Popup UI
-│   ├── providers/         # AI provider implementations
-│   ├── utils/             # Utility functions
-│   └── locales/           # Translations
-├── icons/                 # Extension icons
-├── scripts/               # Build scripts
-├── Documents/             # Documentation
-└── dist/                  # Build output
+│   ├── background/         # Service worker
+│   ├── content/            # Content scripts
+│   ├── options/            # Options page
+│   ├── popup/              # Popup UI
+│   ├── providers/          # AI providers
+│   ├── utils/              # Shared utilities
+│   └── locales/            # i18n resources
+├── icons/                  # Extension icons
+├── scripts/                # Packaging scripts
+├── Documents/              # Documentation
+├── dist/                   # Chromium build output
+└── dist-firefox/           # Firefox build output
 ```
 
-## Adding a New Provider
+## Adding a Provider
 
-1. Create provider class in `src/providers/your-provider.js`:
-```javascript
-import { BaseProvider } from './base-provider.js';
+1. Create `src/providers/your-provider.ts`
+```ts
+import { BaseProvider } from './base-provider';
 
 export class YourProvider extends BaseProvider {
   constructor(config) {
@@ -85,10 +79,10 @@ export class YourProvider extends BaseProvider {
   }
 
   validateConfig() {
-    return !!(this.config.apiKey);
+    return !!this.config.apiKey;
   }
 
-  async translate(text, targetLanguage, sourceLanguage) {
+  async translate(text: string, targetLanguage: string, sourceLanguage = 'auto') {
     // Implementation
   }
 
@@ -97,75 +91,18 @@ export class YourProvider extends BaseProvider {
   }
 }
 ```
-
-2. Register in `src/providers/index.js`
-3. Add UI in `src/options/options.html`
-4. Add default config in `src/utils/storage.js`
+2. Register it in `src/providers/index.ts`
+3. Add UI + logic in `src/options/options.html` / `options.ts`
+4. Provide defaults in `src/utils/storage.ts`
 
 ## Debugging
 
-### Background Service Worker
-- Open `chrome://extensions/`
-- Find Multi-AI Translator
-- Click "Service Worker" link
-- DevTools will open
+### Background
+- Chrome/Edge: `chrome://extensions/` → extension card → **Service Worker**
+- Firefox: `about:debugging` → **Inspect**
 
 ### Content Scripts
-- Open any web page
-- Press F12 for DevTools
-- Check Console tab for logs
-- Content script errors appear here
+- Open any page, press F12, check the Console tab
 
-### Popup/Options
-- Right-click popup or options page
-- Select "Inspect"
-
-## Code Style
-
-We use ESLint and Prettier:
-
-```bash
-# Check code style
-yarn lint
-
-# Format code
-yarn format
-```
-
-## Common Issues
-
-### Extension not loading
-- Check manifest.json syntax
-- Check build configuration in vite.config.js
-- Check browser console for errors
-
-### API calls failing
-- Verify CORS settings
-- Check API key configuration
-- Review background service worker console
-
-### Translation not working
-- Check provider configuration
-- Verify API key is valid
-- Check network tab in DevTools
-
-## Performance Tips
-
-1. **Chunk large texts**: Split into smaller pieces
-2. **Cache translations**: Avoid duplicate API calls
-3. **Rate limiting**: Add delays between requests
-4. **Minimize DOM operations**: Batch updates
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## Resources
-
-- [Chrome Extension Docs](https://developer.chrome.com/docs/extensions/)
-- [Manifest V3 Migration](https://developer.chrome.com/docs/extensions/mv3/intro/)
-- [Service Workers](https://developer.chrome.com/docs/extensions/mv3/service_workers/)
+### Popup / Options
+- Right-click the UI → **Inspect**

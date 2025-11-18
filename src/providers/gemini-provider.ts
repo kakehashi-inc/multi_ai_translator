@@ -1,23 +1,35 @@
 import { GoogleGenAI } from '@google/genai';
-import { BaseProvider } from './base-provider.js';
-import { ConstVariables } from '../utils/const-variables.js';
+import { BaseProvider } from './base-provider';
+import { ConstVariables } from '../utils/const-variables';
+import type { ProviderSettings } from '../types/settings';
+
+interface GeminiProviderConfig extends ProviderSettings {
+  apiKey?: string;
+  model?: string;
+  temperature?: number;
+  maxOutputTokens?: number;
+}
 
 /**
  * Gemini Provider (Google)
  * Supports Gemini Pro and other models
  */
-export class GeminiProvider extends BaseProvider {
-  constructor(config) {
+export class GeminiProvider extends BaseProvider<GeminiProviderConfig, GoogleGenAI> {
+  private modelName?: string;
+  private generationConfig?: {
+    temperature?: number;
+    maxOutputTokens?: number;
+  };
+
+  constructor(config: GeminiProviderConfig) {
     super(config);
     this.name = 'gemini';
     this.client = null;
-    this.model = null;
+    this.modelName = undefined;
+    this.generationConfig = undefined;
   }
 
-  /**
-   * Initialize Gemini client
-   */
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this.client) {
       return;
     }
@@ -39,17 +51,11 @@ export class GeminiProvider extends BaseProvider {
     }
   }
 
-  /**
-   * Validate configuration
-   */
-  validateConfig() {
+  validateConfig(): boolean {
     return !!(this.config.apiKey && this.config.model);
   }
 
-  /**
-   * Translate text using Gemini
-   */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
+  async translate(text: string, targetLanguage: string, sourceLanguage = 'auto'): Promise<string> {
     if (!this.validateConfig()) {
       throw new Error('Invalid Gemini configuration');
     }
@@ -57,6 +63,10 @@ export class GeminiProvider extends BaseProvider {
     await this.ensureInitialized();
 
     return await this.withErrorHandling(async () => {
+      if (!this.client || !this.modelName) {
+        throw new Error('Gemini client not initialized');
+      }
+
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
       const response = await this.client.models.generateContent({
@@ -65,16 +75,16 @@ export class GeminiProvider extends BaseProvider {
         generationConfig: this.generationConfig
       });
 
-      return response.text.trim();
+      return response.text?.trim() ?? '';
     });
   }
 
-  /**
-   * Get available models
-   */
-  async getModels() {
+  async getModels(): Promise<string[]> {
     try {
       await this.ensureInitialized();
+      if (!this.client) {
+        return [];
+      }
 
       const pager = await this.client.models.list({
         config: {
@@ -82,7 +92,7 @@ export class GeminiProvider extends BaseProvider {
         }
       });
 
-      const models = [];
+      const models: string[] = [];
       for await (const model of pager) {
         const name = model?.name?.replace('models/', '');
         if (name && name.includes('gemini')) {

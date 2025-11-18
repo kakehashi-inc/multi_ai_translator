@@ -1,11 +1,19 @@
-import { PromptBuilder } from '../utils/prompt-builder.js';
+import { PromptBuilder } from '../utils/prompt-builder';
+import type { ProviderName, ProviderSettings } from '../types/settings';
 
 /**
  * Base Provider Class
  * All AI providers must extend this class
  */
-export class BaseProvider {
-  constructor(config) {
+export abstract class BaseProvider<
+  Config extends ProviderSettings = ProviderSettings,
+  Client = unknown
+> {
+  protected readonly config: Config;
+  protected name: ProviderName | string;
+  protected client: Client | null;
+
+  constructor(config: Config) {
     this.config = config;
     this.name = 'base';
     this.client = null;
@@ -16,7 +24,7 @@ export class BaseProvider {
    * Common pattern used by all providers
    * @protected
    */
-  async ensureInitialized() {
+  protected async ensureInitialized(): Promise<void> {
     if (!this.client) {
       await this.initialize();
     }
@@ -29,11 +37,11 @@ export class BaseProvider {
    * @param {Function} operation - Async operation to execute
    * @returns {Promise<any>} Result of operation
    */
-  async withErrorHandling(operation) {
+  protected async withErrorHandling<T>(operation: () => Promise<T>): Promise<T> {
     try {
       return await operation();
     } catch (error) {
-      this.handleError(error);
+      return this.handleError(error);
     }
   }
 
@@ -42,9 +50,7 @@ export class BaseProvider {
    * Must be implemented by subclass
    * @abstract
    */
-  async initialize() {
-    throw new Error('initialize must be implemented by subclass');
-  }
+  protected abstract initialize(): Promise<void>;
 
   /**
    * Validate provider configuration
@@ -52,9 +58,7 @@ export class BaseProvider {
    * @abstract
    * @returns {boolean} Whether the configuration is valid
    */
-  validateConfig() {
-    throw new Error('validateConfig must be implemented by subclass');
-  }
+  abstract validateConfig(): boolean;
 
   /**
    * Translate text using the AI provider
@@ -65,9 +69,11 @@ export class BaseProvider {
    * @param {string} sourceLanguage - Source language (optional)
    * @returns {Promise<string>} Translated text
    */
-  async translate(text, targetLanguage, _sourceLanguage = 'auto') {
-    throw new Error('translate must be implemented by subclass');
-  }
+  abstract translate(
+    text: string,
+    targetLanguage: string,
+    sourceLanguage?: string
+  ): Promise<string>;
 
   /**
    * Get available models for this provider
@@ -75,9 +81,7 @@ export class BaseProvider {
    * @abstract
    * @returns {Promise<string[]>} List of model names
    */
-  async getModels() {
-    throw new Error('getModels must be implemented by subclass');
-  }
+  abstract getModels(): Promise<string[]>;
 
   /**
    * Create translation prompt
@@ -87,7 +91,7 @@ export class BaseProvider {
    * @param {string} sourceLanguage - Source language
    * @returns {string} Formatted prompt
    */
-  createPrompt(text, targetLanguage, sourceLanguage) {
+  protected createPrompt(text: string, targetLanguage: string, sourceLanguage: string): string {
     return PromptBuilder.buildPrompt(text, targetLanguage, sourceLanguage);
   }
 
@@ -96,24 +100,26 @@ export class BaseProvider {
    * @param {Error} error - The error object
    * @throws {Error} Formatted error with helpful message
    */
-  handleError(error) {
+  protected handleError(error: unknown): never {
+    const message = error instanceof Error ? error.message : String(error);
+
     // In development we keep detailed provider-level diagnostics, but avoid
     // emitting multiple error-level logs for the same failure from different layers.
     if (process.env.NODE_ENV !== 'production') {
       console.debug(`[${this.name}] Error:`, error);
     }
 
-    if (error.message.includes('API key')) {
+    if (message.includes('API key')) {
       throw new Error(`Invalid API key for ${this.name}`);
     }
-    if (error.message.includes('rate limit')) {
+    if (message.includes('rate limit')) {
       throw new Error(`Rate limit exceeded for ${this.name}`);
     }
-    if (error.message.includes('network') || error.message.includes('fetch')) {
+    if (message.includes('network') || message.includes('fetch')) {
       throw new Error(`Network error when connecting to ${this.name}`);
     }
 
-    throw new Error(`Translation failed: ${error.message}`);
+    throw new Error(`Translation failed: ${message}`);
   }
 
   /**
@@ -123,12 +129,12 @@ export class BaseProvider {
    * @param {number} maxLength - Maximum length per chunk
    * @returns {string[]} Array of text chunks
    */
-  splitIntoChunks(text, maxLength = 2000) {
+  protected splitIntoChunks(text: string, maxLength = 2000): string[] {
     if (text.length <= maxLength) {
       return [text];
     }
 
-    const chunks = [];
+    const chunks: string[] = [];
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
     let currentChunk = '';
 

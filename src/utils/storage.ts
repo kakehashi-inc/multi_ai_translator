@@ -3,7 +3,14 @@
  * Manages extension settings with Browser Storage API
  */
 import browser from 'webextension-polyfill';
-import { ConstVariables } from './const-variables.js';
+import { ConstVariables } from './const-variables';
+import type {
+  ProviderName,
+  ProviderSettings,
+  ProviderSettingsMap,
+  Settings,
+  TranslationHistoryItem
+} from '../types/settings';
 
 const {
   PROVIDER_ORDER,
@@ -22,7 +29,15 @@ const {
   DEFAULT_OLLAMA_HOST
 } = ConstVariables;
 
-function normalizeLanguageCode(language) {
+type SettingsStorageShape = {
+  settings?: Settings;
+};
+
+type HistoryStorageShape = {
+  translationHistory?: TranslationHistoryItem[];
+};
+
+function normalizeLanguageCode(language?: string | null): string {
   if (!language || typeof language !== 'string') {
     return DEFAULT_LANGUAGE;
   }
@@ -31,7 +46,7 @@ function normalizeLanguageCode(language) {
   return code?.toLowerCase() || DEFAULT_LANGUAGE;
 }
 
-export function getBrowserLanguage() {
+export function getBrowserLanguage(): string {
   try {
     if (browser?.i18n?.getUILanguage) {
       return normalizeLanguageCode(browser.i18n.getUILanguage());
@@ -47,12 +62,8 @@ export function getBrowserLanguage() {
   return DEFAULT_LANGUAGE;
 }
 
-/**
- * Default settings factory
- */
-function createDefaultSettings() {
-  const browserLanguage = getBrowserLanguage();
-  const providerDefaults = {
+function createProviderDefaults(): Record<ProviderName, ProviderSettings> {
+  return {
     gemini: {
       enabled: false,
       apiKey: '',
@@ -96,8 +107,17 @@ function createDefaultSettings() {
       temperature: DEFAULT_OLLAMA_TEMPERATURE
     }
   };
+}
 
-  const providers = {};
+function deepCloneSettings(settings: Settings): Settings {
+  return JSON.parse(JSON.stringify(settings)) as Settings;
+}
+
+function createDefaultSettings(): Settings {
+  const browserLanguage = getBrowserLanguage();
+  const providerDefaults = createProviderDefaults();
+  const providers: ProviderSettingsMap = {};
+
   PROVIDER_ORDER.forEach((name) => {
     providers[name] = { ...providerDefaults[name] };
   });
@@ -121,172 +141,11 @@ function createDefaultSettings() {
   };
 }
 
-/**
- * Get all settings
- * @returns {Promise<object>} Settings object
- */
-export async function getSettings() {
-  try {
-    const result = await browser.storage.local.get('settings');
-    return normalizeSettings(result.settings);
-  } catch (error) {
-    console.error('Failed to load settings, falling back to defaults', error);
-    // Fallback for testing
-    return getDefaultSettings();
-  }
+export function getDefaultSettings(): Settings {
+  return deepCloneSettings(createDefaultSettings());
 }
 
-/**
- * Save settings
- * @param {object} settings - Settings object
- * @returns {Promise<void>}
- */
-export async function saveSettings(settings) {
-  try {
-    await browser.storage.local.set({ settings });
-  } catch (error) {
-    console.error('Failed to save settings:', error);
-  }
-}
-
-/**
- * Get specific provider settings
- * @param {string} providerName - Provider name
- * @returns {Promise<object>} Provider settings
- */
-export async function getProviderSettings(providerName) {
-  const settings = await getSettings();
-  return settings.providers[providerName] || {};
-}
-
-/**
- * Save provider settings
- * @param {string} providerName - Provider name
- * @param {object} providerSettings - Provider settings
- * @returns {Promise<void>}
- */
-export async function saveProviderSettings(providerName, providerSettings) {
-  const settings = await getSettings();
-  settings.providers[providerName] = {
-    ...settings.providers[providerName],
-    ...providerSettings
-  };
-  await saveSettings(settings);
-}
-
-/**
- * Get enabled providers
- * @returns {Promise<string[]>} Array of enabled provider names
- */
-export async function getEnabledProviders() {
-  const settings = await getSettings();
-  const ordered = [];
-
-  PROVIDER_ORDER.forEach((name) => {
-    if (settings.providers[name]?.enabled) {
-      ordered.push(name);
-    }
-  });
-
-  Object.keys(settings.providers).forEach((name) => {
-    if (!PROVIDER_ORDER.includes(name) && settings.providers[name]?.enabled) {
-      ordered.push(name);
-    }
-  });
-
-  return ordered;
-}
-
-/**
- * Reset settings to default
- * @returns {Promise<void>}
- */
-export async function resetSettings() {
-  await saveSettings(getDefaultSettings());
-}
-
-/**
- * Export settings as JSON
- * @returns {Promise<string>} JSON string of settings
- */
-export async function exportSettings() {
-  const settings = await getSettings();
-  return JSON.stringify(settings, null, 2);
-}
-
-/**
- * Import settings from JSON
- * @param {string} jsonString - JSON string of settings
- * @returns {Promise<void>}
- */
-export async function importSettings(jsonString) {
-  try {
-    const settings = JSON.parse(jsonString);
-    await saveSettings(settings);
-  } catch (error) {
-    console.error('Invalid settings JSON provided', error);
-    throw new Error('Invalid settings JSON');
-  }
-}
-
-/**
- * Get translation history
- * @param {number} limit - Maximum number of items to return
- * @returns {Promise<object[]>} Array of translation history items
- */
-export async function getTranslationHistory(limit = 50) {
-  try {
-    const result = await browser.storage.local.get('translationHistory');
-    const history = result.translationHistory || [];
-    return history.slice(0, limit);
-  } catch (error) {
-    console.warn('Failed to read translation history', error);
-    return [];
-  }
-}
-
-/**
- * Add item to translation history
- * @param {object} item - Translation history item
- * @returns {Promise<void>}
- */
-export async function addToHistory(item) {
-  try {
-    const history = await getTranslationHistory();
-    history.unshift({
-      ...item,
-      timestamp: Date.now()
-    });
-
-    // Keep only last 100 items
-    const trimmedHistory = history.slice(0, 100);
-    await browser.storage.local.set({ translationHistory: trimmedHistory });
-  } catch (error) {
-    console.error('Failed to add to history:', error);
-  }
-}
-
-/**
- * Clear translation history
- * @returns {Promise<void>}
- */
-export async function clearHistory() {
-  try {
-    await browser.storage.local.set({ translationHistory: [] });
-  } catch (error) {
-    console.error('Failed to clear history:', error);
-  }
-}
-
-/**
- * Get default settings
- * @returns {object} Default settings
- */
-export function getDefaultSettings() {
-  return JSON.parse(JSON.stringify(createDefaultSettings()));
-}
-
-function normalizeSettings(storedSettings) {
+function normalizeSettings(storedSettings?: Settings): Settings {
   const normalized = getDefaultSettings();
 
   if (!storedSettings) {
@@ -300,7 +159,6 @@ function normalizeSettings(storedSettings) {
     };
   }
 
-  normalized.providers = normalized.providers || {};
   const providerNames = new Set([
     ...Object.keys(normalized.providers),
     ...(storedSettings.providers ? Object.keys(storedSettings.providers) : [])
@@ -308,7 +166,7 @@ function normalizeSettings(storedSettings) {
 
   providerNames.forEach((name) => {
     normalized.providers[name] = {
-      ...(normalized.providers[name] || {}),
+      ...(normalized.providers[name] || { enabled: false }),
       ...(storedSettings.providers?.[name] || {})
     };
   });
@@ -327,4 +185,112 @@ function normalizeSettings(storedSettings) {
   }
 
   return normalized;
+}
+
+export async function getSettings(): Promise<Settings> {
+  try {
+    const result = await browser.storage.local.get('settings');
+    const stored = (result as SettingsStorageShape).settings;
+    return normalizeSettings(stored);
+  } catch (error) {
+    console.error('Failed to load settings, falling back to defaults', error);
+    return getDefaultSettings();
+  }
+}
+
+export async function saveSettings(settings: Settings): Promise<void> {
+  try {
+    await browser.storage.local.set({ settings });
+  } catch (error) {
+    console.error('Failed to save settings:', error);
+  }
+}
+
+export async function getProviderSettings(providerName: string): Promise<ProviderSettings> {
+  const settings = await getSettings();
+  return settings.providers[providerName] || { enabled: false };
+}
+
+export async function saveProviderSettings(
+  providerName: string,
+  providerSettings: ProviderSettings
+): Promise<void> {
+  const settings = await getSettings();
+  settings.providers[providerName] = {
+    ...settings.providers[providerName],
+    ...providerSettings
+  };
+  await saveSettings(settings);
+}
+
+export async function getEnabledProviders(): Promise<string[]> {
+  const settings = await getSettings();
+  const ordered: string[] = [];
+
+  PROVIDER_ORDER.forEach((name) => {
+    if (settings.providers[name]?.enabled) {
+      ordered.push(name);
+    }
+  });
+
+  Object.keys(settings.providers).forEach((name) => {
+    if (!PROVIDER_ORDER.includes(name as ProviderName) && settings.providers[name]?.enabled) {
+      ordered.push(name);
+    }
+  });
+
+  return ordered;
+}
+
+export async function resetSettings(): Promise<void> {
+  await saveSettings(getDefaultSettings());
+}
+
+export async function exportSettings(): Promise<string> {
+  const settings = await getSettings();
+  return JSON.stringify(settings, null, 2);
+}
+
+export async function importSettings(jsonString: string): Promise<void> {
+  try {
+    const parsed = JSON.parse(jsonString) as Settings;
+    await saveSettings(normalizeSettings(parsed));
+  } catch (error) {
+    console.error('Invalid settings JSON provided', error);
+    throw new Error('Invalid settings JSON');
+  }
+}
+
+export async function getTranslationHistory(limit = 50): Promise<TranslationHistoryItem[]> {
+  try {
+    const result = await browser.storage.local.get('translationHistory');
+    const history = (result as HistoryStorageShape).translationHistory || [];
+    return history.slice(0, limit);
+  } catch (error) {
+    console.warn('Failed to read translation history', error);
+    return [];
+  }
+}
+
+export async function addToHistory(item: Omit<TranslationHistoryItem, 'timestamp'>): Promise<void> {
+  try {
+    const history = await getTranslationHistory(100);
+    history.unshift({
+      ...item,
+      timestamp: Date.now()
+    });
+
+    const trimmedHistory = history.slice(0, 100);
+    await browser.storage.local.set({ translationHistory: trimmedHistory });
+  } catch (error) {
+    console.error('Failed to add to history:', error);
+  }
+}
+
+export async function clearHistory(): Promise<void> {
+  try {
+    await browser.storage.local.set({ translationHistory: [] });
+  } catch (error) {
+    console.error('Failed to clear history:', error);
+  }
 }

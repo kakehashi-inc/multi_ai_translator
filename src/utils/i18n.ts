@@ -4,13 +4,18 @@
  */
 import browser from 'webextension-polyfill';
 
+type LanguageEntry = {
+  code: string;
+  name: string;
+};
+
 let currentLocale = 'en';
-let messages = {};
+let messages: Record<string, string> = {};
 
 /**
  * Initialize i18n with messages from browser.i18n
  */
-export function initI18n() {
+export function initI18n(): void {
   // Get user's preferred language
   try {
     currentLocale = browser.i18n.getUILanguage().split('-')[0];
@@ -26,7 +31,7 @@ export function initI18n() {
  * @param {string[]} substitutions - Optional substitutions
  * @returns {string} Translated message
  */
-export function getMessage(key, substitutions = []) {
+export function getMessage(key: string, substitutions: string[] = []): string {
   try {
     return browser.i18n.getMessage(key, substitutions) || key;
   } catch (error) {
@@ -40,7 +45,7 @@ export function getMessage(key, substitutions = []) {
  * Get current locale
  * @returns {string} Current locale code
  */
-export function getCurrentLocale() {
+export function getCurrentLocale(): string {
   return currentLocale;
 }
 
@@ -48,7 +53,7 @@ export function getCurrentLocale() {
  * Set locale (for testing)
  * @param {string} locale - Locale code
  */
-export function setLocale(locale) {
+export function setLocale(locale: string): void {
   currentLocale = locale;
 }
 
@@ -56,15 +61,15 @@ export function setLocale(locale) {
  * Set messages (for testing)
  * @param {object} msgs - Messages object
  */
-export function setMessages(msgs) {
-  messages = msgs;
+export function setMessages(msgs: Record<string, string>): void {
+  messages = { ...msgs };
 }
 
 /**
  * Translate all elements with data-i18n attribute
  */
-export function translatePage() {
-  const elements = document.querySelectorAll('[data-i18n]');
+export function translatePage(): void {
+  const elements = document.querySelectorAll<HTMLElement>('[data-i18n]');
 
   elements.forEach((element) => {
     const key = element.getAttribute('data-i18n');
@@ -84,7 +89,7 @@ export function translatePage() {
  * @param {string} code - Language code
  * @returns {string} Language name
  */
-export function getLanguageName(code) {
+export function getLanguageName(code: string): string {
   const languageNames = {
     en: 'English',
     ja: '日本語',
@@ -107,7 +112,7 @@ export function getLanguageName(code) {
  * Get supported languages
  * @returns {object[]} Array of {code, name} objects
  */
-export function getSupportedLanguages() {
+export function getSupportedLanguages(): LanguageEntry[] {
   return [
     { code: 'en', name: 'English' },
     { code: 'ja', name: '日本語' },

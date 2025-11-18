@@ -1,13 +1,23 @@
 import { OpenAI } from 'openai';
-import { BaseProvider } from './base-provider.js';
-import { ConstVariables } from '../utils/const-variables.js';
+import { BaseProvider } from './base-provider';
+import { ConstVariables } from '../utils/const-variables';
+import type { ProviderSettings } from '../types/settings';
+
+export interface OpenAIProviderConfig extends ProviderSettings {
+  apiKey?: string;
+  baseUrl?: string;
+  baseURL?: string;
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+}
 
 /**
  * OpenAI Provider
  * Supports GPT-4, GPT-3.5-turbo, etc.
  */
-export class OpenAIProvider extends BaseProvider {
-  constructor(config) {
+export class OpenAIProvider extends BaseProvider<OpenAIProviderConfig, OpenAI> {
+  constructor(config: OpenAIProviderConfig) {
     super(config);
     this.name = 'openai';
     this.client = null;
@@ -16,7 +26,7 @@ export class OpenAIProvider extends BaseProvider {
   /**
    * Initialize OpenAI client
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     if (this.client) {
       return;
     }
@@ -28,7 +38,7 @@ export class OpenAIProvider extends BaseProvider {
     try {
       this.client = new OpenAI({
         apiKey: this.config.apiKey,
-        baseURL: this.config.baseURL,
+        baseURL: this.config.baseUrl ?? this.config.baseURL,
         dangerouslyAllowBrowser: true // Required for browser extension
       });
     } catch (error) {
@@ -39,14 +49,14 @@ export class OpenAIProvider extends BaseProvider {
   /**
    * Validate configuration
    */
-  validateConfig() {
+  validateConfig(): boolean {
     return !!(this.config.apiKey && this.config.model);
   }
 
   /**
    * Translate text using OpenAI
    */
-  async translate(text, targetLanguage, sourceLanguage = 'auto') {
+  async translate(text: string, targetLanguage: string, sourceLanguage = 'auto'): Promise<string> {
     if (!this.validateConfig()) {
       throw new Error('Invalid OpenAI configuration');
     }
@@ -55,6 +65,10 @@ export class OpenAIProvider extends BaseProvider {
 
     return await this.withErrorHandling(async () => {
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
+
+      if (!this.client) {
+        throw new Error('OpenAI client not initialized');
+      }
 
       const response = await this.client.chat.completions.create({
         model: this.config.model,
@@ -73,17 +87,20 @@ export class OpenAIProvider extends BaseProvider {
         max_tokens: this.config.maxTokens ?? ConstVariables.DEFAULT_OPENAI_MAX_TOKENS
       });
 
-      return response.choices[0].message.content.trim();
+      return response.choices[0]?.message?.content?.trim() ?? '';
     });
   }
 
   /**
    * Get available models
    */
-  async getModels() {
+  async getModels(): Promise<string[]> {
     await this.ensureInitialized();
 
     try {
+      if (!this.client) {
+        return [];
+      }
       const response = await this.client.models.list();
       return response.data
         .filter((model) => model.id.includes('gpt'))
