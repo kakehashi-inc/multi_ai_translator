@@ -348,11 +348,30 @@ async function getProviderModels({
 }
 
 async function handleTranslateSelectionInline(info: Menus.OnClickData, tab?: Tabs.Tab) {
-  if (!info?.selectionText) {
+  const targetTab = await resolveContentTab(tab);
+  if (!targetTab?.id) {
+    showNotification('Error', getMessage('errorNoActiveTab'));
+    return;
+  }
+
+  // Get selection text with logical breaks from content script (same as popup)
+  let selectionText: string;
+  try {
+    const response = await sendMessageToTab(targetTab.id, {
+      action: 'get-selection-text'
+    });
+    selectionText = (response as { text?: string })?.text || '';
+  } catch (error) {
+    console.error('[Service Worker] Failed to get selection text:', error);
+    // Fallback to info.selectionText if content script fails
+    selectionText = info?.selectionText || '';
+  }
+
+  if (!selectionText?.trim()) {
     showNotification('Error', getMessage('errorNoSelectionText'));
     return;
   }
-  const targetTab = await resolveContentTab(tab);
+
   const settings = await getSettings();
   const lastUsed = await getLastUsedProvider();
   const provider = resolveEnabledProvider(settings, lastUsed);
@@ -364,8 +383,8 @@ async function handleTranslateSelectionInline(info: Menus.OnClickData, tab?: Tab
   const targetLanguage = settings.common.defaultTargetLanguage;
 
   await forwardSelectionTranslation({
-    tabId: targetTab?.id,
-    text: info.selectionText,
+    tabId: targetTab.id,
+    text: selectionText,
     provider,
     language: targetLanguage,
     sourceLanguage

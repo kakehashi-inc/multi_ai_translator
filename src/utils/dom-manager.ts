@@ -69,7 +69,10 @@ type SelectionOverlayElements = {
   translationContent: HTMLPreElement;
   originalTab: HTMLButtonElement;
   translationTab: HTMLButtonElement;
+  expandBtn: HTMLButtonElement;
+  collapseBtn: HTMLButtonElement;
   translationReady: boolean;
+  isExpanded: boolean;
 };
 
 let selectionOverlay: SelectionOverlayElements | null = null;
@@ -375,14 +378,43 @@ function ensureSelectionOverlayStyles(): void {
       color: #fed7d7;
       border-color: rgba(252, 129, 129, 0.4);
     }
-    #multi-ai-selection-overlay button.close-btn {
+    #multi-ai-selection-overlay button.close-btn,
+    #multi-ai-selection-overlay button.expand-btn,
+    #multi-ai-selection-overlay button.collapse-btn {
       border: none;
       background: transparent;
       color: inherit;
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
       line-height: 1;
-      padding: 4px;
+      padding: 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.2s;
+      min-width: 24px;
+      min-height: 24px;
+    }
+    #multi-ai-selection-overlay button.close-btn:hover,
+    #multi-ai-selection-overlay button.expand-btn:hover,
+    #multi-ai-selection-overlay button.collapse-btn:hover {
+      opacity: 0.7;
+    }
+    #multi-ai-selection-overlay.expanded {
+      width: 90vw;
+      max-width: 1200px;
+      height: 90vh;
+      max-height: 90vh;
+      right: 5vw;
+      bottom: 5vh;
+    }
+    #multi-ai-selection-overlay.expanded .overlay-panel {
+      max-height: calc(90vh - 200px);
+    }
+    #multi-ai-selection-overlay .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
   `;
   document.head.appendChild(style);
@@ -405,16 +437,57 @@ export function showSelectionOverlay(meta: SelectionOverlayMeta, onClose: () => 
   const header = document.createElement('header');
   const title = document.createElement('span');
   title.textContent = meta.title;
+
+  const headerControls = document.createElement('div');
+  headerControls.className = 'header-controls';
+
+  const expandBtn = document.createElement('button');
+  expandBtn.className = 'expand-btn';
+  expandBtn.textContent = '↖';
+  expandBtn.setAttribute('aria-label', 'Expand');
+  expandBtn.title = 'Expand';
+
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'collapse-btn';
+  collapseBtn.textContent = '↘';
+  collapseBtn.setAttribute('aria-label', 'Collapse');
+  collapseBtn.title = 'Collapse';
+  collapseBtn.style.display = 'none';
+
   const closeBtn = document.createElement('button');
   closeBtn.className = 'close-btn';
   closeBtn.textContent = '×';
   closeBtn.setAttribute('aria-label', 'Close');
+  closeBtn.title = 'Close';
   closeBtn.onclick = () => {
     hideSelectionOverlay();
     onClose();
   };
+
+  expandBtn.onclick = () => {
+    if (selectionOverlay) {
+      selectionOverlay.container.classList.add('expanded');
+      selectionOverlay.isExpanded = true;
+      expandBtn.style.display = 'none';
+      collapseBtn.style.display = 'flex';
+    }
+  };
+
+  collapseBtn.onclick = () => {
+    if (selectionOverlay) {
+      selectionOverlay.container.classList.remove('expanded');
+      selectionOverlay.isExpanded = false;
+      expandBtn.style.display = 'flex';
+      collapseBtn.style.display = 'none';
+    }
+  };
+
+  headerControls.appendChild(expandBtn);
+  headerControls.appendChild(collapseBtn);
+  headerControls.appendChild(closeBtn);
+
   header.appendChild(title);
-  header.appendChild(closeBtn);
+  header.appendChild(headerControls);
 
   const body = document.createElement('div');
   body.className = 'overlay-body';
@@ -493,7 +566,10 @@ export function showSelectionOverlay(meta: SelectionOverlayMeta, onClose: () => 
     translationContent: translationPre,
     originalTab,
     translationTab,
-    translationReady: false
+    expandBtn,
+    collapseBtn,
+    translationReady: false,
+    isExpanded: false
   };
 
   originalTab.addEventListener('click', () => setSelectionOverlayTab('original'));

@@ -5,6 +5,7 @@
 import browser from 'webextension-polyfill';
 import { Translator } from './translator';
 import { getMessage } from '../utils/i18n';
+import { ConstVariables } from '../utils/const-variables';
 import {
   isPageTranslated,
   showSelectionOverlay,
@@ -79,8 +80,7 @@ async function handleMessage(request: ContentRequest) {
     }
 
     case 'get-selection-text': {
-      const selection = window.getSelection();
-      const text = selection?.toString().trim() || '';
+      const text = getSelectionTextWithLogicalBreaks(window.getSelection());
       return { success: true, text };
     }
 
@@ -134,9 +134,9 @@ async function handleInlineSelectionTranslation(
         request.provider,
         request.sourceLanguage
       );
-      translations.push(translation.trim());
+      translations.push(translation);
     }
-    showSelectionOverlayResult(translations.join('\n\n').trim());
+    showSelectionOverlayResult(translations.join('\n'));
   } catch (error) {
     console.error('[Content Script] Inline selection translation failed', error);
     const message = error instanceof Error ? error.message : getMessage('errorTranslationFailed');
@@ -145,36 +145,97 @@ async function handleInlineSelectionTranslation(
   }
 }
 
-function splitSelectionText(text: string, maxLength = 1800): string[] {
-  const normalized = text.replace(/\r\n/g, '\n').trim();
+function getSelectionTextWithLogicalBreaks(selection: Selection | null): string {
+  if (!selection || selection.rangeCount === 0) {
+    return '';
+  }
+
+  const range = selection.getRangeAt(0);
+  if (range.collapsed) {
+    return '';
+  }
+
+  // Clone the selected content
+  const fragment = range.cloneContents();
+
+  // Find a suitable parent element to temporarily insert the fragment
+  // This ensures original styles are applied
+  const commonAncestor = range.commonAncestorContainer;
+  const parentElement =
+    commonAncestor.nodeType === Node.ELEMENT_NODE
+      ? (commonAncestor as HTMLElement)
+      : (commonAncestor.parentElement as HTMLElement);
+
+  if (!parentElement) {
+    // Fallback to simple toString if no parent element
+    return selection.toString().replace(/\r\n/g, '\n').trim();
+  }
+
+  // Create a temporary container and insert it into the DOM
+  // This allows the browser to apply styles and compute innerText correctly
+  const tempContainer = document.createElement('div');
+  tempContainer.style.position = 'absolute';
+  tempContainer.style.left = '-9999px';
+  tempContainer.style.top = '-9999px';
+  tempContainer.style.visibility = 'hidden';
+  tempContainer.style.whiteSpace = 'pre-wrap';
+  tempContainer.setAttribute('aria-hidden', 'true');
+
+  tempContainer.appendChild(fragment);
+  parentElement.appendChild(tempContainer);
+
+  let result = '';
+  try {
+    // Force reflow to ensure styles are computed
+    void tempContainer.offsetHeight;
+    // Use innerText which automatically handles logical line breaks
+    result = tempContainer.innerText || tempContainer.textContent || '';
+  } finally {
+    // Always clean up: remove the temporary container
+    parentElement.removeChild(tempContainer);
+  }
+
+  // Normalize line breaks
+  return result.replace(/\r\n/g, '\n').trim();
+}
+
+function splitSelectionText(
+  text: string,
+  maxLength = ConstVariables.DEFAULT_CHUNK_MAX_LENGTH
+): string[] {
+  const normalized = text.replace(/\r\n/g, '\n');
+  if (!normalized) {
+    return [''];
+  }
+
   if (normalized.length <= maxLength) {
     return [normalized];
   }
 
+  const lines = normalized.split('\n');
   const chunks: string[] = [];
-  let remaining = normalized;
+  let current = '';
 
-  while (remaining.length > maxLength) {
-    let breakpoint = Math.max(
-      remaining.lastIndexOf('\n', maxLength),
-      remaining.lastIndexOf('。', maxLength),
-      remaining.lastIndexOf('、', maxLength),
-      remaining.lastIndexOf(' ', maxLength)
-    );
+  for (const line of lines) {
+    const addition = current ? `\n${line}` : line;
 
-    if (breakpoint === -1 || breakpoint < maxLength * 0.4) {
-      breakpoint = maxLength;
+    if (current && current.length + addition.length > maxLength) {
+      chunks.push(current);
+      current = line;
+      continue;
     }
 
-    const chunk = remaining.slice(0, breakpoint).trim();
-    if (chunk) {
-      chunks.push(chunk);
+    if (!current && addition.length > maxLength) {
+      chunks.push(line);
+      current = '';
+      continue;
     }
-    remaining = remaining.slice(breakpoint).trimStart();
+
+    current = current ? `${current}\n${line}` : line;
   }
 
-  if (remaining) {
-    chunks.push(remaining);
+  if (current) {
+    chunks.push(current);
   }
 
   return chunks.length ? chunks : [normalized];
