@@ -2,19 +2,22 @@
 
 ## 本番環境用ビルド
 
-1. 拡張機能をビルドする：
+1. 拡張機能をビルドする（Chromium + Firefox）：
 ```bash
 yarn build
 ```
 
-これにより、`dist` ディレクトリに最適化されたビルドが作成されます。
+`dist/`（Chromium 用）と `dist-firefox/`（Firefox 用）が生成されます。
+Chromium だけ、あるいは Firefox だけを個別に更新する場合は `yarn build:chromium` / `yarn build:firefox` を使用します。
 
 2. 配布パッケージを作成する：
 ```bash
 yarn package
 ```
 
-これにより、アップロード可能な `multi-ai-translator.zip` が作成されます。
+`packages/` ディレクトリに以下の ZIP が作成されます。
+- `multi-ai-translator-chrome.zip`（Chrome / Edge 用）
+- `multi-ai-translator-firefox.zip`（Firefox 用）
 
 ## Chrome ウェブストア
 
@@ -41,7 +44,7 @@ yarn package
 
 3. **新規アイテムの作成**
    - 「新規アイテム」をクリック
-   - `multi-ai-translator.zip` をアップロード
+   - `packages/multi-ai-translator-chrome.zip` をアップロード
    - 自動チェックを待つ
 
 4. **ストアリストの記入**
@@ -131,7 +134,7 @@ yarn package
 
 2. **拡張機能を提出**
    - 「新しい拡張機能」をクリック
-   - `multi-ai-translator.zip` をアップロード
+   - `packages/multi-ai-translator-chrome.zip` をアップロード（Edge も Chromium ビルドを使用）
    - 必須フィールドを記入（Chromeと同様）
 
 3. **審査プロセス**

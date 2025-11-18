@@ -2,7 +2,7 @@
 
 ## 概要
 
-Multi-AI Translatorは、Manifest V3に準拠したChrome拡張機能として設計されています。このドキュメントでは、拡張機能のアーキテクチャ、コンポーネント構成、データフローについて説明します。
+Multi-AI Translatorは、Chromium（Chrome / Edge）向けには Manifest V3、Firefox 向けには Manifest V2 で動作するクロスブラウザ拡張機能です。実装は TypeScript + Vite を用い、共通のコードベースを `webextension-polyfill` で抽象化しています。このドキュメントでは、拡張機能のアーキテクチャ、コンポーネント構成、データフローについて説明します。
 
 ## アーキテクチャ図
 
@@ -42,7 +42,7 @@ Multi-AI Translatorは、Manifest V3に準拠したChrome拡張機能として�
 
 ### 1. Background Service Worker
 
-**ファイル**：`src/background/`
+**ファイル**：`src/background/service-worker.ts`
 
 **役割**：
 - 拡張機能の中核となる永続的なバックグラウンドプロセス
@@ -51,20 +51,13 @@ Multi-AI Translatorは、Manifest V3に準拠したChrome拡張機能として�
 - 状態管理
 
 **主な責務**：
-```javascript
+```ts
 // メッセージハンドリング
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  switch(message.type) {
-    case 'TRANSLATE_PAGE':
-      // ページ翻訳の処理
-      break;
-    case 'TRANSLATE_SELECTION':
-      // 選択テキスト翻訳の処理
-      break;
-    case 'GET_SETTINGS':
-      // 設定の取得
-      break;
-  }
+browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  handleMessage(request)
+    .then(sendResponse)
+    .catch((error) => sendResponse({ error: error.message }));
+  return true;
 });
 ```
 
@@ -75,7 +68,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 ### 2. Content Scripts
 
-**ファイル**：`src/content/`
+**ファイル**：`src/content/content-script.ts`、`src/content/translator.ts`
 
 **役割**：
 - ウェブページのDOMにアクセス
@@ -83,27 +76,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 - 翻訳結果のページへの適用
 
 **主な機能**：
-```javascript
-// テキストノードの抽出
-function extractTextNodes(element) {
-  const walker = document.createTreeWalker(
-    element,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        return node.nodeValue.trim()
-          ? NodeFilter.FILTER_ACCEPT
-          : NodeFilter.FILTER_REJECT;
-      }
-    }
-  );
-  // ...
-}
+```ts
+// 翻訳フロー
+const translator = new Translator();
+await translator.initialize();
 
-// 翻訳の適用
-function applyTranslation(node, translatedText) {
-  node.nodeValue = translatedText;
-}
+browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  translator
+    .handleMessage(request)
+    .then(sendResponse)
+    .catch((error) => sendResponse({ error: error.message }));
+  return true;
+});
 ```
 
 **注入モード**：
@@ -112,7 +96,7 @@ function applyTranslation(node, translatedText) {
 
 ### 3. Popup UI
 
-**ファイル**：`src/popup/`
+**ファイル**：`src/popup/popup.ts`
 
 **役割**：
 - ユーザーインターフェース
@@ -126,19 +110,17 @@ function applyTranslation(node, translatedText) {
 - 現在のプロバイダー表示
 
 **通信**：
-```javascript
-// Background Scriptへのメッセージ送信
-chrome.runtime.sendMessage({
-  type: 'TRANSLATE_PAGE',
-  targetLanguage: 'ja'
-}, (response) => {
-  // レスポンス処理
+```ts
+await browser.runtime.sendMessage({
+  action: 'translate-page',
+  provider,
+  language: targetLanguage
 });
 ```
 
 ### 4. Options UI
 
-**ファイル**：`src/options/`
+**ファイル**：`src/options/options.ts`
 
 **役割**：
 - 拡張機能の設定管理
@@ -220,24 +202,25 @@ class OpenAIProvider extends BaseProvider {
 **主要モジュール**：
 
 #### Storage Utils
-```javascript
-// 設定の保存
-async function saveSettings(settings) {
-  await chrome.storage.local.set({ settings });
+```typescript
+import browser from 'webextension-polyfill';
+
+export async function saveSettings(settings: Settings) {
+  await browser.storage.local.set({ settings });
 }
 
-// 設定の読み込み
-async function loadSettings() {
-  const { settings } = await chrome.storage.local.get('settings');
-  return settings || getDefaultSettings();
+export async function loadSettings(): Promise<Settings> {
+  const { settings } = await browser.storage.local.get('settings');
+  return normalizeSettings(settings);
 }
 ```
 
 #### i18n Utils
-```javascript
-// メッセージの取得
-function getMessage(key, substitutions) {
-  return chrome.i18n.getMessage(key, substitutions);
+```typescript
+import browser from 'webextension-polyfill';
+
+export function getMessage(key: string, substitutions?: string[]) {
+  return browser.i18n.getMessage(key, substitutions);
 }
 ```
 
@@ -359,85 +342,54 @@ function chunkText(text, maxChunkSize) {
 
 ## ストレージ戦略
 
-### Chrome Storage API
+### WebExtension Storage API
 
 **使用するストレージタイプ**：
-- `chrome.storage.local`: 設定、APIキー、キャッシュ
-- `chrome.storage.sync`: UI言語（デバイス間同期）
+- `browser.storage.local`: 設定、プロバイダー情報、翻訳履歴
 
-**ストレージ構造**：
-```javascript
+**ストレージ構造**（抜粋）：
+```ts
 {
   settings: {
-    provider: 'openai',
-    targetLanguage: 'ja',
-    sourceLanguage: 'auto',
+    common: {
+      defaultProvider: 'openai',
+      defaultSourceLanguage: 'auto',
+      defaultTargetLanguage: 'ja',
+      uiLanguage: 'ja',
+      batchMaxChars: 64000,
+      batchMaxItems: 20
+    },
     providers: {
-      openai: {
-        enabled: true,
-        apiKey: 'sk-...',
-        model: 'gpt-3.5-turbo',
-        temperature: 0.3
-      },
-      claude: {
-        enabled: false,
-        apiKey: '',
-        model: 'claude-3-sonnet'
-      },
+      openai: { enabled: true, apiKey: 'sk-...', model: 'gpt-4o-mini' },
+      anthropic: { enabled: false, apiKey: '', model: '' },
       // ...
     },
-    advanced: {
-      chunkSize: 5000,
-      timeout: 30000,
-      requestDelay: 500,
-      maxConcurrentRequests: 3
+    ui: {
+      theme: 'auto',
+      fontSize: 14,
+      showOriginalText: true,
+      highlightTranslated: true
     }
   },
-  translationCache: {
-    'hash1': '翻訳1',
-    'hash2': '翻訳2',
-    // ...
-  },
-  uiLanguage: 'ja'
+  translationHistory: [
+    {
+      original: 'Hello',
+      translated: 'こんにちは',
+      provider: 'openai',
+      timestamp: 1710000000000
+    }
+  ]
 }
 ```
 
-### キャッシュ戦略
-
-**目的**：
-- 同じテキストの再翻訳を避ける
-- API使用量を削減
-- レスポンス速度向上
-
-**実装**：
-```javascript
-// ハッシュ生成
-function generateHash(text, targetLanguage, provider) {
-  return btoa(`${text}:${targetLanguage}:${provider}`);
-}
-
-// キャッシュから取得
-async function getCachedTranslation(text, targetLanguage, provider) {
-  const hash = generateHash(text, targetLanguage, provider);
-  const { translationCache } = await chrome.storage.local.get('translationCache');
-  return translationCache?.[hash];
-}
-
-// キャッシュに保存
-async function cacheTranslation(text, targetLanguage, provider, translation) {
-  const hash = generateHash(text, targetLanguage, provider);
-  const { translationCache = {} } = await chrome.storage.local.get('translationCache');
-  translationCache[hash] = translation;
-  await chrome.storage.local.set({ translationCache });
-}
-```
+※ 現状、翻訳キャッシュは導入しておらず、最新 100 件の翻訳履歴のみを保持します。
 
 ## セキュリティ考慮事項
 
 ### APIキーの保護
 
 1. **ローカルストレージ**：
-   - APIキーは `chrome.storage.local` に保存
+   - APIキーは `browser.storage.local` に保存
    - 他の拡張機能からアクセス不可
 
 2. **通信の暗号化**：
@@ -571,8 +523,8 @@ async function handleTranslateRequest(message) {
 
 // UI層
 async function translatePage() {
-  const response = await chrome.runtime.sendMessage({
-    type: 'TRANSLATE_PAGE'
+  const response = await browser.runtime.sendMessage({
+    action: 'translate-page'
   });
 
   if (!response.success) {
@@ -622,10 +574,10 @@ describe('chunkText', () => {
 
 1. `BaseProvider` を継承
 2. 必要なメソッドを実装
-3. `src/providers/index.js` に登録
+3. `src/providers/index.ts` に登録
 4. UI設定を追加
 
-```javascript
+```typescript
 // 1. プロバイダークラス作成
 export class NewProvider extends BaseProvider {
   async translate(text, targetLang, sourceLang) {
@@ -642,35 +594,13 @@ export class NewProvider extends BaseProvider {
 }
 
 // 2. 登録
-import { NewProvider } from './new-provider.js';
+import { NewProvider } from './new-provider';
 export const providers = {
   openai: OpenAIProvider,
   claude: ClaudeProvider,
   newProvider: NewProvider
 };
 ```
-
-## 将来の改善案
-
-1. **オフラインサポート**：
-   - Service Workerキャッシュの活用
-   - 翻訳履歴のオフライン保存
-
-2. **バックグラウンド翻訳**：
-   - ページ読み込み時の自動翻訳
-   - ユーザー設定に基づく自動検出
-
-3. **カスタム辞書**：
-   - ユーザー定義の用語集
-   - 専門用語の一貫した翻訳
-
-4. **翻訳履歴**：
-   - 過去の翻訳履歴
-   - お気に入り機能
-
-5. **コラボレーション機能**：
-   - 翻訳の共有
-   - チーム設定
 
 ## 参考資料
 

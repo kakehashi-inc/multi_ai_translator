@@ -40,6 +40,11 @@ yarn install
 4. Rebuild and press **Reload** after each change
 5. Use the **Inspect** button to view background logs
 
+> Need a persistent install?
+> - **Developer Edition / Nightly**: set `xpinstall.signatures.required = false` in `about:config` to load unsigned builds.
+> - **AMO “Unlisted” signing**: upload the `dist-firefox/` package to the [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/), download the signed XPI, and install it via `about:addons`.
+> - **Enterprise policy**: organizations can disable signature requirements through managed policies, though this is uncommon outside corporate environments.
+
 ## Testing Changes
 
 1. Edit the source

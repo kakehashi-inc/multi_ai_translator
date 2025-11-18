@@ -2,19 +2,22 @@
 
 ## Building for Production
 
-1. Build the extension:
+1. Build the Chromium + Firefox targets:
 ```bash
 yarn build
 ```
 
-This creates an optimized build in the `dist` directory.
+This produces optimized bundles in `dist/` (Chromium) and `dist-firefox/` (Firefox).
+Use `yarn build:chromium` or `yarn build:firefox` if you need individual builds.
 
-2. Create distribution package:
+2. Create distribution packages:
 ```bash
 yarn package
 ```
 
-This creates `multi-ai-translator.zip` ready for upload.
+This writes ZIP files to `packages/`:
+- `multi-ai-translator-chrome.zip` (for Chrome / Edge)
+- `multi-ai-translator-firefox.zip` (for Firefox)
 
 ## Chrome Web Store
 
@@ -41,7 +44,7 @@ This creates `multi-ai-translator.zip` ready for upload.
 
 3. **Create New Item**
    - Click "New Item"
-   - Upload `multi-ai-translator.zip`
+   - Upload `packages/multi-ai-translator-chrome.zip`
    - Wait for automatic checks
 
 4. **Fill Store Listing**
@@ -131,7 +134,7 @@ This creates `multi-ai-translator.zip` ready for upload.
 
 2. **Submit Extension**
    - Click "New Extension"
-   - Upload `multi-ai-translator.zip`
+   - Upload `packages/multi-ai-translator-chrome.zip` (Edge also consumes the Chromium build)
    - Fill required fields (similar to Chrome)
 
 3. **Review Process**

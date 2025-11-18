@@ -40,6 +40,11 @@ yarn install
 4. 変更後は再ビルドし、「再読み込み」で反映
 5. 背景スクリプトのログは「検査」ボタンから確認
 
+> 永続的にインストールしたい場合
+> - **Developer Edition / Nightly**: `about:config` で `xpinstall.signatures.required` を `false` にすると署名なしでも読み込めます。
+> - **AMO の「非公開（Unlisted）」署名**: `yarn build:firefox` で作成したパッケージを [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/) にアップロードし、署名付き XPI をダウンロードして `about:addons` からインストールします。
+> - **企業ポリシー**: 管理ポリシーで署名チェックを無効化する方法もありますが、一般利用では非推奨です。
+
 ## 変更のテスト
 
 1. ソースコードを編集
