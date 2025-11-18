@@ -7,6 +7,10 @@
     "message": "複数のAIプロバイダ（OpenAI、Anthropic（Claude）、Gemini、Ollama）を使用してWebページを翻訳",
     "description": "拡張機能の説明"
   },
+  "contextMenuTranslateSelection": {
+    "message": "選択範囲を翻訳",
+    "description": "選択範囲を翻訳するコンテキストメニューのタイトル"
+  },
   "commandTranslatePage": {
     "message": "ページを翻訳",
     "description": "ページ全体を翻訳するコマンド"
@@ -171,6 +175,30 @@
     "message": "選択範囲の翻訳結果",
     "description": "ポップアップに表示する選択範囲の翻訳結果ラベル"
   },
+  "selectionPopupTitle": {
+    "message": "選択範囲の翻訳",
+    "description": "選択範囲翻訳専用ポップアップのタイトル"
+  },
+  "labelSelectionSource": {
+    "message": "元言語",
+    "description": "選択範囲ポップアップの元言語ラベル"
+  },
+  "labelSelectionTarget": {
+    "message": "翻訳先",
+    "description": "選択範囲ポップアップの翻訳先ラベル"
+  },
+  "labelSelectionProvider": {
+    "message": "プロバイダ",
+    "description": "選択範囲ポップアップのプロバイダ表示"
+  },
+  "labelSelectionOriginal": {
+    "message": "原文",
+    "description": "選択範囲の原文見出し"
+  },
+  "labelSelectionResult": {
+    "message": "翻訳結果",
+    "description": "選択範囲の翻訳結果見出し"
+  },
   "statusScanning": {
     "message": "翻訳可能なテキストをスキャン中…",
     "description": "ページをスキャン中のステータスメッセージ"
@@ -235,6 +263,10 @@
     "message": "プロバイダを選択してください",
     "description": "プロバイダが選択されていないときのエラーメッセージ"
   },
+  "errorNoEnabledProviders": {
+    "message": "有効なプロバイダがありません。設定から有効化してください。",
+    "description": "利用可能なプロバイダがない場合のエラーメッセージ"
+  },
   "errorNoSelectionText": {
     "message": "翻訳したいテキストをページ上で選択してください。",
     "description": "選択範囲がない場合のエラーメッセージ"
@@ -247,6 +279,14 @@
     "message": "選択範囲を翻訳中...",
     "description": "選択範囲を翻訳中のステータスメッセージ"
   },
+  "statusSelectionPreparing": {
+    "message": "翻訳の準備中…",
+    "description": "選択範囲翻訳を開始する前のステータス"
+  },
+  "statusSelectionPopupOpened": {
+    "message": "選択範囲の翻訳オーバーレイを表示しました",
+    "description": "選択範囲オーバーレイを表示した際のステータス"
+  },
   "errorTranslationFailed": {
     "message": "翻訳に失敗しました。プロバイダの設定を確認してください。",
     "description": "翻訳が失敗したときのエラーメッセージ"
@@ -258,6 +298,10 @@
   "statusSelectionTranslated": {
     "message": "選択範囲を翻訳しました",
     "description": "選択範囲が翻訳されたときのステータスメッセージ"
+  },
+  "errorSelectionJobNotFound": {
+    "message": "選択範囲の情報が見つかりませんでした。もう一度お試しください。",
+    "description": "選択範囲のジョブが存在しない場合のエラーメッセージ"
   },
   "errorTranslationFailedWithMessage": {
     "message": "翻訳に失敗しました: $MESSAGE$",

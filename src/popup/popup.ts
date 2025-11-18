@@ -10,9 +10,6 @@ import { ConstVariables } from '../utils/const-variables';
 
 let isPageTranslating = false;
 let isSelectionTranslating = false;
-const selectionResultId = 'selection-result';
-const selectionResultTextId = 'selection-result-text';
-
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -38,7 +35,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize button states
     await updateRestoreButtonVisibility();
     await updateSelectionButtonState();
-    clearSelectionResult();
   } catch (error) {
     console.error('[Popup] Initialization error:', error);
     showStatus(getMessage('errorFailedToInitialize'), 'error');
@@ -179,7 +175,6 @@ function setupEventListeners() {
         return;
       }
 
-      clearSelectionResult();
       isPageTranslating = true;
       isSelectionTranslating = false;
       updateTranslationButtons();
@@ -231,19 +226,10 @@ function setupEventListeners() {
         return;
       }
 
-      clearSelectionResult();
       isSelectionTranslating = true;
       isPageTranslating = false;
       updateTranslationButtons();
       await updateRestoreButtonVisibility();
-
-      showStatus(getMessage('statusTranslatingSelection'), 'info');
-
-      // Save last used provider
-      await browser.runtime.sendMessage({
-        action: 'setLastUsedProvider',
-        data: { provider }
-      });
 
       const selectionText = await fetchSelectionText();
       if (!selectionText) {
@@ -251,17 +237,16 @@ function setupEventListeners() {
         return;
       }
 
-      // Save last used provider
       await browser.runtime.sendMessage({
         action: 'setLastUsedProvider',
         data: { provider }
       });
 
       const response = await sendMessageToActiveTab({
-        action: 'translate-selection-text',
+        action: 'translate-selection-inline',
         text: selectionText,
-        language: targetLanguage,
         provider,
+        language: targetLanguage,
         sourceLanguage
       });
 
@@ -269,12 +254,10 @@ function setupEventListeners() {
         throw new Error(response?.error || getMessage('errorTranslationFailed'));
       }
 
-      showSelectionResult(response.translation);
-      showStatus(getMessage('statusSelectionTranslated'), 'success');
+      showStatus(getMessage('statusSelectionPopupOpened'), 'success');
     } catch (error) {
       console.error('[Popup] Translation error:', error);
       showStatus(getMessage('errorTranslationFailedWithMessage', [error.message]), 'error');
-      clearSelectionResult();
     } finally {
       isSelectionTranslating = false;
       updateTranslationButtons();
@@ -288,7 +271,6 @@ function setupEventListeners() {
     try {
       await handleCancelTranslation();
       showStatus(getMessage('statusOriginalContentRestored'), 'success');
-      clearSelectionResult();
     } catch (error) {
       console.error('[Popup] Restore error:', error);
       showStatus(getMessage('errorRestoreFailedWithMessage', [error.message]), 'error');
@@ -389,26 +371,6 @@ async function fetchSelectionText(): Promise<string> {
     console.error('[Popup] Failed to get selection text:', error);
     throw error;
   }
-}
-
-function showSelectionResult(text: string): void {
-  const container = document.getElementById(selectionResultId);
-  const textEl = document.getElementById(selectionResultTextId);
-  if (!container || !textEl) {
-    return;
-  }
-  textEl.textContent = text;
-  container.classList.add('is-visible');
-}
-
-function clearSelectionResult(): void {
-  const container = document.getElementById(selectionResultId);
-  const textEl = document.getElementById(selectionResultTextId);
-  if (!container || !textEl) {
-    return;
-  }
-  textEl.textContent = '';
-  container.classList.remove('is-visible');
 }
 
 /**

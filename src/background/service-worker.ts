@@ -29,6 +29,16 @@ type BackgroundRequest =
   | { action: 'getModels'; data: ProviderRequestPayload }
   | { action: 'setLastUsedProvider'; data?: { provider?: string | null } }
   | { action: 'getLastUsedProvider' }
+  | {
+      action: 'translate-selection-inline';
+      data: {
+        tabId: number;
+        text: string;
+        language?: string;
+        provider?: string;
+        sourceLanguage?: string;
+      };
+    }
   | { action: string; data?: unknown };
 
 type TranslateResponse =
@@ -153,14 +163,9 @@ async function createContextMenus(): Promise<void> {
 
   const menuItems: Array<{ id: string; title: string; contexts: Menus.ContextType[] }> = [
     {
-      id: 'translate-page',
-      title: 'Translate page',
-      contexts: ['page']
-    },
-    {
-      id: 'restore-original',
-      title: 'Restore original',
-      contexts: ['page']
+      id: 'translate-selection-inline',
+      title: getMessage('contextMenuTranslateSelection'),
+      contexts: ['selection']
     }
   ];
 
@@ -178,13 +183,8 @@ async function createContextMenus(): Promise<void> {
  */
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
-    switch (info.menuItemId) {
-      case 'translate-page':
-        await handleTranslatePage(tab);
-        break;
-      case 'restore-original':
-        await handleRestoreOriginal(tab);
-        break;
+    if (info.menuItemId === 'translate-selection-inline') {
+      await handleTranslateSelectionInline(info, tab);
     }
   } catch (error) {
     console.error('[Multi-AI Translator] Context menu error:', error);
@@ -227,6 +227,17 @@ async function handleMessage(request: BackgroundRequest): Promise<unknown> {
       return { success: true };
     case 'getLastUsedProvider':
       return { provider: await getLastUsedProvider() };
+    case 'translate-selection-inline':
+      await forwardSelectionTranslation(
+        (data || {}) as {
+          tabId?: number;
+          text?: string;
+          language?: string;
+          provider?: string;
+          sourceLanguage?: string;
+        }
+      );
+      return { success: true };
     default:
       throw new Error(getMessage('errorUnknownAction', [action]));
   }
@@ -336,30 +347,80 @@ async function getProviderModels({
   }
 }
 
-/**
- * Handle translate page
- */
-async function handleTranslatePage(tab?: Tabs.Tab): Promise<void> {
+async function handleTranslateSelectionInline(info: Menus.OnClickData, tab?: Tabs.Tab) {
+  if (!info?.selectionText) {
+    showNotification('Error', getMessage('errorNoSelectionText'));
+    return;
+  }
   const targetTab = await resolveContentTab(tab);
   const settings = await getSettings();
   const lastUsed = await getLastUsedProvider();
-  const provider = lastUsed || settings.common.defaultProvider;
+  const provider = resolveEnabledProvider(settings, lastUsed);
+  if (!provider) {
+    showNotification('Error', getMessage('errorNoEnabledProviders'));
+    return;
+  }
   const sourceLanguage = settings.common.defaultSourceLanguage || 'auto';
-  await sendMessageToTab(targetTab?.id, {
-    action: 'translate-page',
+  const targetLanguage = settings.common.defaultTargetLanguage;
+
+  await forwardSelectionTranslation({
+    tabId: targetTab?.id,
+    text: info.selectionText,
     provider,
+    language: targetLanguage,
     sourceLanguage
   });
 }
 
-/**
- * Handle restore original
- */
-async function handleRestoreOriginal(tab?: Tabs.Tab): Promise<void> {
-  const targetTab = await resolveContentTab(tab);
-  await sendMessageToTab(targetTab?.id, {
-    action: 'restore-original'
+async function forwardSelectionTranslation({
+  tabId,
+  text,
+  language,
+  provider,
+  sourceLanguage
+}: {
+  tabId?: number;
+  text?: string;
+  language?: string;
+  provider?: string;
+  sourceLanguage?: string;
+}): Promise<void> {
+  if (!tabId) {
+    throw new Error(getMessage('errorNoActiveTab'));
+  }
+  if (!text?.trim()) {
+    throw new Error(getMessage('errorNoSelectionText'));
+  }
+
+  const settings = await getSettings();
+  const resolvedProvider =
+    provider && settings.providers?.[provider]?.enabled
+      ? provider
+      : resolveEnabledProvider(settings, await getLastUsedProvider());
+
+  if (!resolvedProvider) {
+    throw new Error(getMessage('errorNoEnabledProviders'));
+  }
+
+  await sendMessageToTab(tabId, {
+    action: 'translate-selection-inline',
+    text,
+    language,
+    provider: resolvedProvider,
+    sourceLanguage
   });
+}
+
+function resolveEnabledProvider(
+  settings: Awaited<ReturnType<typeof getSettings>>,
+  preferred?: string | null
+): string | null {
+  if (preferred && settings.providers?.[preferred]?.enabled) {
+    return preferred;
+  }
+  const entries = Object.entries(settings.providers || {});
+  const enabledEntry = entries.find(([, cfg]) => cfg?.enabled);
+  return enabledEntry ? enabledEntry[0] : null;
 }
 
 /**

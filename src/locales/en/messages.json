@@ -7,6 +7,10 @@
     "message": "Translate web pages using multiple AI providers (OpenAI, Anthropic (Claude), Gemini, Ollama)",
     "description": "Description of the extension"
   },
+  "contextMenuTranslateSelection": {
+    "message": "Translate selection",
+    "description": "Context menu title for translating selected text"
+  },
   "commandTranslatePage": {
     "message": "Translate page",
     "description": "Command to translate entire page"
@@ -171,6 +175,30 @@
     "message": "Selection Translation",
     "description": "Label for the translated selection result shown in the popup"
   },
+  "selectionPopupTitle": {
+    "message": "Selection Translation",
+    "description": "Title of the dedicated selection translation popup"
+  },
+  "labelSelectionSource": {
+    "message": "Source",
+    "description": "Label for source language in selection popup"
+  },
+  "labelSelectionTarget": {
+    "message": "Target",
+    "description": "Label for target language in selection popup"
+  },
+  "labelSelectionProvider": {
+    "message": "Provider",
+    "description": "Label for provider name in selection popup"
+  },
+  "labelSelectionOriginal": {
+    "message": "Original Text",
+    "description": "Heading for original selection text"
+  },
+  "labelSelectionResult": {
+    "message": "Translation",
+    "description": "Heading for translated selection text"
+  },
   "statusScanning": {
     "message": "Scanning page for translatable text…",
     "description": "Status message when scanning page"
@@ -235,6 +263,10 @@
     "message": "Please select a provider",
     "description": "Error message when no provider is selected"
   },
+  "errorNoEnabledProviders": {
+    "message": "No enabled providers found. Please enable one in Settings.",
+    "description": "Error when no providers are available for translation"
+  },
   "errorNoSelectionText": {
     "message": "Select text on the page before translating.",
     "description": "Error shown when no text is selected for translation"
@@ -247,6 +279,14 @@
     "message": "Translating selection...",
     "description": "Status message when translating selection"
   },
+  "statusSelectionPreparing": {
+    "message": "Preparing translation…",
+    "description": "Status shown before selection translation starts"
+  },
+  "statusSelectionPopupOpened": {
+    "message": "Selection translation overlay opened",
+    "description": "Status message after showing the inline selection overlay"
+  },
   "errorTranslationFailed": {
     "message": "Translation failed. Please check provider settings.",
     "description": "Error message when translation fails"
@@ -258,6 +298,10 @@
   "statusSelectionTranslated": {
     "message": "Selection translated",
     "description": "Status message when selection is translated"
+  },
+  "errorSelectionJobNotFound": {
+    "message": "Selection information was not found. Please try again.",
+    "description": "Error when the background job for selection translation is missing"
   },
   "errorTranslationFailedWithMessage": {
     "message": "Translation failed: $MESSAGE$",

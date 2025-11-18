@@ -329,7 +329,7 @@ export class Translator {
   }
 
   /**
-   * Translate selection text while showing status overlay
+   * Translate arbitrary selection text without modifying the DOM
    */
   async translateSelectionText(
     text: string,
@@ -343,8 +343,6 @@ export class Translator {
 
     try {
       this.selectionInProgress = true;
-      updateTranslationStatus(getMessage('statusTranslatingSelection'));
-
       const settings = await this.ensureSettings();
       const target = targetLanguage || settings.common.defaultTargetLanguage;
       const provider = providerName || settings.common.defaultProvider;
@@ -358,18 +356,7 @@ export class Translator {
       }
 
       const translations = PromptBuilder.parseResponsePayload(result.translation, [text]);
-      const translated = translations[0] ?? result.translation ?? text;
-
-      updateTranslationStatus(getMessage('statusSelectionTranslated'), 'success');
-      clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
-      return translated;
-    } catch (error) {
-      updateTranslationStatus(
-        error instanceof Error ? error.message : getMessage('errorTranslationFailed'),
-        'error'
-      );
-      clearTranslationStatus(STATUS_CLEAR_DELAY_MS);
-      throw error;
+      return translations[0] ?? result.translation ?? text;
     } finally {
       this.selectionInProgress = false;
     }

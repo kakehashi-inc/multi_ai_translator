@@ -78,7 +78,7 @@ yarn build:firefox
 3. **Translate Selection**:
    - Highlight any text on the page
    - Open the extension popup
-   - Click **Translate Selection** to see the translated text inside the popup
+   - Click **Translate Selection** to show an overlay on the page with progress and the translation
 
 ## Development
 
