@@ -1,3 +1,4 @@
+import { ConstVariables } from '../utils/const-variables';
 import { PromptBuilder } from '../utils/prompt-builder';
 import type { ProviderName, ProviderSettings } from '../types/settings';
 
@@ -129,7 +130,10 @@ export abstract class BaseProvider<
    * @param {number} maxLength - Maximum length per chunk
    * @returns {string[]} Array of text chunks
    */
-  protected splitIntoChunks(text: string, maxLength = 2000): string[] {
+  protected splitIntoChunks(
+    text: string,
+    maxLength = ConstVariables.DEFAULT_CHUNK_MAX_LENGTH
+  ): string[] {
     if (text.length <= maxLength) {
       return [text];
     }

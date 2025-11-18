@@ -20,7 +20,8 @@ export class ConstVariables {
 
   // Batch translation
   static DEFAULT_BATCH_MAX_ITEMS = 20;
-  static DEFAULT_BATCH_MAX_CHARS = 64000;
+  static DEFAULT_BATCH_MAX_CHARS = 2000;
+  static DEFAULT_CHUNK_MAX_LENGTH = 1000;
 
   // Timing constants
   static STATUS_CLEAR_DELAY_MS = 4000;
