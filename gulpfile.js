@@ -3,6 +3,10 @@ import { deleteAsync } from 'del';
 import eslint from 'gulp-eslint-new';
 import gulpStylelint from 'gulp-stylelint-esm';
 import jsonlint from '@prantlf/gulp-jsonlint';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 /**
  * Clean dist directory
@@ -60,4 +64,30 @@ export function lintJson() {
     .pipe(jsonlint.reporter());
 }
 
-export const lint = gulp.parallel(lintScripts, lintCss, lintJson);
+/**
+ * Run TypeScript type checking
+ */
+export function lintTypeScript(done) {
+  execAsync('tsc --noEmit')
+    .then(({ stdout, stderr }) => {
+      if (stderr) {
+        console.error(stderr);
+      }
+      if (stdout) {
+        console.log(stdout);
+      }
+      done();
+    })
+    .catch((error) => {
+      console.error('TypeScript type checking failed:');
+      if (error.stdout) {
+        console.error(error.stdout);
+      }
+      if (error.stderr) {
+        console.error(error.stderr);
+      }
+      done(error);
+    });
+}
+
+export const lint = gulp.parallel(lintScripts, lintTypeScript, lintCss, lintJson);
