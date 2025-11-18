@@ -80,16 +80,20 @@ ${requestPayload}`;
         const translatedMatch = block.match(/<translated>([\s\S]*?)<\/translated>/i);
         if (!originalMatch || !translatedMatch) continue;
 
-        const originalText = unescapeXml(originalMatch[1]?.trim() ?? '');
-        const translatedText = unescapeXml(translatedMatch[1]?.trim() ?? '');
-        if (!originalText) continue;
+        // 空白や改行を維持するため、実際の値にはtrim()を使用しない
+        const originalText = unescapeXml(originalMatch[1] ?? '');
+        const translatedText = unescapeXml(translatedMatch[1] ?? '');
+        // 条件判定でのみtrim()を使用して意味のない戻り値を排除
+        if (originalText == null || originalText.trim() === '') continue;
 
         const key = normalizeForMatch(originalText);
         const targets = normalizedMap.get(key);
         if (!targets || !targets.length) continue;
 
         const targetIndex = targets.shift();
-        if (targetIndex !== undefined && translatedText) {
+        // 条件判定でのみtrim()を使用して意味のない戻り値を排除
+        if (targetIndex !== undefined && translatedText != null && translatedText.trim() !== '') {
+          // 実際の値はtrim()せずに保存（空白や改行を維持）
           translations[targetIndex] = translatedText;
         }
       }

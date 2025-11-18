@@ -355,8 +355,23 @@ export class Translator {
         throw new Error(result.error);
       }
 
+      // XML形式のレスポンスをパース
       const translations = PromptBuilder.parseResponsePayload(result.translation, [text]);
-      return translations[0] ?? result.translation ?? text;
+
+      // パースが成功し、翻訳結果が存在する場合（条件判定でのみtrim()を使用）
+      if (translations.length > 0 && translations[0] != null && translations[0].trim() !== '') {
+        // 実際の値はtrim()せずに返す（空白や改行を維持）
+        return translations[0];
+      }
+
+      // パースが失敗した場合、生の翻訳結果を使用（条件判定でのみtrim()を使用）
+      if (result.translation != null && result.translation.trim() !== '') {
+        // 実際の値はtrim()せずに返す（空白や改行を維持）
+        return result.translation;
+      }
+
+      // 翻訳結果が空の場合は元のテキストを返す
+      return text;
     } finally {
       this.selectionInProgress = false;
     }

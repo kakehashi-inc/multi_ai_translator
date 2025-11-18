@@ -134,9 +134,19 @@ async function handleInlineSelectionTranslation(
         request.provider,
         request.sourceLanguage
       );
-      translations.push(translation);
+      // 翻訳結果が存在することを確認（条件判定でのみtrim()を使用）
+      if (translation != null && translation.trim() !== '') {
+        // 実際の値はtrim()せずに追加（空白や改行を維持）
+        translations.push(translation);
+      } else {
+        // 翻訳結果が空の場合は元のテキストを保持
+        console.warn(`[Content Script] Empty translation for chunk ${i + 1}, keeping original`);
+        translations.push(chunks[i]);
+      }
     }
-    showSelectionOverlayResult(translations.join('\n'));
+    // すべての翻訳結果を結合（空の要素を除外、条件判定でのみtrim()を使用）
+    const finalTranslation = translations.filter((t) => t != null && t.trim() !== '').join('\n');
+    showSelectionOverlayResult(finalTranslation);
   } catch (error) {
     console.error('[Content Script] Inline selection translation failed', error);
     const message = error instanceof Error ? error.message : getMessage('errorTranslationFailed');
