@@ -555,7 +555,3 @@ function showStatus(message, type = 'info') {
     }, 5000);
   }
 }
-
-/**
- * Format provider name for display
- */

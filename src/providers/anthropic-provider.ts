@@ -70,6 +70,10 @@ export class AnthropicProvider extends BaseProvider<AnthropicProviderConfig, Ant
         throw new Error('Anthropic client not initialized');
       }
 
+      if (!this.config.model) {
+        throw new Error('Model is required');
+      }
+
       const response = await this.client.messages.create({
         model: this.config.model,
         max_tokens: this.config.maxTokens ?? ConstVariables.DEFAULT_ANTHROPIC_MAX_TOKENS,

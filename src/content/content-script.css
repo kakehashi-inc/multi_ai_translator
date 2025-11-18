@@ -9,11 +9,6 @@
   transition: background-color 0.3s ease;
 }
 
-.translation-highlight {
-  background-color: rgba(255, 235, 59, 0.3) !important;
-  transition: background-color 0.3s ease;
-}
-
 /* Loading indicator */
 .translation-loading {
   position: relative;
@@ -45,64 +40,10 @@
   }
 }
 
-/* Translation popup */
-.translation-popup {
-  position: fixed;
-  max-width: 400px;
-  padding: 16px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 2147483647;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333333;
-  word-wrap: break-word;
-}
-
-.translation-popup .popup-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #666666;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.translation-popup .popup-close:hover {
-  color: #333333;
-}
-
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .translation-popup {
-    background: #2d2d2d;
-    border-color: #444444;
-    color: #e0e0e0;
-  }
-
-  .translation-popup .popup-close {
-    color: #999999;
-  }
-
-  .translation-popup .popup-close:hover {
-    color: #ffffff;
-  }
-
   .translated {
     background-color: rgba(255, 235, 59, 0.15) !important;
-  }
-
-  .translation-highlight {
-    background-color: rgba(255, 235, 59, 0.25) !important;
   }
 }
 

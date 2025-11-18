@@ -9,20 +9,12 @@ type LanguageEntry = {
   name: string;
 };
 
-let currentLocale = 'en';
-let messages: Record<string, string> = {};
-
 /**
  * Initialize i18n with messages from browser.i18n
  */
 export function initI18n(): void {
-  // Get user's preferred language
-  try {
-    currentLocale = browser.i18n.getUILanguage().split('-')[0];
-  } catch (error) {
-    console.warn('Failed to detect UI language, defaulting to en', error);
-    currentLocale = 'en';
-  }
+  // Initialization is handled by browser.i18n API
+  // This function is kept for compatibility
 }
 
 /**
@@ -36,33 +28,8 @@ export function getMessage(key: string, substitutions: string[] = []): string {
     return browser.i18n.getMessage(key, substitutions) || key;
   } catch (error) {
     console.warn('Failed to get localized message', key, error);
-    // Fallback for testing environment
-    return messages[key] || key;
+    return key;
   }
-}
-
-/**
- * Get current locale
- * @returns {string} Current locale code
- */
-export function getCurrentLocale(): string {
-  return currentLocale;
-}
-
-/**
- * Set locale (for testing)
- * @param {string} locale - Locale code
- */
-export function setLocale(locale: string): void {
-  currentLocale = locale;
-}
-
-/**
- * Set messages (for testing)
- * @param {object} msgs - Messages object
- */
-export function setMessages(msgs: Record<string, string>): void {
-  messages = { ...msgs };
 }
 
 /**
@@ -73,6 +40,9 @@ export function translatePage(): void {
 
   elements.forEach((element) => {
     const key = element.getAttribute('data-i18n');
+    if (!key) {
+      return;
+    }
     const text = getMessage(key);
 
     if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
@@ -82,30 +52,6 @@ export function translatePage(): void {
       element.textContent = text;
     }
   });
-}
-
-/**
- * Get language name from code
- * @param {string} code - Language code
- * @returns {string} Language name
- */
-export function getLanguageName(code: string): string {
-  const languageNames = {
-    en: 'English',
-    ja: '日本語',
-    zh: '中文',
-    ko: '한국어',
-    es: 'Español',
-    fr: 'Français',
-    de: 'Deutsch',
-    it: 'Italiano',
-    pt: 'Português',
-    ru: 'Русский',
-    ar: 'العربية',
-    hi: 'हिन्दी'
-  };
-
-  return languageNames[code] || code;
 }
 
 /**

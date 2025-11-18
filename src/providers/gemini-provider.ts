@@ -69,11 +69,24 @@ export class GeminiProvider extends BaseProvider<GeminiProviderConfig, GoogleGen
 
       const prompt = this.createPrompt(text, targetLanguage, sourceLanguage);
 
-      const response = await this.client.models.generateContent({
+      const requestParams: {
+        model: string;
+        contents: string;
+        temperature?: number;
+        maxOutputTokens?: number;
+      } = {
         model: this.modelName,
-        contents: prompt,
-        generationConfig: this.generationConfig
-      });
+        contents: prompt
+      };
+
+      if (this.generationConfig?.temperature !== undefined) {
+        requestParams.temperature = this.generationConfig.temperature;
+      }
+      if (this.generationConfig?.maxOutputTokens !== undefined) {
+        requestParams.maxOutputTokens = this.generationConfig.maxOutputTokens;
+      }
+
+      const response = await this.client.models.generateContent(requestParams);
 
       return response.text?.trim() ?? '';
     });

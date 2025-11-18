@@ -116,15 +116,6 @@ body {
   background: #5568d3;
 }
 
-.btn-secondary {
-  background: #48bb78;
-  color: white;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #38a169;
-}
-
 .btn-outline {
   background: transparent;
   color: #667eea;

@@ -206,23 +206,6 @@ export async function saveSettings(settings: Settings): Promise<void> {
   }
 }
 
-export async function getProviderSettings(providerName: string): Promise<ProviderSettings> {
-  const settings = await getSettings();
-  return settings.providers[providerName] || { enabled: false };
-}
-
-export async function saveProviderSettings(
-  providerName: string,
-  providerSettings: ProviderSettings
-): Promise<void> {
-  const settings = await getSettings();
-  settings.providers[providerName] = {
-    ...settings.providers[providerName],
-    ...providerSettings
-  };
-  await saveSettings(settings);
-}
-
 export async function getEnabledProviders(): Promise<string[]> {
   const settings = await getSettings();
   const ordered: string[] = [];
@@ -261,7 +244,7 @@ export async function importSettings(jsonString: string): Promise<void> {
   }
 }
 
-export async function getTranslationHistory(limit = 50): Promise<TranslationHistoryItem[]> {
+async function getTranslationHistory(limit = 50): Promise<TranslationHistoryItem[]> {
   try {
     const result = await browser.storage.local.get('translationHistory');
     const history = (result as HistoryStorageShape).translationHistory || [];
@@ -284,13 +267,5 @@ export async function addToHistory(item: Omit<TranslationHistoryItem, 'timestamp
     await browser.storage.local.set({ translationHistory: trimmedHistory });
   } catch (error) {
     console.error('Failed to add to history:', error);
-  }
-}
-
-export async function clearHistory(): Promise<void> {
-  try {
-    await browser.storage.local.set({ translationHistory: [] });
-  } catch (error) {
-    console.error('Failed to clear history:', error);
   }
 }

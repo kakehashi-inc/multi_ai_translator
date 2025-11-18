@@ -11,18 +11,6 @@
     "message": "選択範囲を翻訳",
     "description": "選択範囲を翻訳するコンテキストメニューのタイトル"
   },
-  "commandTranslatePage": {
-    "message": "ページを翻訳",
-    "description": "ページ全体を翻訳するコマンド"
-  },
-  "commandTranslateSelection": {
-    "message": "選択範囲を翻訳",
-    "description": "選択したテキストを翻訳するコマンド"
-  },
-  "commandRestoreOriginal": {
-    "message": "元に戻す",
-    "description": "元のコンテンツに戻すコマンド"
-  },
   "settingsSubtitle": {
     "message": "設定",
     "description": "設定ページのサブタイトル"
@@ -90,10 +78,6 @@
   "labelDefaultTargetLanguage": {
     "message": "デフォルト翻訳先言語",
     "description": "デフォルト翻訳先言語ラベル"
-  },
-  "labelAutoDetectLanguage": {
-    "message": "元言語を自動検出",
-    "description": "言語自動検出ラベル"
   },
   "labelTheme": {
     "message": "テーマ",
@@ -170,10 +154,6 @@
   "labelSourceLanguage": {
     "message": "元言語",
     "description": "元言語ラベル"
-  },
-  "labelSelectionTranslation": {
-    "message": "選択範囲の翻訳結果",
-    "description": "ポップアップに表示する選択範囲の翻訳結果ラベル"
   },
   "selectionPopupTitle": {
     "message": "選択範囲の翻訳",
@@ -295,14 +275,6 @@
     "message": "ページの翻訳を開始しました",
     "description": "ページの翻訳が開始されたときのステータスメッセージ"
   },
-  "statusSelectionTranslated": {
-    "message": "選択範囲を翻訳しました",
-    "description": "選択範囲が翻訳されたときのステータスメッセージ"
-  },
-  "errorSelectionJobNotFound": {
-    "message": "選択範囲の情報が見つかりませんでした。もう一度お試しください。",
-    "description": "選択範囲のジョブが存在しない場合のエラーメッセージ"
-  },
   "errorTranslationFailedWithMessage": {
     "message": "翻訳に失敗しました: $MESSAGE$",
     "description": "特定のメッセージとともに翻訳が失敗したときのエラーメッセージ",
@@ -312,10 +284,6 @@
         "example": "ネットワークエラー"
       }
     }
-  },
-  "errorRestoreFailed": {
-    "message": "復元に失敗しました",
-    "description": "復元が失敗したときのエラーメッセージ"
   },
   "statusOriginalContentRestored": {
     "message": "元のコンテンツを復元しました",

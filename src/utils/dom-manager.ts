@@ -151,13 +151,6 @@ export function restoreOriginalContent(
   translationState.clear();
 }
 
-export function highlightElement(element: HTMLElement): void {
-  element.classList.add('translation-highlight');
-  window.setTimeout(() => {
-    element.classList.remove('translation-highlight');
-  }, ConstVariables.HIGHLIGHT_DURATION_MS);
-}
-
 export function showLoadingIndicator(element: Element): void {
   element.classList.add('translation-loading');
 }
@@ -621,10 +614,6 @@ function setSelectionOverlayTab(target: 'original' | 'translation'): void {
   selectionOverlay.translationTab.classList.toggle('active', !showOriginal);
   selectionOverlay.originalPanel.hidden = !showOriginal;
   selectionOverlay.translationPanel.hidden = showOriginal;
-}
-
-export function getTranslationState(): PageTranslationState {
-  return translationState;
 }
 
 export function isPageTranslated(): boolean {

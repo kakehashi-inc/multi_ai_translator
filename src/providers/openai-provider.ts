@@ -70,6 +70,10 @@ export class OpenAIProvider extends BaseProvider<OpenAIProviderConfig, OpenAI> {
         throw new Error('OpenAI client not initialized');
       }
 
+      if (!this.config.model) {
+        throw new Error('Model is required');
+      }
+
       const response = await this.client.chat.completions.create({
         model: this.config.model,
         messages: [

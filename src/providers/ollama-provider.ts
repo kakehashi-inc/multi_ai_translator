@@ -61,6 +61,10 @@ export class OllamaProvider extends BaseProvider<OllamaProviderConfig, Ollama> {
         throw new Error('Ollama client not initialized');
       }
 
+      if (!this.config.model) {
+        throw new Error('Model is required');
+      }
+
       const response = await this.client.generate({
         model: this.config.model,
         prompt,

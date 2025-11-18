@@ -8,18 +8,18 @@ import { GeminiProvider } from './gemini-provider';
 import { OllamaProvider } from './ollama-provider';
 import { OpenAICompatibleProvider } from './openai-compatible-provider';
 import { AnthropicCompatibleProvider } from './anthropic-compatible-provider';
-import { ConstVariables } from '../utils/const-variables';
 import type { ProviderSettings } from '../types/settings';
 import type { BaseProvider } from './base-provider';
 
+// Allow constructors that accept ProviderSettings or any subtype (e.g., AnthropicCompatibleConfig)
 type ProviderConstructor = new (config: ProviderSettings) => BaseProvider;
 
 export const PROVIDERS: Record<string, ProviderConstructor> = {
   gemini: GeminiProvider,
   anthropic: AnthropicProvider,
-  'anthropic-compatible': AnthropicCompatibleProvider,
+  'anthropic-compatible': AnthropicCompatibleProvider as ProviderConstructor,
   openai: OpenAIProvider,
-  'openai-compatible': OpenAICompatibleProvider,
+  'openai-compatible': OpenAICompatibleProvider as ProviderConstructor,
   ollama: OllamaProvider
 };
 
@@ -31,10 +31,6 @@ export function createProvider(providerName: string, config?: ProviderSettings):
   }
 
   return new ProviderClass(config || { enabled: false });
-}
-
-export function getAvailableProviders(): string[] {
-  return [...ConstVariables.PROVIDER_ORDER];
 }
 
 export {

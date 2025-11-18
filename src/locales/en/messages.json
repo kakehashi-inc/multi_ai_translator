@@ -11,18 +11,6 @@
     "message": "Translate selection",
     "description": "Context menu title for translating selected text"
   },
-  "commandTranslatePage": {
-    "message": "Translate page",
-    "description": "Command to translate entire page"
-  },
-  "commandTranslateSelection": {
-    "message": "Translate selection",
-    "description": "Command to translate selected text"
-  },
-  "commandRestoreOriginal": {
-    "message": "Restore original",
-    "description": "Command to restore original content"
-  },
   "settingsSubtitle": {
     "message": "Settings",
     "description": "Settings page subtitle"
@@ -90,10 +78,6 @@
   "labelDefaultTargetLanguage": {
     "message": "Default Target Language",
     "description": "Default target language label"
-  },
-  "labelAutoDetectLanguage": {
-    "message": "Auto-detect source language",
-    "description": "Auto detect language label"
   },
   "labelTheme": {
     "message": "Theme",
@@ -170,10 +154,6 @@
   "labelSourceLanguage": {
     "message": "Source Language",
     "description": "Source language label"
-  },
-  "labelSelectionTranslation": {
-    "message": "Selection Translation",
-    "description": "Label for the translated selection result shown in the popup"
   },
   "selectionPopupTitle": {
     "message": "Selection Translation",
@@ -295,14 +275,6 @@
     "message": "Page translation started",
     "description": "Status message when page translation starts"
   },
-  "statusSelectionTranslated": {
-    "message": "Selection translated",
-    "description": "Status message when selection is translated"
-  },
-  "errorSelectionJobNotFound": {
-    "message": "Selection information was not found. Please try again.",
-    "description": "Error when the background job for selection translation is missing"
-  },
   "errorTranslationFailedWithMessage": {
     "message": "Translation failed: $MESSAGE$",
     "description": "Error message when translation fails with specific message",
@@ -312,10 +284,6 @@
         "example": "Network error"
       }
     }
-  },
-  "errorRestoreFailed": {
-    "message": "Restore failed",
-    "description": "Error message when restore fails"
   },
   "statusOriginalContentRestored": {
     "message": "Original content restored",
