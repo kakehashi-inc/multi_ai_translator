@@ -356,7 +356,7 @@ function chunkText(text, maxChunkSize) {
       defaultSourceLanguage: 'auto',
       defaultTargetLanguage: 'ja',
       uiLanguage: 'ja',
-      batchMaxChars: 64000,
+      batchMaxChars: 1000,
       batchMaxItems: 20
     },
     providers: {

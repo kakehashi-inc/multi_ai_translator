@@ -185,7 +185,7 @@ export async function getSettings(): Promise<Settings> {
       defaultSourceLanguage: 'auto',
       defaultTargetLanguage: 'ja',
       uiLanguage: 'ja',
-      batchMaxChars: 64000,
+      batchMaxChars: 1000,
       batchMaxItems: 20
     },
     providers: {
