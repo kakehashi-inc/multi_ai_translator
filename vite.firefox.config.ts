@@ -49,7 +49,8 @@ export default defineConfig({
         },
         {
           src: 'icons',
-          dest: 'icons'
+          dest: '.',
+          rename: 'icons'
         },
         {
           src: 'src/locales',
