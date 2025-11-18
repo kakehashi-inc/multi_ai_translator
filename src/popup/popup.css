@@ -83,6 +83,10 @@ body {
   margin-top: 4px;
 }
 
+#restore-btn {
+  display: none;
+}
+
 .btn {
   width: 100%;
   padding: 10px 16px;

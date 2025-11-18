@@ -3,7 +3,7 @@
  * Handles extension lifecycle, context menus, and message passing
  */
 import browser from 'webextension-polyfill';
-import type { Tabs } from 'webextension-polyfill';
+import type { Menus, Tabs } from 'webextension-polyfill';
 import { createProvider } from '../providers';
 import { getSettings, addToHistory } from '../utils/storage';
 import { getMessage } from '../utils/i18n';
@@ -46,6 +46,20 @@ let lastUsedProviderCache: string | null = null;
 // Ensure we only log the session storage fallback once to avoid noisy console output
 let sessionStorageWarningLogged = false;
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return 'Unknown error';
+  }
+}
+
 /**
  * Get last used provider from storage
  * Works in both Chrome and Firefox
@@ -72,7 +86,8 @@ async function getLastUsedProvider(): Promise<string | null> {
   // Fallback to local storage (persists until browser restart)
   try {
     const result = await browser.storage.local.get('lastUsedProvider');
-    lastUsedProviderCache = result.lastUsedProvider || null;
+    const stored = result?.lastUsedProvider;
+    lastUsedProviderCache = typeof stored === 'string' ? stored : null;
     return lastUsedProviderCache;
   } catch (error) {
     console.warn('[Service Worker] Failed to get last used provider', error);
@@ -136,7 +151,7 @@ async function createContextMenus(): Promise<void> {
     );
   }
 
-  const menuItems = [
+  const menuItems: Array<{ id: string; title: string; contexts: Menus.ContextType[] }> = [
     {
       id: 'translate-page',
       title: 'Translate page',
@@ -173,40 +188,19 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     }
   } catch (error) {
     console.error('[Multi-AI Translator] Context menu error:', error);
-    showNotification('Error', error.message);
-  }
-});
-
-/**
- * Handle keyboard commands
- */
-browser.commands.onCommand.addListener(async (command) => {
-  try {
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-
-    switch (command) {
-      case 'translate-page':
-        await handleTranslatePage(tab);
-        break;
-      case 'restore-original':
-        await handleRestoreOriginal(tab);
-        break;
-    }
-  } catch (error) {
-    console.error('[Multi-AI Translator] Command error:', error);
-    showNotification('Error', error.message);
+    showNotification('Error', getErrorMessage(error));
   }
 });
 
 /**
  * Handle messages from content scripts and popup
  */
-browser.runtime.onMessage.addListener((request: BackgroundRequest, _sender, sendResponse) => {
-  handleMessage(request)
+browser.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+  handleMessage(request as BackgroundRequest)
     .then(sendResponse)
     .catch((error) => {
       console.error('[Multi-AI Translator] Message error:', error);
-      sendResponse({ error: error.message });
+      sendResponse({ error: getErrorMessage(error) });
     });
 
   return true; // Keep message channel open for async response
