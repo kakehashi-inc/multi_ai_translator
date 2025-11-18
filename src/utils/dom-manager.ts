@@ -263,7 +263,6 @@ function ensureSelectionOverlayStyles(): void {
       color: #1a202c;
       border-radius: 12px;
       box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       overflow: hidden;
