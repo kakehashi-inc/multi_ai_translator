@@ -1,6 +1,6 @@
 {
   "name": "multi-ai-translator",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Browser extension for translating web pages using multiple AI providers",
   "type": "module",
   "scripts": {
