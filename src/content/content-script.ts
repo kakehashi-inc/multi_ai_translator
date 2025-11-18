@@ -122,20 +122,62 @@ async function handleInlineSelectionTranslation(
   });
 
   try {
-    updateSelectionOverlayStatus(getMessage('statusTranslatingSelection'));
-    const translation = await translator.translateSelectionText(
-      request.text,
-      request.language,
-      request.provider,
-      request.sourceLanguage
-    );
-    showSelectionOverlayResult(translation);
+    const chunks = splitSelectionText(request.text);
+    const translations: string[] = [];
+    for (let i = 0; i < chunks.length; i += 1) {
+      const current = (i + 1).toString();
+      const total = chunks.length.toString();
+      updateSelectionOverlayStatus(getMessage('statusTranslating', [current, total]));
+      const translation = await translator.translateSelectionText(
+        chunks[i],
+        request.language,
+        request.provider,
+        request.sourceLanguage
+      );
+      translations.push(translation.trim());
+    }
+    showSelectionOverlayResult(translations.join('\n\n').trim());
   } catch (error) {
     console.error('[Content Script] Inline selection translation failed', error);
     const message = error instanceof Error ? error.message : getMessage('errorTranslationFailed');
     showSelectionOverlayError(message);
     throw error;
   }
+}
+
+function splitSelectionText(text: string, maxLength = 1800): string[] {
+  const normalized = text.replace(/\r\n/g, '\n').trim();
+  if (normalized.length <= maxLength) {
+    return [normalized];
+  }
+
+  const chunks: string[] = [];
+  let remaining = normalized;
+
+  while (remaining.length > maxLength) {
+    let breakpoint = Math.max(
+      remaining.lastIndexOf('\n', maxLength),
+      remaining.lastIndexOf('。', maxLength),
+      remaining.lastIndexOf('、', maxLength),
+      remaining.lastIndexOf(' ', maxLength)
+    );
+
+    if (breakpoint === -1 || breakpoint < maxLength * 0.4) {
+      breakpoint = maxLength;
+    }
+
+    const chunk = remaining.slice(0, breakpoint).trim();
+    if (chunk) {
+      chunks.push(chunk);
+    }
+    remaining = remaining.slice(breakpoint).trimStart();
+  }
+
+  if (remaining) {
+    chunks.push(remaining);
+  }
+
+  return chunks.length ? chunks : [normalized];
 }
 
 /**

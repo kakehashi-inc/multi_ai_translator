@@ -58,12 +58,21 @@ class PageTranslationState {
 const translationState = new PageTranslationState();
 let statusOverlay: HTMLDivElement | null = null;
 let statusHideTimeout: number | null = null;
-let selectionOverlay: {
+
+type SelectionOverlayElements = {
   container: HTMLDivElement;
-  status: HTMLDivElement;
-  result: HTMLPreElement;
-  error: HTMLDivElement;
-} | null = null;
+  statusBar: HTMLDivElement;
+  errorBar: HTMLDivElement;
+  originalPanel: HTMLDivElement;
+  translationPanel: HTMLDivElement;
+  originalContent: HTMLPreElement;
+  translationContent: HTMLPreElement;
+  originalTab: HTMLButtonElement;
+  translationTab: HTMLButtonElement;
+  translationReady: boolean;
+};
+
+let selectionOverlay: SelectionOverlayElements | null = null;
 const selectionOverlayStyleId = 'multi-ai-selection-overlay-style';
 
 export function getTranslatableNodes(
@@ -245,7 +254,7 @@ function ensureSelectionOverlayStyles(): void {
       position: fixed;
       right: 16px;
       bottom: 16px;
-      width: 360px;
+      width: 380px;
       max-height: calc(100vh - 32px);
       background: #ffffff;
       color: #1a202c;
@@ -273,29 +282,58 @@ function ensureSelectionOverlayStyles(): void {
     }
     #multi-ai-selection-overlay .overlay-body {
       padding: 16px;
-      overflow-y: auto;
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
     #multi-ai-selection-overlay .meta {
-      font-size: 13px;
-      display: grid;
-      grid-template-columns: 80px 1fr;
-      row-gap: 4px;
+      font-size: 12px;
+      color: #475569;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
     }
-    #multi-ai-selection-overlay .meta-label {
-      font-weight: 600;
-      color: #4a5568;
-    }
-    #multi-ai-selection-overlay.dark .meta-label {
+    #multi-ai-selection-overlay.dark .meta {
       color: #cbd5f5;
+    }
+    #multi-ai-selection-overlay .overlay-tabs {
+      display: flex;
+      gap: 6px;
+    }
+    #multi-ai-selection-overlay .overlay-tab {
+      flex: 1;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: transparent;
+      color: inherit;
+      border-radius: 8px;
+      padding: 4px 0;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    #multi-ai-selection-overlay .overlay-tab.active {
+      background: rgba(79, 70, 229, 0.12);
+      border-color: rgba(99, 102, 241, 0.6);
+    }
+    #multi-ai-selection-overlay .overlay-tab:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    #multi-ai-selection-overlay .overlay-panels {
+      flex: 1;
+    }
+    #multi-ai-selection-overlay .overlay-panel {
+      max-height: 45vh;
+      overflow-y: auto;
+      padding-right: 8px;
     }
     #multi-ai-selection-overlay h3 {
       font-size: 13px;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       color: #4a5568;
     }
     #multi-ai-selection-overlay.dark h3 {
@@ -306,14 +344,10 @@ function ensureSelectionOverlayStyles(): void {
       word-break: break-word;
       font-size: 15px;
       line-height: 1.6;
-      background: rgba(226, 232, 240, 0.5);
-      border-radius: 8px;
-      padding: 10px;
+      background: transparent;
+      padding: 0;
       margin: 0;
       color: inherit;
-    }
-    #multi-ai-selection-overlay.dark pre {
-      background: rgba(45, 55, 72, 0.8);
     }
     #multi-ai-selection-overlay .status,
     #multi-ai-selection-overlay .error {
@@ -388,50 +422,62 @@ export function showSelectionOverlay(meta: SelectionOverlayMeta, onClose: () => 
   const metaSection = document.createElement('div');
   metaSection.className = 'meta';
 
-  const metaEntries: Array<[string, string]> = [
-    [meta.labels.source, meta.sourceLanguage || 'auto'],
-    [meta.labels.target, meta.targetLanguage || ''],
-    [meta.labels.provider, ConstVariables.formatProviderName(meta.provider)]
-  ];
+  metaSection.textContent = `${meta.labels.source}: ${meta.sourceLanguage || 'auto'} / ${
+    meta.labels.target
+  }: ${meta.targetLanguage || ''} / ${meta.labels.provider}: ${ConstVariables.formatProviderName(
+    meta.provider
+  )}`;
 
-  metaEntries.forEach(([label, value]) => {
-    const labelEl = document.createElement('span');
-    labelEl.className = 'meta-label';
-    labelEl.textContent = label;
-    const valueEl = document.createElement('span');
-    valueEl.textContent = value;
-    metaSection.appendChild(labelEl);
-    metaSection.appendChild(valueEl);
-  });
+  const tabs = document.createElement('div');
+  tabs.className = 'overlay-tabs';
+  const originalTab = document.createElement('button');
+  originalTab.className = 'overlay-tab active';
+  originalTab.textContent = meta.labels.original;
+  const translationTab = document.createElement('button');
+  translationTab.className = 'overlay-tab';
+  translationTab.textContent = meta.labels.result;
+  translationTab.disabled = true;
+  tabs.appendChild(originalTab);
+  tabs.appendChild(translationTab);
 
+  const panelsWrapper = document.createElement('div');
+  panelsWrapper.className = 'overlay-panels';
+
+  const originalPanel = document.createElement('div');
+  originalPanel.className = 'overlay-panel';
   const originalHeading = document.createElement('h3');
   originalHeading.textContent = meta.labels.original;
   const originalPre = document.createElement('pre');
   originalPre.textContent = meta.original;
+  originalPanel.appendChild(originalHeading);
+  originalPanel.appendChild(originalPre);
 
-  const status = document.createElement('div');
-  status.className = 'status';
-  status.textContent = meta.statusPreparing;
+  const translationPanel = document.createElement('div');
+  translationPanel.className = 'overlay-panel';
+  translationPanel.hidden = true;
+  const translationHeading = document.createElement('h3');
+  translationHeading.textContent = meta.labels.result;
+  const translationPre = document.createElement('pre');
+  translationPre.textContent = '';
+  translationPanel.appendChild(translationHeading);
+  translationPanel.appendChild(translationPre);
 
-  const error = document.createElement('div');
-  error.className = 'error';
-  error.hidden = true;
+  panelsWrapper.appendChild(originalPanel);
+  panelsWrapper.appendChild(translationPanel);
 
-  const resultHeading = document.createElement('h3');
-  resultHeading.textContent = meta.labels.result;
-  const resultPre = document.createElement('pre');
-  resultPre.textContent = '';
-  const resultContainer = document.createElement('div');
-  resultContainer.appendChild(resultHeading);
-  resultContainer.appendChild(resultPre);
-  resultContainer.hidden = true;
+  const statusBar = document.createElement('div');
+  statusBar.className = 'status';
+  statusBar.textContent = meta.statusPreparing;
+
+  const errorBar = document.createElement('div');
+  errorBar.className = 'error';
+  errorBar.hidden = true;
 
   body.appendChild(metaSection);
-  body.appendChild(originalHeading);
-  body.appendChild(originalPre);
-  body.appendChild(status);
-  body.appendChild(error);
-  body.appendChild(resultContainer);
+  body.appendChild(statusBar);
+  body.appendChild(tabs);
+  body.appendChild(panelsWrapper);
+  body.appendChild(errorBar);
 
   container.appendChild(header);
   container.appendChild(body);
@@ -439,39 +485,67 @@ export function showSelectionOverlay(meta: SelectionOverlayMeta, onClose: () => 
 
   selectionOverlay = {
     container,
-    status,
-    result: resultPre,
-    error
+    statusBar,
+    errorBar,
+    originalPanel,
+    translationPanel,
+    originalContent: originalPre,
+    translationContent: translationPre,
+    originalTab,
+    translationTab,
+    translationReady: false
   };
+
+  originalTab.addEventListener('click', () => setSelectionOverlayTab('original'));
+  translationTab.addEventListener('click', () => setSelectionOverlayTab('translation'));
+
+  setSelectionOverlayTab('original');
 }
 
 export function updateSelectionOverlayStatus(message: string): void {
   if (!selectionOverlay) return;
-  selectionOverlay.status.textContent = message;
-  selectionOverlay.status.hidden = false;
-  selectionOverlay.error.hidden = true;
-  selectionOverlay.result.parentElement!.hidden = true;
+  selectionOverlay.statusBar.textContent = message;
+  selectionOverlay.statusBar.hidden = false;
+  selectionOverlay.errorBar.hidden = true;
 }
 
 export function showSelectionOverlayResult(text: string): void {
   if (!selectionOverlay) return;
-  selectionOverlay.result.textContent = text;
-  selectionOverlay.status.hidden = true;
-  selectionOverlay.error.hidden = true;
-  selectionOverlay.result.parentElement!.hidden = false;
+  selectionOverlay.translationContent.textContent = text;
+  selectionOverlay.translationReady = true;
+  selectionOverlay.translationTab.disabled = false;
+  selectionOverlay.statusBar.textContent = '';
+  selectionOverlay.statusBar.hidden = true;
+  selectionOverlay.errorBar.hidden = true;
+  setSelectionOverlayTab('translation');
 }
 
 export function showSelectionOverlayError(message: string): void {
   if (!selectionOverlay) return;
-  selectionOverlay.error.textContent = message;
-  selectionOverlay.error.hidden = false;
-  selectionOverlay.status.hidden = true;
-  selectionOverlay.result.parentElement!.hidden = true;
+  selectionOverlay.translationReady = true;
+  selectionOverlay.translationTab.disabled = false;
+  selectionOverlay.errorBar.textContent = message;
+  selectionOverlay.errorBar.hidden = false;
+  selectionOverlay.statusBar.hidden = true;
+  setSelectionOverlayTab('translation');
 }
 
 export function hideSelectionOverlay(): void {
   selectionOverlay?.container.remove();
   selectionOverlay = null;
+}
+
+function setSelectionOverlayTab(target: 'original' | 'translation'): void {
+  if (!selectionOverlay) return;
+  if (target === 'translation' && !selectionOverlay.translationReady) {
+    return;
+  }
+
+  const showOriginal = target === 'original';
+  selectionOverlay.originalTab.classList.toggle('active', showOriginal);
+  selectionOverlay.translationTab.classList.toggle('active', !showOriginal);
+  selectionOverlay.originalPanel.hidden = !showOriginal;
+  selectionOverlay.translationPanel.hidden = showOriginal;
 }
 
 export function getTranslationState(): PageTranslationState {
