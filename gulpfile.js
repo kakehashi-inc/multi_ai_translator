@@ -20,7 +20,7 @@ export function clean() {
  */
 export function lintScripts() {
   return gulp
-    .src(['src/**/*.{ts,js}'])
+    .src(['src/**/*.{ts,tsx,js,jsx}'])
     .pipe(eslint({ fix: false }))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());

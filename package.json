@@ -14,7 +14,7 @@
     "build:firefox": "yarn sync:version:firefox && vite build --config vite.firefox.config.ts",
     "clean": "gulp clean",
     "lint": "gulp lint",
-    "format": "prettier --write \"src/**/*.{ts,js,css,json}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,css,json}\"",
     "package": "node scripts/package.js",
     "release": "yarn clean && yarn format && yarn lint && yarn build && yarn package"
   },
@@ -37,9 +37,12 @@
     "@eslint/js": "^10.0.1",
     "@prantlf/gulp-jsonlint": "^3.0.1",
     "@types/chrome": "^0.1.39",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@types/webextension-polyfill": "^0.12.5",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",
+    "@vitejs/plugin-react": "^6.0.1",
     "archiver": "^7.0.1",
     "cross-env": "^10.1.0",
     "del": "^8.0.1",
@@ -59,9 +62,15 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@google/genai": "^1.48.0",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
     "ollama": "^0.6.3",
-    "openai": "^6.33.0"
+    "openai": "^6.33.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "engines": {
     "node": ">=22.0.0"

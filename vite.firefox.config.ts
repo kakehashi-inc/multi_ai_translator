@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { build as esbuildBuild } from 'esbuild';
 import type { PluginOption } from 'vite';
@@ -40,6 +41,7 @@ function firefoxScriptsPlugin(): PluginOption {
 
 export default defineConfig({
   plugins: [
+    react(),
     viteStaticCopy({
       targets: [
         {

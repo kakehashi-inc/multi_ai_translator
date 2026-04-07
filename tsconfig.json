@@ -7,10 +7,12 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "jsx": "react-jsx",
     "types": ["chrome", "webextension-polyfill"]
   },
   "include": ["src/**/*", "vite.config.ts", "vite.firefox.config.ts"],
