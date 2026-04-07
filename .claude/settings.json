@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__serena",
+      "WebSearch",
+      "SemanticSearch",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(glob:*)",
+      "Bash(ls:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
