@@ -15,15 +15,34 @@ Use `yarn build:chrome` or `yarn build:firefox` if you need individual builds.
 yarn package
 ```
 
-This writes ZIP files to `packages/`:
-- `multi-ai-translator-chrome.zip` (for Chrome / Edge)
-- `multi-ai-translator-firefox.zip` (for Firefox)
+This writes versioned ZIP files to `packages/` (the version is read from each `manifest*.json`):
+- `multi-ai-translator-chrome-<version>.zip` (for Chrome / Edge) — e.g. `multi-ai-translator-chrome-0.1.2.zip`
+- `multi-ai-translator-firefox-<version>.zip` (for Firefox)
+
+## Cost Summary (as of 2026-04)
+
+| Phase | Item | Cost |
+| --- | --- | --- |
+| Chrome Web Store | Developer registration (one-time) | **USD 5** |
+| Chrome Web Store | Per-extension submission / hosting / updates | Free |
+| Microsoft Edge Add-ons | Partner Center registration (individual developer) | Free |
+| Microsoft Edge Add-ons | Submission / hosting / updates | Free |
+| Firefox Add-ons (AMO) | Developer registration | Free |
+| Firefox Add-ons (AMO) | Listed / Unlisted submission, signing, hosting | Free |
+
+Notes:
+- The Chrome USD 5 fee is a **one-time** charge per Google account, not per extension. One paid account can publish up to 20 extensions. The fee is the same for individual and company accounts; Google does not charge an additional company-verification fee for Chrome Web Store.
+- For Microsoft Edge Add-ons, **publishing is free for both individual and company accounts** as of 2025-12 (per Microsoft Learn: *"There is no registration fee for submitting extensions to the Microsoft Edge program"*). The USD 99 Partner Center fee that some sources mention applies to other Microsoft Store programs (e.g. Windows app publishing), **not** to the Edge extensions program.
+- Company (enterprise) account specifics:
+  - **Chrome Web Store**: optional domain verification gives a "verified publisher" badge — this requires owning a domain (typical cost USD ~10–15/year for the domain itself, paid to your registrar, not to Google).
+  - **Edge Add-ons**: company verification is free but takes longer than individual (a few days to a few weeks). Microsoft contacts a designated *company approver* by phone/email, and you may need to upload supporting documents (utility bill, DUNS ID, government records) to Partner Center → Legal info. The publisher display name must match your registered business name. Account type cannot be changed from company to individual after enrollment.
+- No third-party hosting, signing certificates, or CI services are required for the standard publishing flow described below.
 
 ## Chrome Web Store
 
 ### Prerequisites
 - Google account
-- $5 one-time developer registration fee
+- **USD 5** one-time developer registration fee (paid once at the registration step below)
 - Prepared assets (icons, screenshots, descriptions)
 
 ### Steps
@@ -44,7 +63,7 @@ This writes ZIP files to `packages/`:
 
 3. **Create New Item**
    - Click "New Item"
-   - Upload `packages/multi-ai-translator-chrome.zip`
+   - Upload the versioned ZIP from `packages/` (e.g. `multi-ai-translator-chrome-0.1.2.zip`)
    - Wait for automatic checks
 
 4. **Fill Store Listing**
@@ -102,10 +121,15 @@ This writes ZIP files to `packages/`:
    We do not intercept or store translation content.
 
    Permissions:
-   • storage: To save your settings locally
-   • activeTab: To access page content for translation
-   • <all_urls>: To translate any webpage
+   • storage: To save your settings (API keys, language preferences) locally
+   • activeTab: To access the active tab when the user invokes translation
+   • scripting: To inject the translation logic into the current page
+   • contextMenus: To provide right-click "Translate" entries
+   • notifications: To show translation success or failure notifications
+   • <all_urls> (host permission): To translate any webpage the user opens
    ```
+
+   These match the permissions declared in `manifest.json` and `manifest.firefox.json`. Keep this section in sync if permissions change.
 
 6. **Submit for Review**
    - Review all information
@@ -134,7 +158,7 @@ This writes ZIP files to `packages/`:
 
 2. **Submit Extension**
    - Click "New Extension"
-   - Upload `packages/multi-ai-translator-chrome.zip` (Edge also consumes the Chrome build)
+   - Upload the versioned Chrome ZIP from `packages/` (e.g. `multi-ai-translator-chrome-0.1.2.zip`) — Edge consumes the same Chrome build
    - Fill required fields (similar to Chrome)
 
 3. **Review Process**
@@ -142,24 +166,61 @@ This writes ZIP files to `packages/`:
    - More thorough than Chrome
    - May request changes
 
+## Firefox Add-ons (AMO)
+
+### Prerequisites
+- Mozilla account (Firefox account)
+- No registration fee
+- Prepared assets (icons, screenshots, descriptions)
+- The Firefox build is MV2 — `manifest.firefox.json` is bundled into `dist-firefox/` by `yarn build:firefox`
+
+### Steps
+
+1. **Register**
+   - Go to [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/)
+   - Sign in with a Mozilla account
+   - Accept the Add-on Distribution Agreement
+
+2. **Submit Extension**
+   - Click **Submit a New Add-on**
+   - Choose distribution:
+     - **On this site (Listed)** — published on addons.mozilla.org, signed automatically after review
+     - **On your own (Unlisted)** — only signed for self-distribution; not listed on AMO
+   - Upload the versioned Firefox ZIP from `packages/` (e.g. `multi-ai-translator-firefox-0.1.2.zip`)
+   - Fill in metadata (name, summary, description, categories, license, support contact)
+   - Provide a source code URL or upload sources if minified/bundled code is included (Vite output qualifies — make sure the GitHub repo URL or a source archive is supplied)
+
+3. **Review Process**
+   - Automated validation runs immediately
+   - Human review for Listed submissions: typically a few hours to several days
+   - Unlisted submissions are usually signed within minutes
+   - AMO is strict about remote code execution and minified code provenance — keep build instructions reproducible
+
+### After Approval
+
+- Listed add-ons go live on addons.mozilla.org automatically
+- Unlisted add-ons can be downloaded as a signed `.xpi` from the Developer Hub and distributed manually
+
 ## Updating the Extension
 
-1. **Update version** in `manifest.json`:
+1. **Bump the version in `package.json`** — this is the source of truth:
 ```json
 {
-  "version": "1.0.1"
+  "version": "0.1.3"
 }
 ```
+   `yarn build:chrome` / `yarn build:firefox` automatically run `scripts/sync-manifest-version.js`, which propagates the version to both `manifest.json` (Chrome/Edge, MV3) and `manifest.firefox.json` (Firefox, MV2). You can also run `yarn sync:version` manually.
 
 2. **Build and package**:
 ```bash
 yarn build
 yarn package
 ```
+   This produces versioned ZIPs such as `multi-ai-translator-chrome-0.1.3.zip` and `multi-ai-translator-firefox-0.1.3.zip` under `packages/`.
 
 3. **Upload new version**:
-   - Chrome: Upload to existing item
-   - Edge: Create new submission
+   - Chrome: Upload to the existing item in the Developer Dashboard (no fee for updates)
+   - Edge: Create a new submission in Partner Center (no fee)
 
 4. **Add release notes**:
 ```
@@ -181,7 +242,7 @@ Follow semantic versioning:
 ### Official Stores
 - ✅ Chrome Web Store (recommended)
 - ✅ Edge Add-ons (recommended)
-- 🚧 Firefox Add-ons (future)
+- ✅ Firefox Add-ons / AMO (recommended)
 
 ### Alternative Distribution
 - GitHub Releases

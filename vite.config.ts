@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
-import { crx } from '@crxjs/vite-plugin';
+import { crx, type ManifestV3Export } from '@crxjs/vite-plugin';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import manifest from './manifest.json' with { type: 'json' };
 
 export default defineConfig({
   plugins: [
-    crx({ manifest }),
+    crx({ manifest: manifest as unknown as ManifestV3Export }),
     viteStaticCopy({
       targets: [
         {

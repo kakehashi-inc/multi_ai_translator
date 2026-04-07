@@ -15,15 +15,34 @@ Chrome だけ、あるいは Firefox だけを個別に更新する場合は `ya
 yarn package
 ```
 
-`packages/` ディレクトリに以下の ZIP が作成されます。
-- `multi-ai-translator-chrome.zip`（Chrome / Edge 用）
-- `multi-ai-translator-firefox.zip`（Firefox 用）
+`packages/` ディレクトリに、各 `manifest*.json` のバージョンを反映した ZIP が作成されます。
+- `multi-ai-translator-chrome-<version>.zip`（Chrome / Edge 用）— 例: `multi-ai-translator-chrome-0.1.2.zip`
+- `multi-ai-translator-firefox-<version>.zip`（Firefox 用）
+
+## 費用サマリ（2026-04 時点）
+
+| フェーズ | 項目 | 費用 |
+| --- | --- | --- |
+| Chrome ウェブストア | 開発者登録（1回限り） | **5 USD** |
+| Chrome ウェブストア | 拡張機能の提出・ホスティング・更新 | 無料 |
+| Microsoft Edge アドオン | パートナーセンター登録（個人開発者） | 無料 |
+| Microsoft Edge アドオン | 提出・ホスティング・更新 | 無料 |
+| Firefox アドオン (AMO) | 開発者登録 | 無料 |
+| Firefox アドオン (AMO) | Listed / Unlisted の提出・署名・ホスティング | 無料 |
+
+補足:
+- Chrome の 5 USD は **Google アカウントごとに 1 回限り** の登録料で、拡張機能ごとに発生するものではありません。1 アカウントで最大 20 個の拡張機能を公開できます。料金は個人・法人とも同額で、Chrome ウェブストアでは法人検証のための追加料金は発生しません。
+- Microsoft Edge アドオンは、2025-12 時点で **個人アカウント・法人アカウントとも公開料金は無料** です（Microsoft Learn 公式：「There is no registration fee for submitting extensions to the Microsoft Edge program」）。一部の情報源で言及される **99 USD のパートナーセンター料金は、Windows アプリ等の別プログラム向け** であり、Edge 拡張機能プログラムには適用されません。
+- 法人（企業）アカウント特有の事項:
+  - **Chrome ウェブストア**: 任意でドメイン検証を行うと「verified publisher（認証済み発行者）」バッジが付与されます。これにはドメインの所有が必要で、ドメイン自体の費用（通常 年間 10〜15 USD 程度）が別途レジストラに発生します（Google への支払いではありません）。
+  - **Edge アドオン**: 法人アカウントの検証自体は無料ですが、個人アカウントよりも時間がかかります（数日〜数週間）。Microsoft が指定された **会社承認者（company approver）** に電話・メールで連絡し、パートナーセンターの「Legal info」に補足書類（公共料金請求書、DUNS ID、政府発行書類など）のアップロードを求められる場合があります。Publisher 表示名は **登記された法人名** と一致している必要があります。登録後にアカウント種別を法人から個人へ変更することはできません。
+- 以下に記載する標準の公開フローでは、サードパーティのホスティング・署名証明書・CI サービスは不要です。
 
 ## Chrome ウェブストア
 
 ### 前提条件
 - Googleアカウント
-- 5ドルの1回限りの開発者登録料
+- **5 USD** の1回限りの開発者登録料（下記の登録ステップで支払います）
 - 準備済みのアセット（アイコン、スクリーンショット、説明文）
 
 ### 手順
@@ -44,7 +63,7 @@ yarn package
 
 3. **新規アイテムの作成**
    - 「新規アイテム」をクリック
-   - `packages/multi-ai-translator-chrome.zip` をアップロード
+   - `packages/` 内のバージョン付き ZIP（例: `multi-ai-translator-chrome-0.1.2.zip`）をアップロード
    - 自動チェックを待つ
 
 4. **ストアリストの記入**
@@ -102,10 +121,15 @@ yarn package
    当社は翻訳コンテンツを傍受または保存することはありません。
 
    権限：
-   • storage：設定をローカルに保存するため
-   • activeTab：翻訳のためにページコンテンツにアクセスするため
-   • <all_urls>：任意のウェブページを翻訳するため
+   • storage：設定（APIキー、言語設定など）をローカルに保存するため
+   • activeTab：ユーザーが翻訳を実行したときにアクティブなタブへアクセスするため
+   • scripting：現在のページに翻訳ロジックを注入するため
+   • contextMenus：右クリックメニューに「翻訳」項目を提供するため
+   • notifications：翻訳の成功・失敗を通知するため
+   • <all_urls>（ホスト権限）：ユーザーが開いた任意のウェブページを翻訳するため
    ```
+
+   これらは `manifest.json` および `manifest.firefox.json` で宣言されている権限と一致します。権限を変更する場合はこのセクションも同期してください。
 
 6. **審査用に提出**
    - すべての情報を確認
@@ -134,7 +158,7 @@ yarn package
 
 2. **拡張機能を提出**
    - 「新しい拡張機能」をクリック
-   - `packages/multi-ai-translator-chrome.zip` をアップロード（Edge も Chrome ビルドを使用）
+   - `packages/` 内のバージョン付き Chrome ZIP（例: `multi-ai-translator-chrome-0.1.2.zip`）をアップロード（Edge も Chrome ビルドを使用）
    - 必須フィールドを記入（Chromeと同様）
 
 3. **審査プロセス**
@@ -142,24 +166,61 @@ yarn package
    - Chromeよりも徹底的
    - 変更を求められる場合がある
 
+## Firefox アドオン (AMO)
+
+### 前提条件
+- Mozilla アカウント（Firefox アカウント）
+- 登録料不要
+- 準備済みのアセット（アイコン、スクリーンショット、説明文）
+- Firefox 用ビルドは MV2 で、`yarn build:firefox` により `manifest.firefox.json` が `dist-firefox/` にバンドルされます
+
+### 手順
+
+1. **登録**
+   - [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/) にアクセス
+   - Mozilla アカウントでサインイン
+   - Add-on Distribution Agreement に同意
+
+2. **拡張機能を提出**
+   - 「Submit a New Add-on」をクリック
+   - 配布方法を選択:
+     - **On this site (Listed)** — addons.mozilla.org で公開され、審査後に自動で署名されます
+     - **On your own (Unlisted)** — 自己配布用に署名されるだけで、AMO には掲載されません
+   - `packages/` 内のバージョン付き Firefox ZIP（例: `multi-ai-translator-firefox-0.1.2.zip`）をアップロード
+   - メタデータ（名称、概要、説明、カテゴリ、ライセンス、サポート連絡先）を記入
+   - ミニファイ／バンドルされたコードが含まれる場合はソースコードの URL を提示するかソースをアップロード（Vite の出力はこれに該当するため、GitHub リポジトリ URL またはソースアーカイブを必ず指定すること）
+
+3. **審査プロセス**
+   - 自動バリデーションは即時実行
+   - Listed の人手レビューは通常数時間〜数日
+   - Unlisted は通常数分で署名完了
+   - AMO はリモートコード実行やミニファイコードの出所に厳格なため、ビルド手順を再現可能に保つこと
+
+### 承認後
+
+- Listed アドオンは addons.mozilla.org で自動的に公開されます
+- Unlisted アドオンは Developer Hub から署名済み `.xpi` をダウンロードして手動で配布できます
+
 ## 拡張機能の更新
 
-1. **`manifest.json` でバージョンを更新**：
+1. **`package.json` のバージョンを更新**（これがソース・オブ・トゥルースです）：
 ```json
 {
-  "version": "1.0.1"
+  "version": "0.1.3"
 }
 ```
+   `yarn build:chrome` / `yarn build:firefox` を実行すると `scripts/sync-manifest-version.js` が自動で動作し、`manifest.json`（Chrome/Edge、MV3）と `manifest.firefox.json`（Firefox、MV2）の双方にバージョンが伝播されます。手動で同期したい場合は `yarn sync:version` を実行してください。
 
 2. **ビルドしてパッケージ化**：
 ```bash
 yarn build
 yarn package
 ```
+   `packages/` 配下に `multi-ai-translator-chrome-0.1.3.zip` や `multi-ai-translator-firefox-0.1.3.zip` のようなバージョン付き ZIP が生成されます。
 
 3. **新しいバージョンをアップロード**：
-   - Chrome：既存のアイテムにアップロード
-   - Edge：新しい提出を作成
+   - Chrome：既存のアイテムにアップロード（更新は無料）
+   - Edge：新しい提出を作成（無料）
 
 4. **リリースノートを追加**：
 ```
@@ -181,7 +242,7 @@ yarn package
 ### 公式ストア
 - ✅ Chrome ウェブストア（推奨）
 - ✅ Edge アドオン（推奨）
-- 🚧 Firefox アドオン（将来）
+- ✅ Firefox アドオン / AMO（推奨）
 
 ### 代替配布方法
 - GitHub リリース
