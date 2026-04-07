@@ -240,7 +240,7 @@ export async function importSettings(jsonString: string): Promise<void> {
     await saveSettings(normalizeSettings(parsed));
   } catch (error) {
     console.error('Invalid settings JSON provided', error);
-    throw new Error('Invalid settings JSON');
+    throw new Error('Invalid settings JSON', { cause: error });
   }
 }
 

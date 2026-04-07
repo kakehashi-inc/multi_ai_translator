@@ -518,9 +518,9 @@ async function injectContentScript(tabId: number): Promise<void> {
   } catch (error) {
     console.error('[Service Worker] Failed to inject content script:', error);
     if (isAccessDeniedError(error)) {
-      throw new Error(getMessage('errorPageBlocksExtensions'));
+      throw new Error(getMessage('errorPageBlocksExtensions'), { cause: error });
     }
-    throw new Error(getMessage('errorTranslatorCouldNotLoad'));
+    throw new Error(getMessage('errorTranslatorCouldNotLoad'), { cause: error });
   }
 }
 

@@ -219,8 +219,9 @@ yarn package
    This produces versioned ZIPs such as `multi-ai-translator-chrome-0.1.3.zip` and `multi-ai-translator-firefox-0.1.3.zip` under `packages/`.
 
 3. **Upload new version**:
-   - Chrome: Upload to the existing item in the Developer Dashboard (no fee for updates)
-   - Edge: Create a new submission in Partner Center (no fee)
+   - Chrome: Upload `multi-ai-translator-chrome-<version>.zip` to the existing item in the Developer Dashboard (no fee for updates)
+   - Edge: Create a new submission in Partner Center and upload the same Chrome ZIP (no fee)
+   - Firefox: Upload `multi-ai-translator-firefox-<version>.zip` as a new version of the existing add-on in the Firefox Add-ons Developer Hub (Listed goes through automated review, Unlisted is signing-only — both are free)
 
 4. **Add release notes**:
 ```
@@ -229,86 +230,3 @@ Version 1.0.1
 - Improved performance
 - Updated dependencies
 ```
-
-## Version Management
-
-Follow semantic versioning:
-- **Major** (1.0.0): Breaking changes
-- **Minor** (0.1.0): New features
-- **Patch** (0.0.1): Bug fixes
-
-## Distribution Channels
-
-### Official Stores
-- ✅ Chrome Web Store (recommended)
-- ✅ Edge Add-ons (recommended)
-- ✅ Firefox Add-ons / AMO (recommended)
-
-### Alternative Distribution
-- GitHub Releases
-- Direct download from website
-- Enterprise deployment
-
-## Monitoring
-
-### Metrics to Track
-- Install count
-- Active users
-- Ratings and reviews
-- Crash reports
-- User feedback
-
-### Tools
-- Chrome Web Store Dashboard
-- Edge Partner Center
-- Google Analytics (if implemented)
-
-## Support
-
-Provide multiple support channels:
-- GitHub Issues
-- Email support
-- Documentation wiki
-- FAQ page
-
-## Marketing
-
-1. **Launch announcement**
-   - Blog post
-   - Social media
-   - Product Hunt
-
-2. **Documentation**
-   - User guide
-   - Video tutorials
-   - FAQ
-
-3. **Community**
-   - Discord/Slack
-   - Reddit posts
-   - Forum participation
-
-## Compliance
-
-- GDPR compliance (if EU users)
-- Privacy policy (required)
-- Terms of service
-- License (MIT recommended)
-
-## Rollback Plan
-
-If critical issues occur:
-
-1. **Immediate**:
-   - Remove extension from stores temporarily
-   - Post status update
-
-2. **Fix**:
-   - Identify and fix issue
-   - Test thoroughly
-   - Fast-track review
-
-3. **Recovery**:
-   - Upload fixed version
-   - Notify users
-   - Post-mortem analysis

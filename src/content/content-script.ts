@@ -194,7 +194,7 @@ function getSelectionTextWithLogicalBreaks(selection: Selection | null): string 
   tempContainer.appendChild(fragment);
   parentElement.appendChild(tempContainer);
 
-  let result = '';
+  let result: string;
   try {
     // Force reflow to ensure styles are computed
     void tempContainer.offsetHeight;

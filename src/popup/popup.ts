@@ -468,9 +468,9 @@ async function injectContentScript(tabId) {
   } catch (error) {
     console.error('[Popup] Failed to inject content script:', error);
     if (isAccessDeniedError(error)) {
-      throw new Error(getMessage('errorPageBlocksExtensions'));
+      throw new Error(getMessage('errorPageBlocksExtensions'), { cause: error });
     }
-    throw new Error(getMessage('errorTranslatorCouldNotLoad'));
+    throw new Error(getMessage('errorTranslatorCouldNotLoad'), { cause: error });
   }
 }
 

@@ -9,9 +9,9 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'src/locales',
-          dest: '',
-          rename: '_locales'
+          src: 'src/locales/**/*',
+          dest: '_locales',
+          rename: { stripBase: 2 }
         }
       ]
     })
