@@ -16,7 +16,6 @@ const {
   PROVIDER_ORDER,
   DEFAULT_BATCH_MAX_CHARS,
   DEFAULT_BATCH_MAX_ITEMS,
-  DEFAULT_PROVIDER,
   DEFAULT_LANGUAGE,
   DEFAULT_FONT_SIZE,
   DEFAULT_OPENAI_TEMPERATURE,
@@ -124,7 +123,6 @@ function createDefaultSettings(): Settings {
 
   return {
     common: {
-      defaultProvider: DEFAULT_PROVIDER,
       defaultSourceLanguage: 'auto',
       defaultTargetLanguage: browserLanguage,
       uiLanguage: browserLanguage,
@@ -134,9 +132,7 @@ function createDefaultSettings(): Settings {
     providers,
     ui: {
       theme: 'auto',
-      fontSize: DEFAULT_FONT_SIZE,
-      showOriginalText: true,
-      highlightTranslated: true
+      fontSize: DEFAULT_FONT_SIZE
     }
   };
 }

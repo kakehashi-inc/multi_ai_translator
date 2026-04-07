@@ -148,6 +148,16 @@ browser.runtime.onInstalled.addListener(async (details) => {
   }
 });
 
+// Re-create context menus on browser startup. `onInstalled` only fires on
+// install/update/reload, so without this listener the menus disappear after
+// a browser restart (Chrome MV3 service workers are torn down between sessions).
+if (browser.runtime.onStartup) {
+  browser.runtime.onStartup.addListener(async () => {
+    console.info('[Multi-AI Translator] Browser startup — re-creating context menus');
+    await createContextMenus();
+  });
+}
+
 /**
  * Create context menus
  */
@@ -258,15 +268,22 @@ async function translateText({
     }
     const settings = await getSettings();
     const lastUsed = await getLastUsedProvider();
-    const provider = providerName || lastUsed || settings.common.defaultProvider;
+    // Provider selection rule:
+    //   1. If the caller passed an explicit, enabled provider → use it
+    //   2. Otherwise if lastUsedProvider is enabled → use it
+    //   3. Otherwise → first enabled provider
+    const requested = providerName || lastUsed || null;
+    const provider = resolveEnabledProvider(settings, requested);
+
+    if (!provider) {
+      throw new Error(getMessage('errorNoEnabledProviders'));
+    }
 
     // Save last used provider
-    if (provider) {
-      await setLastUsedProvider(provider);
-    }
-    const providerConfig = settings.providers[provider];
+    await setLastUsedProvider(provider);
 
-    if (!providerConfig || !providerConfig.enabled) {
+    const providerConfig = settings.providers[provider];
+    if (!providerConfig) {
       throw new Error(getMessage('errorProviderNotEnabled', [provider]));
     }
 

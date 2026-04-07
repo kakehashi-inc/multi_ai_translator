@@ -5,9 +5,6 @@ export class ConstVariables {
   static DEFAULT_LANGUAGE: string = 'en';
   static DEFAULT_FONT_SIZE = 14;
 
-  // Provider defaults
-  static DEFAULT_PROVIDER: ProviderName = 'openai';
-
   // Provider-specific defaults (shared values but named for clarity)
   static DEFAULT_OPENAI_TEMPERATURE = 0.3;
   static DEFAULT_OPENAI_MAX_TOKENS = 2000;

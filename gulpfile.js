@@ -41,12 +41,14 @@ function formatStylelintResults(results) {
 }
 
 export function lintCss() {
-  return gulp.src(['src/**/*.css']).pipe(
-    gulpStylelint({
-      failAfterError: true,
-      reporters: [{ formatter: formatStylelintResults, console: true }]
-    })
-  );
+  return gulp
+    .src(['src/**/*.css', 'src/**/*.scss', '!src/scss/_tokens.scss'])
+    .pipe(
+      gulpStylelint({
+        failAfterError: true,
+        reporters: [{ formatter: formatStylelintResults, console: true }]
+      })
+    );
 }
 
 export function lintJson() {

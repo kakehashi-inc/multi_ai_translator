@@ -109,20 +109,21 @@ export function getTranslatableNodes(
   return nodes;
 }
 
-export function replaceNodeContent(node: Text, translation: string, provider: string): void {
+export function replaceNodeContent(node: Text, translation: string, provider: string | null): void {
   const parent = node.parentElement;
   if (!parent || parent.closest('code, pre, kbd, samp')) {
     return;
   }
 
+  const providerLabel = provider ?? '';
   const element = parent as HTMLElement;
   translationState.storeOriginal(element, node.textContent);
   node.textContent = translation;
-  translationState.storeTranslation(element, translation, provider);
+  translationState.storeTranslation(element, translation, providerLabel);
 
   if (!element.classList.contains('translated')) {
     element.classList.add('translated');
-    element.dataset.translatedBy = provider;
+    element.dataset.translatedBy = providerLabel;
   }
 }
 

@@ -9,7 +9,11 @@
       "Bash(glob:*)",
       "Bash(ls:*)",
       "Bash(chmod:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(yarn lint:*)",
+      "Bash(yarn build:chrome)",
+      "Bash(yarn build:firefox)",
+      "Bash(yarn build:*)"
     ],
     "deny": [],
     "ask": []

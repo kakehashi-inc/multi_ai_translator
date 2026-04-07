@@ -21,7 +21,6 @@ export interface ProviderSettings {
 export type ProviderSettingsMap = Record<string, ProviderSettings>;
 
 export interface CommonSettings {
-  defaultProvider: ProviderName;
   defaultSourceLanguage: string;
   defaultTargetLanguage: string;
   uiLanguage: string;
@@ -32,8 +31,6 @@ export interface CommonSettings {
 export interface UISettings {
   theme: 'auto' | 'light' | 'dark';
   fontSize: number;
-  showOriginalText: boolean;
-  highlightTranslated: boolean;
 }
 
 export interface Settings {

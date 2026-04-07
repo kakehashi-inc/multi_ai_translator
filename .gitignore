@@ -147,3 +147,6 @@ deploy*.sh
 .specstory
 dist-firefox
 packages/*
+
+# Auto-generated SCSS tokens (source of truth: src/ui/design-tokens.ts)
+src/scss/_tokens.scss

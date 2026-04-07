@@ -18,6 +18,18 @@ export default defineConfig({
       ]
     })
   ],
+  css: {
+    preprocessorOptions: {
+      // Vite 8 routes scss to sass-embedded automatically when installed.
+      // `api: 'modern-compiler'` is the recommended fast path; the property
+      // is recognized at runtime even though it is not yet in the public
+      // type for SassPreprocessorOptions.
+      scss: {
+        api: 'modern-compiler'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any
+    }
+  },
   build: {
     // Ensure compatibility with older browsers
     target: 'es2020',

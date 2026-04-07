@@ -98,7 +98,10 @@ export class Translator {
       const settings = await this.ensureSettings();
 
       const target = targetLanguage || settings.common.defaultTargetLanguage;
-      const provider = providerName || settings.common.defaultProvider;
+      // Pass through whatever the caller picked (or null). The background
+      // worker resolves the actual enabled provider via lastUsedProvider /
+      // first-enabled fallback — translator.ts must not pre-resolve here.
+      const provider = providerName || null;
       const source = sourceLanguage || settings.common.defaultSourceLanguage || 'auto';
 
       // Get translatable nodes
@@ -345,7 +348,10 @@ export class Translator {
       this.selectionInProgress = true;
       const settings = await this.ensureSettings();
       const target = targetLanguage || settings.common.defaultTargetLanguage;
-      const provider = providerName || settings.common.defaultProvider;
+      // Pass through whatever the caller picked (or null). The background
+      // worker resolves the actual enabled provider via lastUsedProvider /
+      // first-enabled fallback — translator.ts must not pre-resolve here.
+      const provider = providerName || null;
       const source = sourceLanguage || settings.common.defaultSourceLanguage || 'auto';
 
       const requestPayload = PromptBuilder.buildRequestPayload([text]);
