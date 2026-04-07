@@ -18,7 +18,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { getEnabledProviders, getSettings } from '../utils/storage';
 import { ConstVariables } from '../utils/const-variables';
-import { getSupportedLanguages } from '../utils/i18n';
+import { getMessage, getSupportedLanguages } from '../utils/i18n';
 import type { Settings } from '../types/settings';
 import { createAppTheme } from '../ui/theme';
 import { tokens } from '../ui/design-tokens';
@@ -280,7 +280,7 @@ export function PopupApp() {
             value={selectedProvider}
             onChange={(e) => setSelectedProvider(e.target.value)}
             disabled={providers.length === 0}
-            helperText={providers.length === 0 ? 'Enable a provider in Settings' : undefined}
+            helperText={providers.length === 0 ? t('popupHelperEnableProvider') : undefined}
           >
             {providers.map((provider) => (
               <MenuItem key={provider} value={provider}>
@@ -295,7 +295,7 @@ export function PopupApp() {
             value={sourceLanguage}
             onChange={(e) => setSourceLanguage(e.target.value)}
           >
-            <MenuItem value="auto">Auto-detect</MenuItem>
+            <MenuItem value="auto">{t('languageAutoDetect')}</MenuItem>
             {languages.map((lang) => (
               <MenuItem key={lang.code} value={lang.code}>
                 {lang.name}
@@ -365,7 +365,7 @@ export function PopupApp() {
 async function sendMessageToActiveTab(message: Record<string, unknown>): Promise<unknown> {
   const tab = await getContentTabForAction();
   if (!tab?.id) {
-    throw new Error('No accessible tab.');
+    throw new Error(getMessage('errorNoAccessibleTab'));
   }
   try {
     return await browser.tabs.sendMessage(tab.id, message);

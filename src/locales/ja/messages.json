@@ -11,6 +11,14 @@
     "message": "選択範囲を翻訳",
     "description": "選択範囲を翻訳するコンテキストメニューのタイトル"
   },
+  "contextMenuTranslatePage": {
+    "message": "ページを翻訳",
+    "description": "現在のページを翻訳するコンテキストメニューのタイトル"
+  },
+  "notificationOpeningSettings": {
+    "message": "有効なプロバイダがありません。設定画面を開きます。",
+    "description": "ページ翻訳のコンテキストメニューを実行したが有効なプロバイダがない場合に表示する通知"
+  },
   "settingsSubtitle": {
     "message": "設定",
     "description": "設定ページのサブタイトル"
@@ -346,5 +354,131 @@
   "errorNoActiveTab": {
     "message": "アクティブなタブがありません",
     "description": "アクティブなタブがないときのエラーメッセージ"
+  },
+  "statusLoading": {
+    "message": "読み込み中...",
+    "description": "汎用の読み込み表示"
+  },
+  "statusFailedToLoadSettings": {
+    "message": "設定の読み込みに失敗しました",
+    "description": "設定の読み込みに失敗したときに表示するメッセージ"
+  },
+  "statusSettingsSaved": {
+    "message": "設定を保存しました",
+    "description": "設定の保存後に表示する確認メッセージ"
+  },
+  "statusFailedToSaveSettings": {
+    "message": "設定の保存に失敗しました",
+    "description": "設定の保存に失敗したときに表示するメッセージ"
+  },
+  "confirmResetSettings": {
+    "message": "すべての設定を初期状態に戻してもよろしいですか？",
+    "description": "設定リセット前に表示する確認メッセージ"
+  },
+  "statusSettingsReset": {
+    "message": "設定を初期状態に戻しました",
+    "description": "設定をリセットした後に表示する確認メッセージ"
+  },
+  "statusFailedToResetSettings": {
+    "message": "設定のリセットに失敗しました",
+    "description": "設定のリセットに失敗したときに表示するメッセージ"
+  },
+  "statusSettingsExported": {
+    "message": "設定をエクスポートしました",
+    "description": "設定のエクスポート後に表示する確認メッセージ"
+  },
+  "statusFailedToExportSettings": {
+    "message": "設定のエクスポートに失敗しました",
+    "description": "設定のエクスポートに失敗したときに表示するメッセージ"
+  },
+  "statusSettingsImported": {
+    "message": "設定をインポートしました",
+    "description": "設定のインポート後に表示する確認メッセージ"
+  },
+  "statusFailedToImportSettings": {
+    "message": "設定のインポートに失敗しました",
+    "description": "設定のインポートに失敗したときに表示するメッセージ"
+  },
+  "statusFetchingModels": {
+    "message": "$PROVIDER$ からモデルを取得しています...",
+    "description": "プロバイダからモデルを取得中に表示するメッセージ",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "openai"
+      }
+    }
+  },
+  "statusFoundModels": {
+    "message": "$COUNT$ 個のモデルが見つかりました",
+    "description": "モデル取得後に表示するメッセージ",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "12"
+      }
+    }
+  },
+  "statusNoModelsFound": {
+    "message": "モデルが見つかりませんでした。手動で入力してください。",
+    "description": "モデル取得結果が空のときに表示するメッセージ"
+  },
+  "statusFailedToFetchModels": {
+    "message": "モデルの取得に失敗しました",
+    "description": "モデル取得に失敗したときに表示するメッセージ"
+  },
+  "labelEnableProvider": {
+    "message": "$PROVIDER$ を有効化",
+    "description": "プロバイダ有効化トグルのアクセシブルラベル",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "OpenAI"
+      }
+    }
+  },
+  "labelToggleVisibility": {
+    "message": "表示を切り替え",
+    "description": "パスワード表示切り替えボタンのアクセシブルラベル"
+  },
+  "labelOptional": {
+    "message": "(任意)",
+    "description": "任意フィールドのラベル末尾に付与する文言"
+  },
+  "languageAutoDetect": {
+    "message": "自動検出",
+    "description": "ソース言語の自動検出オプション"
+  },
+  "popupHelperEnableProvider": {
+    "message": "設定でプロバイダを有効化してください",
+    "description": "ポップアップで有効なプロバイダがないときに表示するヘルパーテキスト"
+  },
+  "errorNoAccessibleTab": {
+    "message": "アクセス可能なタブがありません。",
+    "description": "ポップアップからアクセス可能なタブが見つからないときのエラー"
+  },
+  "errorInvalidSettingsJson": {
+    "message": "設定JSONの形式が正しくありません",
+    "description": "インポート設定のJSONが無効なときに表示するエラー"
+  },
+  "errorAPIKeyRequiredForModels": {
+    "message": "モデル取得には $PROVIDER$ のAPIキーが必要です。",
+    "description": "モデル取得時にAPIキーが未設定のときに表示するエラー",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "OpenAI"
+      }
+    }
+  },
+  "errorBaseURLRequiredForModels": {
+    "message": "$PROVIDER$ プロバイダからモデルを取得するにはベースURLが必要です。",
+    "description": "モデル取得時にベースURLが未設定のときに表示するエラー",
+    "placeholders": {
+      "provider": {
+        "content": "$1",
+        "example": "OpenAI互換"
+      }
+    }
   }
 }

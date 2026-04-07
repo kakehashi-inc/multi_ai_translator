@@ -176,6 +176,15 @@ async function createContextMenus(): Promise<void> {
       id: 'translate-selection-inline',
       title: getMessage('contextMenuTranslateSelection'),
       contexts: ['selection']
+    },
+    {
+      // Only shown when nothing is selected. Together with the selection
+      // menu above, this guarantees exactly one extension menu item is ever
+      // visible at a time, which prevents Chrome / Firefox from collapsing
+      // the items into an "extension name" submenu.
+      id: 'translate-page',
+      title: getMessage('contextMenuTranslatePage'),
+      contexts: ['page']
     }
   ];
 
@@ -195,6 +204,8 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     if (info.menuItemId === 'translate-selection-inline') {
       await handleTranslateSelectionInline(info, tab);
+    } else if (info.menuItemId === 'translate-page') {
+      await handleTranslatePageContextMenu(tab);
     }
   } catch (error) {
     console.error('[Multi-AI Translator] Context menu error:', error);
@@ -402,6 +413,45 @@ async function handleTranslateSelectionInline(info: Menus.OnClickData, tab?: Tab
   await forwardSelectionTranslation({
     tabId: targetTab.id,
     text: selectionText,
+    provider,
+    language: targetLanguage,
+    sourceLanguage
+  });
+}
+
+/**
+ * Context menu: Translate the current page using the last used / first
+ * enabled provider. If no provider is enabled, notify the user and open
+ * the options page so they can configure one.
+ */
+async function handleTranslatePageContextMenu(tab?: Tabs.Tab) {
+  const targetTab = await resolveContentTab(tab);
+  if (!targetTab?.id) {
+    showNotification('Error', getMessage('errorNoActiveTab'));
+    return;
+  }
+
+  const settings = await getSettings();
+  const lastUsed = await getLastUsedProvider();
+  const provider = resolveEnabledProvider(settings, lastUsed);
+
+  if (!provider) {
+    // No enabled provider — tell the user and open the options page so
+    // they can pick one before retrying.
+    showNotification(getMessage('extensionName'), getMessage('notificationOpeningSettings'));
+    await browser.runtime.openOptionsPage();
+    return;
+  }
+
+  // Persist the resolved provider so the popup / future invocations agree
+  // on the same selection.
+  await setLastUsedProvider(provider);
+
+  const sourceLanguage = settings.common.defaultSourceLanguage || 'auto';
+  const targetLanguage = settings.common.defaultTargetLanguage;
+
+  await sendMessageToTab(targetTab.id, {
+    action: 'translate-page',
     provider,
     language: targetLanguage,
     sourceLanguage

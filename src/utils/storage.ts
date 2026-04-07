@@ -4,6 +4,7 @@
  */
 import browser from 'webextension-polyfill';
 import { ConstVariables } from './const-variables';
+import { getMessage } from './i18n';
 import type {
   ProviderName,
   ProviderSettings,
@@ -236,7 +237,7 @@ export async function importSettings(jsonString: string): Promise<void> {
     await saveSettings(normalizeSettings(parsed));
   } catch (error) {
     console.error('Invalid settings JSON provided', error);
-    throw new Error('Invalid settings JSON', { cause: error });
+    throw new Error(getMessage('errorInvalidSettingsJson'), { cause: error });
   }
 }
 

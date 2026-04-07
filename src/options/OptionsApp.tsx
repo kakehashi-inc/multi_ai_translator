@@ -37,7 +37,7 @@ import {
   saveSettings
 } from '../utils/storage';
 import { ConstVariables } from '../utils/const-variables';
-import { getSupportedLanguages } from '../utils/i18n';
+import { getMessage, getSupportedLanguages } from '../utils/i18n';
 import type { ProviderName, ProviderSettings, Settings } from '../types/settings';
 import { PROVIDER_META, type ProviderFieldDef } from './providerMeta';
 import { createAppTheme } from '../ui/theme';
@@ -107,7 +107,7 @@ export function OptionsApp() {
         setSettings(loaded);
       } catch (error) {
         console.error('[Options] Initialization error:', error);
-        showStatus(t('statusFailedToLoadSettings') || 'Failed to load settings', 'error');
+        showStatus(t('statusFailedToLoadSettings'), 'error');
       }
     })();
   }, [t]);
@@ -169,24 +169,15 @@ export function OptionsApp() {
     try {
       await saveSettings(settings);
       setIsDirty(false);
-      showStatus(t('statusSettingsSaved') || 'Settings saved successfully', 'success');
+      showStatus(t('statusSettingsSaved'), 'success');
     } catch (error) {
       console.error('[Options] Save error:', error);
-      showStatus(
-        (t('statusFailedToSaveSettings') || 'Failed to save settings') +
-          ': ' +
-          (error as Error).message,
-        'error'
-      );
+      showStatus(t('statusFailedToSaveSettings') + ': ' + (error as Error).message, 'error');
     }
   }, [settings, showStatus, t]);
 
   const handleReset = useCallback(async () => {
-    if (
-      !confirm(
-        t('confirmResetSettings') || 'Are you sure you want to reset all settings to defaults?'
-      )
-    ) {
+    if (!confirm(t('confirmResetSettings'))) {
       return;
     }
     try {
@@ -194,10 +185,10 @@ export function OptionsApp() {
       const fresh = await getSettings();
       setSettings(fresh);
       setIsDirty(false);
-      showStatus(t('statusSettingsReset') || 'Settings reset to defaults', 'success');
+      showStatus(t('statusSettingsReset'), 'success');
     } catch (error) {
       console.error('[Options] Reset error:', error);
-      showStatus(t('statusFailedToResetSettings') || 'Failed to reset settings', 'error');
+      showStatus(t('statusFailedToResetSettings'), 'error');
     }
   }, [showStatus, t]);
 
@@ -211,10 +202,10 @@ export function OptionsApp() {
       a.download = 'multi-ai-translator-settings.json';
       a.click();
       URL.revokeObjectURL(url);
-      showStatus(t('statusSettingsExported') || 'Settings exported', 'success');
+      showStatus(t('statusSettingsExported'), 'success');
     } catch (error) {
       console.error('[Options] Export error:', error);
-      showStatus(t('statusFailedToExportSettings') || 'Failed to export settings', 'error');
+      showStatus(t('statusFailedToExportSettings'), 'error');
     }
   }, [showStatus, t]);
 
@@ -232,15 +223,10 @@ export function OptionsApp() {
         const fresh = await getSettings();
         setSettings(fresh);
         setIsDirty(false);
-        showStatus(t('statusSettingsImported') || 'Settings imported successfully', 'success');
+        showStatus(t('statusSettingsImported'), 'success');
       } catch (error) {
         console.error('[Options] Import error:', error);
-        showStatus(
-          (t('statusFailedToImportSettings') || 'Failed to import settings') +
-            ': ' +
-            (error as Error).message,
-          'error'
-        );
+        showStatus(t('statusFailedToImportSettings') + ': ' + (error as Error).message, 'error');
       } finally {
         event.target.value = '';
       }
@@ -253,10 +239,7 @@ export function OptionsApp() {
       if (!settings) return;
       try {
         showStatus(
-          (t('statusFetchingModels') || 'Fetching models from') +
-            ' ' +
-            ConstVariables.formatProviderName(provider) +
-            '...',
+          t('statusFetchingModels', [ConstVariables.formatProviderName(provider)]),
           'info'
         );
         const config = buildModelFetchConfig(provider, settings.providers[provider]);
@@ -271,28 +254,15 @@ export function OptionsApp() {
 
         if (response.success && response.models && response.models.length > 0) {
           setModels((prev) => ({ ...prev, [provider]: response.models! }));
-          showStatus(
-            (t('statusFoundModels') || 'Found') +
-              ` ${response.models.length} ` +
-              (t('labelModel') || 'models'),
-            'success'
-          );
+          showStatus(t('statusFoundModels', [String(response.models.length)]), 'success');
         } else if (response.success) {
-          showStatus(
-            t('statusNoModelsFound') || 'No models found. Please enter a model manually.',
-            'info'
-          );
+          showStatus(t('statusNoModelsFound'), 'info');
         } else {
-          showStatus(response.error || t('statusNoModelsFound') || 'No models found', 'error');
+          showStatus(response.error || t('statusNoModelsFound'), 'error');
         }
       } catch (error) {
         console.error('[Options] Fetch models error:', error);
-        showStatus(
-          (t('statusFailedToFetchModels') || 'Failed to fetch models') +
-            ': ' +
-            (error as Error).message,
-          'error'
-        );
+        showStatus(t('statusFailedToFetchModels') + ': ' + (error as Error).message, 'error');
       }
     },
     [settings, showStatus, t]
@@ -307,7 +277,7 @@ export function OptionsApp() {
       <ThemeProvider theme={muiTheme}>
         <CssBaseline />
         <Container maxWidth="md" sx={{ py: 6 }}>
-          <Typography>Loading...</Typography>
+          <Typography>{t('statusLoading')}</Typography>
         </Container>
       </ThemeProvider>
     );
@@ -356,7 +326,7 @@ export function OptionsApp() {
                         onChange={(_e, checked) =>
                           updateProviderField(meta.name, 'enabled', checked)
                         }
-                        inputProps={{ 'aria-label': `Enable ${meta.displayName}` }}
+                        inputProps={{ 'aria-label': t('labelEnableProvider', [meta.displayName]) }}
                       />
                     }
                   />
@@ -417,7 +387,9 @@ export function OptionsApp() {
                             <TextField
                               key={fieldId}
                               type={revealed ? 'text' : 'password'}
-                              label={t(field.labelKey) + (field.optional ? ' (optional)' : '')}
+                              label={
+                                t(field.labelKey) + (field.optional ? ' ' + t('labelOptional') : '')
+                              }
                               placeholder={placeholder}
                               value={inputValue}
                               onChange={(e) =>
@@ -434,7 +406,7 @@ export function OptionsApp() {
                                       <Button
                                         size="small"
                                         onClick={() => toggleReveal(fieldId)}
-                                        aria-label="toggle visibility"
+                                        aria-label={t('labelToggleVisibility')}
                                         sx={{ minWidth: 0 }}
                                       >
                                         {revealed ? (
@@ -499,7 +471,7 @@ export function OptionsApp() {
               value={settings.common.defaultSourceLanguage || 'auto'}
               onChange={(e) => updateCommonField('defaultSourceLanguage', e.target.value)}
             >
-              <MenuItem value="auto">Auto-detect</MenuItem>
+              <MenuItem value="auto">{t('languageAutoDetect')}</MenuItem>
               {languages.map((lang) => (
                 <MenuItem key={lang.code} value={lang.code}>
                   {lang.name}
@@ -628,31 +600,29 @@ function buildModelFetchConfig(
   const apiKey = settings?.apiKey?.trim() ?? '';
   const baseUrl = settings?.baseUrl?.trim() ?? '';
   const host = settings?.host?.trim() ?? '';
+  const apiKeyError = (label: string) => ({
+    error: getMessage('errorAPIKeyRequiredForModels', [label])
+  });
+  const baseUrlError = (label: string) => ({
+    error: getMessage('errorBaseURLRequiredForModels', [label])
+  });
   switch (provider) {
     case 'openai':
-      return apiKey
-        ? { config: { apiKey } }
-        : { error: 'OpenAI API key is required to fetch models.' };
+      return apiKey ? { config: { apiKey } } : apiKeyError('OpenAI');
     case 'anthropic':
-      return apiKey
-        ? { config: { apiKey } }
-        : { error: 'Anthropic API key is required to fetch models.' };
+      return apiKey ? { config: { apiKey } } : apiKeyError('Anthropic');
     case 'gemini':
-      return apiKey
-        ? { config: { apiKey } }
-        : { error: 'Gemini API key is required to fetch models.' };
+      return apiKey ? { config: { apiKey } } : apiKeyError('Gemini');
     case 'ollama':
       return { config: { host: host || DEFAULT_OLLAMA_HOST } };
     case 'openai-compatible':
       if (!baseUrl) {
-        return { error: 'Base URL is required to fetch models from OpenAI-compatible providers.' };
+        return baseUrlError('OpenAI-compatible');
       }
       return { config: { baseUrl, apiKey } };
     case 'anthropic-compatible':
       if (!baseUrl) {
-        return {
-          error: 'Base URL is required to fetch models from Anthropic-compatible providers.'
-        };
+        return baseUrlError('Anthropic-compatible');
       }
       return { config: { baseUrl, apiKey } };
     default:
